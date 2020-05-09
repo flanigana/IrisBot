@@ -380,7 +380,7 @@ module.exports.configGuild = async (msg, db) => {
             return configReqs(msg, args, guildConfig, doc);
         } else if (msg.content.startsWith("!config roles")) {
             return configRoles(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config allMembersRole")) {
+        } else if (msg.content.startsWith("!config allMemberRole")) {
             return configAllMemberRole(msg, args, guildConfig, doc);
         } else if (msg.content.startsWith("!config nonMember")) {
             return configNonMemberRole(msg, args, guildConfig, doc);

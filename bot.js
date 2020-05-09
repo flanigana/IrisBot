@@ -8,7 +8,11 @@ const verification = require("./verification");
 
 const client = new Discord.Client();
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert({
+        "project_id": process.env.PROJECT_ID,
+        "private_key": process.env.FIREBASE_PRIVATE_KEY,
+        "client_email": process.env.FIREBASE_CLIENT_EMAIL,
+    })
 });
 const db = admin.firestore();
 
@@ -60,7 +64,7 @@ const setUpGuild = async guild => {
         eightEightMeleeReq: 0,
         assignRoles: false,
         assignAllMember: false,
-        asignNonMember: false,
+        assignNonMember: false,
         founderRole: null,
         leaderRole: null,
         officerRole: null,
