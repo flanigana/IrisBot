@@ -326,17 +326,17 @@ const configList = (msg, guildConfig) => {
     reqs += `}\n`;
     message += reqs;
     message += `\nAssign Guild Roles? ${guildConfig.assignRoles}\n`;
-    message += `    Founder Role: ${tools.getRoleById(msg.guild, guildConfig.founderRole).name}\n`;
-    message += `    Leader Role: ${tools.getRoleById(msg.guild, guildConfig.leaderRole).name}\n`;
-    message += `    Officer Role: ${tools.getRoleById(msg.guild, guildConfig.officerRole).name}\n`;
-    message += `    Member Role: ${tools.getRoleById(msg.guild, guildConfig.memberRole).name}\n`;
-    message += `    Initiate Role: ${tools.getRoleById(msg.guild, guildConfig.initiateRole).name}\n`;
+    message += `    Founder Role: ${guildConfig.founderRole ? tools.getRoleById(msg.guild, guildConfig.founderRole).name : undefined}\n`;
+    message += `    Leader Role: ${guildConfig.leaderRole ? tools.getRoleById(msg.guild, guildConfig.leaderRole).name : undefined}\n`;
+    message += `    Officer Role: ${guildConfig.officerRole ? tools.getRoleById(msg.guild, guildConfig.officerRole).name : undefined}\n`;
+    message += `    Member Role: ${guildConfig.memberRole ? tools.getRoleById(msg.guild, guildConfig.memberRole).name : undefined}\n`;
+    message += `    Initiate Role: ${guildConfig.initiateRole ? tools.getRoleById(msg.guild, guildConfig.initiateRole).name : undefined}\n`;
     message += `\nAssign All-Member Role? ${guildConfig.assignAllMember}\n`;
-    message += `    All-Member Role: ${tools.getRoleById(msg.guild, guildConfig.allMemberRole).name}\n`;
+    message += `    All-Member Role: ${guildConfig.allMemberRole ? tools.getRoleById(msg.guild, guildConfig.allMemberRole).name : undefined}\n`;
     message += `\nAllow Non-Guild-Members? ${guildConfig.assignNonMember}\n`;
-    message += `    Non-Guild-Member Role: ${tools.getRoleById(msg.guild, guildConfig.nonMemberRole).name}\n`;
-    message += `\nVerification Channel: ${tools.getChannelById(msg.guild, guildConfig.verificationChannel).name}\n`;
-    message += `Verification Log Channel: ${tools.getChannelById(msg.guild, guildConfig.verificationLogChannel).name}\n`;
+    message += `    Non-Guild-Member Role: ${guildConfig.nonMemberRole ? tools.getRoleById(msg.guild, guildConfig.nonMemberRole).name : undefined}\n`;
+    message += `\nVerification Channel: ${guildConfig.verificationChannel ? tools.getChannelById(msg.guild, guildConfig.verificationChannel).name : undefined}\n`;
+    message += `Verification Log Channel: ${guildConfig.verificationLogChannel ? tools.getChannelById(msg.guild, guildConfig.verificationLogChannel).name : undefined}\n`;
     message += `\`\`\``;
     msg.reply(message);
 }
