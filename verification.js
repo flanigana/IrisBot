@@ -54,7 +54,7 @@ module.exports.beginVerification = async (msg, db) => {
                     [`${guildId}`]: veriCode,
                 }).then(() => {
                     return sendVerificationMessage(msg, veriCode);
-                }).catch(console.log);
+                }).catch(console.error);
             }
         }).catch(console.error);
 
@@ -145,7 +145,6 @@ const assignGuildRoles = (realmEye, guild, guildConfig, guildMember) => {
     if (!verificationLogChannel) {return false}
     if (guildConfig.assignRoles) {
         const roleId = getRankRole(realmEye, guildConfig);
-        console.log(roleId);
         if (roleId) {
             const role = tools.getRoleById(guild, roleId);
             if (!role) {return false;}
@@ -170,7 +169,9 @@ const assignRoles = async (realmEye, guild, guildConfig, msg, db) => {
             if (guildConfig.allMemberRole) {
                 const role = tools.getRoleById(guild, guildConfig.allMemberRole);
                 if (!role) {return false;}
-                guildMember.roles.add(role.id);
+                if (msg.author.id !== guildConfig.guildOwner) {
+                    guildMember.roles.add(role.id);
+                }
             }
         }
         // remove pending verification
@@ -185,7 +186,9 @@ const assignRoles = async (realmEye, guild, guildConfig, msg, db) => {
     } else if (guildConfig.assignNonMember) {
         const role = tools.getRoleById(guild, guildConfig.nonMemberRole);
         if (!role) {return false;}
-        guildMember.roles.add(role.id);
+        if (msg.author.id !== guildConfig.guildOwner) {
+            guildMember.roles.add(role.id);
+        }
         const verificationLogChannel = tools.getChannelById(guild, guildConfig.verificationLogChannel);
         if (!verificationLogChannel) {return false;}
         verificationLogChannel.send(`${guildMember.user} has been successfully verified as ${realmEye.name}!`);
