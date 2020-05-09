@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const Discord = require("discord.js");
 const admin = require("firebase-admin");
-const serviceAccount = require("./irisbot-firebase-adminsdk.json");
 const config = require("./config");
 const verification = require("./verification");
 
