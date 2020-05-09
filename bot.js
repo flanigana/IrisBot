@@ -9,8 +9,8 @@ const client = new Discord.Client();
 admin.initializeApp({
     credential: admin.credential.cert({
         "project_id": process.env.PROJECT_ID,
-        "private_key": process.env.FIREBASE_PRIVATE_KEY,
         "client_email": process.env.FIREBASE_CLIENT_EMAIL,
+        "private_key": process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     })
 });
 const db = admin.firestore();
