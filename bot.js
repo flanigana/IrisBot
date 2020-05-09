@@ -74,29 +74,6 @@ const setUpGuild = async guild => {
         verificationChannel: defaultChannelId,
         verificationLogChannel: defaultChannelId,
     });
-
-
-    // const guildId = guild.id;
-    // let guildConfig = {
-    //     guildId: guild.id,
-    //     guildName: guild.name,
-    //     realmGuildName: undefined,
-    //     permissions: [],
-    //     reqs: {
-    //         fame: 0,
-    //         rank: 0,
-    //         sixEight: 0,
-    //         eightEight: 0,
-    //         sixEightMelee: 0,
-    //         eightEightMelee: 0,
-    //     },
-    //     assignRoles: false,
-    //     allowNonMember: false,
-    //     serverRoles: {},
-    //     verificationChannel: defaultChannelId,
-    //     verificationLogChannel: defaultChannelId,
-    // }
-    // guildsConfig.set(guildId, guildConfig);
 }
 
 const configGuild = async msg => {

@@ -191,6 +191,9 @@ const assignRoles = async (realmEye, guild, guildConfig, msg, db) => {
         verificationLogChannel.send(`${guildMember.user} has been successfully verified as ${realmEye.name}!`);
         // remove pending verification
         return removePendingVerification(msg.author.id, guild.id, db).then(() => {
+            if (msg.author.id === guildConfig.guildOwner) {
+                return true;
+            }
             return guildMember.setNickname(realmEye.name).then(() => {
                 msg.reply(`You have successfully verified with ${guild.name}!`);
                 return true;
