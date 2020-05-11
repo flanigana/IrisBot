@@ -46,6 +46,23 @@ module.exports.getRoleByName = (guild, name, msg) => {
     return role;
 }
 
+module.exports.getPrefix = async (guildId, db) => {
+    return db.collection("guilds").doc(guildId).get().then(snapshot => {
+        if (snapshot.exists) {
+            const guildConfig = snapshot.data();
+            return guildConfig.prefix;
+        } else {
+            return "!";
+        }
+    }).catch(console.error);
+}
+
+module.exports.getCommand = (fullCommand, preCommand) => {
+    const preCommandTrim = fullCommand.slice(preCommand.length+1);
+    const command = preCommandTrim.split(" ")[0];
+    return command;
+}
+
 module.exports.normalizeNaming = msg => {
     const split = msg.content.split(" ");
     let newContent = "";

@@ -1,5 +1,23 @@
 const tools = require("./tools");
 
+const configPrefix = async (msg, p, args, doc) => {
+    if (args.length === 0) {
+
+        msg.reply(`change command prefix by using:
+        \`${p}config prefix <prefix>\`
+        
+        Current configuration is:
+        ${p}`);
+    } else {
+        return doc.update({
+            "prefix": args[0],
+        }).then(() => {
+            msg.reply(`command prefix changed to ${args[0]}.`);
+            return true;
+        }).catch(console.error);
+    }
+}
+
 const configPermissions = async (msg, args, guildConfig, doc) => {
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
     const admin = guildMember.hasPermission("admin");
@@ -21,7 +39,7 @@ const configPermissions = async (msg, args, guildConfig, doc) => {
         }
         
         msg.reply(`change configuration permissions using:
-        \`!config permissions <roleName> <roleName2> <...>\`
+        \`!config permissions <role> <role2> ... <roleN>\`
         
         Current configuration is:
         ${permissionsList}
@@ -46,10 +64,10 @@ const configPermissions = async (msg, args, guildConfig, doc) => {
     }
 }
 
-const configGuildName = async (msg, args, guildConfig, doc) => {
+const configGuildName = async (msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         msg.reply(`change guild name by using:
-        \`!config guildName <name>\`
+        \`${p}config guildName <name>\`
         
         Current configuration is:
         ${guildConfig.realmGuildName}`);
@@ -65,13 +83,13 @@ const configGuildName = async (msg, args, guildConfig, doc) => {
     }
 }
 
-const configReqs = async (msg, args, guildConfig, doc) => {
+const configReqs = async (msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         msg.reply(`must at least include a fame amount in order to update. For example:
-        \`!config reqs <fame>\`
-        \`!config reqs <fame> <stars>\`
-        \`!config reqs <fame> <stars> <num of 6/8s> <num of 8/8s>\`
-        \`!config reqs <fame> <stars> <num of 6/8s> <num of 8/8s> <num of 6/8 melees> <num of 8/8 melees>\`
+        \`${p}config reqs <fame>\`
+        \`${p}config reqs <fame> <stars>\`
+        \`${p}config reqs <fame> <stars> <num of 6/8s> <num of 8/8s>\`
+        \`${p}config reqs <fame> <stars> <num of 6/8s> <num of 8/8s> <num of 6/8 melees> <num of 8/8 melees>\`
             
         Current configuration is:\`\`\`fix
         Fame: ${guildConfig.fameReq}
@@ -112,7 +130,7 @@ const configReqs = async (msg, args, guildConfig, doc) => {
     }
 }
 
-const configRoles = async (msg, args, guildConfig, doc) => {
+const configRoles = async (msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const founder = guildConfig.founderRole ? tools.getRoleById(msg.guild, guildConfig.founderRole) : undefined;
         const leader = guildConfig.leaderRole ? tools.getRoleById(msg.guild, guildConfig.leaderRole) : undefined;
@@ -122,9 +140,9 @@ const configRoles = async (msg, args, guildConfig, doc) => {
 
         msg.reply(`to configure role automatic assignment:
         To assign roles to all guild ranks:
-        \`!config roles <founderRoleName> <leaderRoleName> <officerRoleName> <memberRoleName> <initiateRoleName>\`
+        \`${p}config roles <founderRoleName> <leaderRoleName> <officerRoleName> <memberRoleName> <initiateRoleName>\`
         To turn on/off automatic role assignment:
-        \`!config roles true/false\`
+        \`${p}config roles true/false\`
 
         Current configuration is:
         Auto-Assign Roles Based on Guild Rank? ${guildConfig.assignRoles}
@@ -179,16 +197,16 @@ const configRoles = async (msg, args, guildConfig, doc) => {
     }
 }
 
-const configAllMemberRole = async (msg, args, guildConfig, doc) => {
+const configAllMemberRole = async (msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         let allMemberRole = guildConfig.allMemberRole ? tools.getRoleById(msg.guild, guildConfig.allMemberRole) : undefined;
         msg.reply(`to configure all-member role assignment:
         To give all members a common role upon verification:
-        \`!config allMemberRole <allMemberRoleName>\`
+        \`${p}config allMemberRole <allMemberRoleName>\`
         To no longer give all members a common role upon verification:
-        \`!config allMemberRole false\`
+        \`${p}config allMemberRole false\`
         To no re-enable this option with the previous configuration:
-        \`!config allMemberRole true\`
+        \`${p}config allMemberRole true\`
         
         Current configuration is:
         Assign Common Role to All Members? ${guildConfig.assignAllMember}
@@ -221,16 +239,16 @@ const configAllMemberRole = async (msg, args, guildConfig, doc) => {
     }
 }
 
-const configNonMemberRole = async (msg, args, guildConfig, doc) => {
+const configNonMemberRole = async (msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const nonMemberRole = guildConfig.nonMemberRole ? tools.getRoleById(msg.guild, guildConfig.nonMemberRole) : undefined;
         msg.reply(`to configure non-member verification:
         To allow non-members to verify and be assigned a role:
-        \`!config nonMemberRole <nonMemberRoleName>\`
+        \`${p}config nonMemberRole <nonMemberRoleName>\`
         To no longer allow non-members to verify and be assigned a role:
-        \`!config nonMemberRole false\`
+        \`${p}config nonMemberRole false\`
         To no re-enable this option with the previous configuration:
-        \`!config nonMemberRole true\`
+        \`${p}config nonMemberRole true\`
         
         Current configuration is:
         Allow Non-Member Verification? ${guildConfig.assignNonMember}
@@ -263,14 +281,14 @@ const configNonMemberRole = async (msg, args, guildConfig, doc) => {
     }
 }
 
-const configVerificationChannel = async (msg, args, guildConfig, doc) => {
+const configVerificationChannel = async (msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         let verificationChannel = guildConfig.verificationChannel ? tools.getChannelById(msg.guild, guildConfig.verificationChannel) : undefined;
         let logChannel = guildConfig.verificationLogChannel ? tools.getChannelById(msg.guild, guildConfig.verificationLogChannel) : undefined;
         msg.reply(`to set verification channel:
-        \`!config verificationChannel <verificationChannelName>\`
+        \`${p}config verificationChannel <verificationChannelName>\`
         or to set verification channel and a different channel for the logs
-        \`!config verificationChannel <verificationChannelName> <logChannelName>\`
+        \`${p}config verificationChannel <verificationChannelName> <logChannelName>\`
         
         Current configuration is:
         Verification Channel: ${verificationChannel}
@@ -304,16 +322,13 @@ const configVerificationChannel = async (msg, args, guildConfig, doc) => {
 
 const configList = (msg, guildConfig) => {
     let message = `\`\`\``;
-    message += `Guild Name: ${guildConfig.realmGuildName}\n`;
+    message +=`Command Prefix: ${guildConfig.prefix}\n`;
+    message += `\nGuild Name: ${guildConfig.realmGuildName}\n`;
     const permissions = guildConfig.permissions;
-    let permissionsList = ``;
+    let permissionsList = `\nPermissions:`;
     for (roleId of permissions) {
         const role = tools.getRoleById(msg.guild, roleId);
-        if (permissionsList === "") {
-            permissionsList += `\nPermissions: ${role.name}`;
-        } else {
-            permissionsList += ` ${role.name}`;
-        }
+        permissionsList += ` ${role.name}`;
     }
     message += `${permissionsList}\n`;
     let reqs = `\nRequirements: {\n`;
@@ -370,28 +385,31 @@ module.exports.configGuild = async (msg, db) => {
         }
     
         msg.content = tools.normalizeNaming(msg);
+        const p = guildConfig.prefix;
+        const command = tools.getCommand(msg.content, `${p}config`);
         const args = tools.getArgs(msg.content);
     
-        if (msg.content.startsWith("!config permissions")) {
-            return configPermissions(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config guildName")) {
-            return configGuildName(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config reqs")) {
-            return configReqs(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config roles")) {
-            return configRoles(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config allMemberRole")) {
-            return configAllMemberRole(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config nonMember")) {
-            return configNonMemberRole(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config verificationChannel")) {
-            return configVerificationChannel(msg, args, guildConfig, doc);
-        } else if (msg.content.startsWith("!config list")) {
+        if (command === "prefix") {
+            return configPrefix(msg, p, args, doc);
+        } else if (command === "permissions") {
+            return configPermissions(msg, p, args, guildConfig, doc);
+        } else if (command === "guildName") {
+            return configGuildName(msg, p, args, guildConfig, doc);
+        } else if (command === "reqs") {
+            return configReqs(msg, p, args, guildConfig, doc);
+        } else if (command === "roles") {
+            return configRoles(msg, p, args, guildConfig, doc);
+        } else if (command === "allMemberRole") {
+            return configAllMemberRole(msg, p, args, guildConfig, doc);
+        } else if (command === "nonMember") {
+            return configNonMemberRole(msg, p, args, guildConfig, doc);
+        } else if (command === "verificationChannel") {
+            return configVerificationChannel(msg, p, args, guildConfig, doc);
+        } else if (command === "list") {
             return configList(msg, guildConfig);
         } else {
-            const split = msg.content.split(" ");
-            const command = split[0] + " " + split[1];
-            msg.reply(`"${command}" is not a valid command!`);
+            const fullCommand = `${p}config ${command}`;
+            msg.reply(`"${fullCommand}" is not a valid command!`);
             return false;
         }
 
