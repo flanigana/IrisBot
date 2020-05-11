@@ -20,24 +20,25 @@ const db = admin.firestore();
 const generalHelp = (msg, p) => {
     msg.reply(`\`\`\`
     Commands -
-    ${p}help : this command list
-    ${p}config : used to configure your server
-    ${p}verify : used to verify for server
+    ${p}help : this command list.
+    ${p}config : used to configure your server.
+    ${p}verify : used to verify for server.
     ${p}ppe : gives a random class name as a suggestion for a new ppe character.\`\`\``);
 }
 
 const configHelp = (msg, p) => {
     msg.reply(`\`\`\`
     Config Commands -
-    ${p}config : this command list
-    ${p}config list : used to list the current surver configuration
-    ${p}config permissions : used to set which roles can change server configuration (Note: all server admins can use config commands)
+    ${p}config : this command list.
+    ${p}config prefix: used to update the bot's command prefix.
+    ${p}config list : used to list the current surver configuration.
+    ${p}config permissions : used to set which roles can change server configuration. (Note: all server admins can use config commands)
     ${p}config guildName : used to change guild name associated with server. This is needed for verification.
-    ${p}config reqs : used to set verification requirements for server
-    ${p}config roles : used to give roles to newly verified members by using guild rank found on RealmEye
-    ${p}config allMemberRole : used to assign a common role to all verified members. This can be used in addition to guild rank roles
+    ${p}config reqs : used to set verification requirements for server.
+    ${p}config roles : used to give roles to newly verified members by using guild rank found on RealmEye.
+    ${p}config allMemberRole : used to assign a common role to all verified members. This can be used in addition to guild rank roles.
     ${p}config nonMemberRole : used to allow or deny non-guild-members to verify with the server. Useful if you want applicants to verify before being added to guild.
-    ${p}config verificationChannel : used to change server's verification channel and the verification log channel\`\`\``);
+    ${p}config verificationChannel : used to change server's verification channel and the verification log channel.\`\`\``);
 }
 
 const helpCommand = (msg, p) => {
