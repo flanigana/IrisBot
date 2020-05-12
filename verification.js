@@ -36,7 +36,12 @@ module.exports.beginVerification = async (msg, db) => {
                 const userData = currentUser.data();
                 
                 if (userData[`${guildId}`]) {
-                    veriCode = userData[`${guildId}`];
+                    if (userData[`${guildId}`] === "verified") {
+                        msg.author.send(`You have already been verified in "${msg.guild.name}"!`);
+                        return true;
+                    } else {
+                        veriCode = userData[`${guildId}`];
+                    }
                     return sendVerificationMessage(msg, veriCode);
 
                 } else {
@@ -95,25 +100,28 @@ const meetsReqs = (guildConfig, realmEye) => {
     return true;
 }
 
-const removePendingVerification = async (userId, guildId, db) => {
+const updateVerification = async (userId, guildId, guildConfig, ign, db) => {
     const userDoc = db.collection("users").doc(userId);
 
-    return userDoc.update({[`${guildId}`]: null}).then(() => {
-        return userDoc.get().then(snapshot => {
-            const userData = snapshot.data();
-            const pendingGuilds = Object.keys(userData);
-            let hasPending = false;
-            for (guildId in pendingGuilds) {
-                if (userData[guildId]) {
-                    hasPending = true;
-                    break;
-                }
-            }
-            if (!hasPending) {
-                return userDoc.delete().then(() => {return true;}).catch(console.error);
-            }
-        });
-    });
+    return userDoc.update({
+        "ign": ign,
+        [`${guildId}`]: "verified",
+    }).then(() => {
+        const verifiedUsers = guildConfig.verifiedUsers;
+
+        if (!verifiedUsers.includes(userId)) {
+            verifiedUsers.push(userId);
+            return db.collection("guilds").doc(guildId).update({
+                "verifiedUsers": verifiedUsers,
+            }).then(() => {
+                return true;
+            }).catch(console.error);
+
+        } else {
+            return true;
+        }
+
+    }).catch(console.error);
 }
 
 const getRankRole = (realmEye, guildConfig) => {
@@ -175,7 +183,10 @@ const assignRoles = async (realmEye, guild, guildConfig, msg, db) => {
             }
         }
         // remove pending verification
-        return removePendingVerification(msg.author.id, guild.id, db).then(() => {
+        return updateVerification(msg.author.id, guild.id, guildConfig, realmEye.name, db).then(() => {
+            if (msg.author.id === guildConfig.guildOwner) {
+                return true;
+            }
             return guildMember.setNickname(realmEye.name).then(() => {
                 msg.reply(`You have successfully verified with ${guild.name}!`);
                 return true;
@@ -193,7 +204,7 @@ const assignRoles = async (realmEye, guild, guildConfig, msg, db) => {
         if (!verificationLogChannel) {return false;}
         verificationLogChannel.send(`${guildMember.user} has been successfully verified as ${realmEye.name}!`);
         // remove pending verification
-        return removePendingVerification(msg.author.id, guild.id, db).then(() => {
+        return updateVerification(msg.author.id, guild.id, guildConfig, realmEye.name, db).then(() => {
             if (msg.author.id === guildConfig.guildOwner) {
                 return true;
             }
@@ -225,14 +236,15 @@ module.exports.checkForVerification = async (msg, client, db) => {
             return false;
         }
         const userData = snapshot.data();
-        const pendingGuilds = Object.keys(userData);
+        const userProps = Object.keys(userData);
         const ign = msg.content.split(" ")[1];
 
         return tools.getRealmEyeInfo(ign).then(realmEye => {
-            for (guildId of pendingGuilds) {
-                if (!guildId) {
+            for (prop of userProps) {
+                if (!prop || prop === "ign" || (userData[prop] === "verified")) {
                     continue;
                 }
+                const guildId = prop;
                 const veriCode = userData[guildId];
 
                 // if user's RealmEye description has the correct verificiation code

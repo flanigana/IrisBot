@@ -65,6 +65,8 @@ const setUpGuild = async guild => {
         eightEightReq: 0,
         sixEightMeleeReq: 0,
         eightEightMeleeReq: 0,
+        verifiedUsers: [],
+        bannedUsers: [],
         assignRoles: false,
         assignAllMember: false,
         assignNonMember: false,
@@ -107,9 +109,11 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
-        const testing = false;
-        if (testing && !(msg.guild.id === "708761992705474680")) {
-            return false;
+        const testing = true;
+        if (testing) {
+            if (msg.guild && !(msg.guild.id === "708761992705474680")) {
+                return false;
+            }
         }
 
         if (msg.guild) {
