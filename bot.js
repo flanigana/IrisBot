@@ -109,7 +109,7 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
-        const testing = true;
+        const testing = false;
         if (testing) {
             if (msg.guild && !(msg.guild.id === "708761992705474680")) {
                 return false;
