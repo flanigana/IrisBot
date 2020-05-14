@@ -149,6 +149,14 @@ client.on("message", async msg => {
             }
         }
 
+        // const embeded = new Discord.MessageEmbed()
+        //     .setColor("#6c17d4")
+        //     .setTitle("Testing")
+        //     .addField("Numbers", "1, 2, 3, 4, 5")
+        //     .setDescription(`This is a response to ${msg.content}.`)
+        //     .setFooter("Iris Bot", client.user.avatarURL());
+        // msg.reply(embeded);
+
         if (msg.guild) {
             const p = await tools.getPrefix(msg.guild.id, db);
             if (!msg.content.startsWith(p)) {
