@@ -9,8 +9,10 @@ const getDefinitions = async definitionsUrl => {
 
     return axios.get(definitionsUrl).then(response => {
         let definitionData = response.data;
+
         // uncomment line below to test a subset of items for quicker loads
         // definitionData = definitionData.substring(0, 486) + "};";
+
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
         let definitions = [];
@@ -52,44 +54,67 @@ const getDefaultClassSkinUrl = className => {
 }
 
 module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
-    return getDefinitions(definitionsUrl).then(definitions => {
+    let promises = [];
+    let items = {};
 
+    // load all items from RealmEye renders image
+    promises.push(getDefinitions(definitionsUrl).then(definitions => {
         return Jimp.read(rendersUrl).then(renders => {
-            let promises = [];
-            let items = {};
-
-            // load all items from RealmEye renders image
+            
             for (definition of definitions) {
                 const name = definition.name;
-                promises.push(renders.clone().crop(definition.startX, definition.startY, 46, 46).getBufferAsync("image/png").then(buffer => {
+                promises.push(renders.clone().crop(definition.startX+6, definition.startY+6, 34, 34).getBufferAsync("image/png").then(buffer => {
                     const item = new Image();
                     item.src = buffer;
                     items[`"${name}"`] = item;
                     return true;
                 }).catch(console.error));
             }
-
-            // load default skin images
-            const classes = ["rogue", "archer", "wizard", "priest", "warrior", "knight", "paladin", "assassin", "necromancer", "huntress", "mystic", 
-            "trickster", "sorcerer", "ninja", "samurai"];
-            for (let i=0; i < classes.length; i++) {
-                const skinUrl = getDefaultClassSkinUrl(classes[i]);
-                promises.push(Jimp.read(skinUrl).then(image => {
-                    return image.getBufferAsync("image/png").then(buffer => {
-                        const item = new Image();
-                        item.src = buffer;
-                        items[`"${classes[i]} classic skin"`] = item;
-                        return true;
-
-                }).catch(console.error);
-                }).catch(console.error));
-            }
-
-            return Promise.all(promises).then(() => {
-                console.log("All images loaded.");
-                return items;
-            });
         });
+    }));
+
+    // load fame icon
+    promises.push(Canvas.loadImage("./fame-icon.png").then(image => {
+        items["fame icon"] = image;
+        return true;
+    }));
+
+    // load star icons
+    const starsUrl = "https://www.realmeye.com/s/e0/img/stars-transparent.png";
+    Jimp.read(starsUrl).then(starRenders => {
+
+        const stars = ["light blue", "blue", "red", "orange", "yellow", "white"];
+        for (let i=0; i < stars.length; i++) {
+            const starName = stars[i];
+            promises.push(starRenders.clone().crop(0, 24*i, 24, 24).getBufferAsync("image/png").then(buffer => {
+                const item = new Image();
+                item.src = buffer;
+                items[`"${starName} star icon"`] = item;
+                return true;
+            }).catch(console.error));
+        }
+
+    }).catch(console.error);
+
+    // load default skin images
+    const classes = ["rogue", "archer", "wizard", "priest", "warrior", "knight", "paladin", "assassin", "necromancer", "huntress", "mystic", 
+    "trickster", "sorcerer", "ninja", "samurai"];
+    for (let i=0; i < classes.length; i++) {
+        const skinUrl = getDefaultClassSkinUrl(classes[i]);
+        promises.push(Jimp.read(skinUrl).then(image => {
+            return image.getBufferAsync("image/png").then(buffer => {
+                const item = new Image();
+                item.src = buffer;
+                items[`"${classes[i]} classic skin"`] = item;
+                return true;
+
+        }).catch(console.error);
+        }).catch(console.error));
+    }
+
+    return Promise.all(promises).then(() => {
+        console.log("All images loaded.");
+        return items;
     });
 }
 
@@ -98,7 +123,7 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
     const sizing = 75;
     const spacing = sizing + 5;
     const fontSize = (2*sizing)/3;
-    const canvasWidth = 1100 + (sizing * 7);
+    const canvasWidth = 1000 + (sizing * 7);
     const canvasHeight = characters.length >= 5 ? (50 + (characters.length * spacing)) : (50 + (5 * spacing));
 
     const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
@@ -112,7 +137,7 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
         const character = characters[i];
 
         // character maxed stats
-        ctx.fillText(character.stats, sizing/2, (sizing/2 + fontSize + (spacing * i)));
+        ctx.fillText(character.stats, ((sizing/2)-10), (sizing/2 + fontSize + (spacing * i)));
 
         // character skin (default for now)
         ctx.drawImage(items[`"${character.class.toLowerCase()} classic skin"`], (sizing/2 + spacing), (sizing/2 + (spacing * i)), sizing, sizing);
@@ -129,18 +154,28 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
         }
 
         // character fame
-        ctx.fillText(`Fame: ${character.fame}`, (sizing/2 + (spacing * 7)), (sizing/2 + fontSize + (spacing * i)));
+        ctx.drawImage(items["fame icon"], (sizing/2 + (spacing * 7)), (sizing/2 + (spacing * i)), sizing, sizing);
+        ctx.fillText(`${character.fame}`, (sizing/2 + (spacing * 8)) + 5, (sizing/2 + fontSize + (spacing * i)));
     }
 
+    // side bar creation
+    const charactersClear = 350;
     ctx.fillStyle = "#383847";
-    ctx.fillRect((sizing/2 + (spacing * 7) + 400), 0, canvasWidth, canvasHeight);
+    ctx.fillRect((sizing/2 + (spacing * 7) + charactersClear-50), 0, canvasWidth, canvasHeight);
 
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(realmEyeData.name, (sizing/2 + (spacing * 7) + 450) , (sizing/2 + fontSize));
-    ctx.fillText(`Rank: ${realmEyeData.rank}`, (sizing/2 + (spacing * 7) + 450) , ((sizing/2 + fontSize) + (spacing * 1)));
-    ctx.fillText(`Fame: ${realmEyeData.fame}`, (sizing/2 + (spacing * 7) + 450) , ((sizing/2 + fontSize) + (spacing * 2)));
-    ctx.fillText(`${realmEyeData.guild}: ${realmEyeData.guildRank}`, (sizing/2 + (spacing * 7) + 450) , ((sizing/2 + fontSize) + (spacing * 3)));
-    ctx.fillText(`Characters: ${characters.length}`, (sizing/2 + (spacing * 7) + 450) , ((sizing/2 + fontSize) + (spacing * 4)));
+
+    const starColor = tools.getStarColor(realmEyeData.rank);
+    ctx.fillText(realmEyeData.name, (sizing/2 + (spacing * 7) + charactersClear) , (sizing/2 + fontSize));
+
+    // rank info
+    ctx.fillText(`Rank:`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 1)));
+    ctx.drawImage(items[`"${starColor} star icon"`], (sizing/2 + (spacing * 7) + charactersClear) + 125, (sizing/2 + (spacing * 1) - 10), sizing, sizing);
+    ctx.fillText(`${realmEyeData.rank}`, (sizing/2 + (spacing * 7) + charactersClear) + 200, ((sizing/2 + fontSize) + (spacing * 1)));
+
+    ctx.fillText(`Fame: ${realmEyeData.fame}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 2)));
+    ctx.fillText(`${realmEyeData.guild}: ${realmEyeData.guildRank}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 3)));
+    ctx.fillText(`Characters: ${characters.length}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 4)));
 
 
     return canvas.toBuffer("image/png", {resolution: `${canvasWidth} x ${canvasHeight}`});

@@ -194,6 +194,24 @@ module.exports.getItemBaseName = itemName => {
     }
 }
 
+module.exports.getStarColor = rank => {
+    const starRequirements = [75, 60, 45, 30, 15, 0];
+
+    if (rank === starRequirements[0]) {
+        return "white";
+    } else if (rank >= starRequirements[1]) {
+        return "yellow";
+    } else if (rank >= starRequirements[2]) {
+        return "yellow";
+    }  else if (rank >= starRequirements[3]) {
+        return "orange";
+    }  else if (rank >= starRequirements[4]) {
+        return "blue";
+    } else {
+        return "light blue";
+    }
+}
+
 module.exports.getUserIgn = async (id, db) => {
     return db.collection("users").doc(id).get().then(snapshot => {
         if (!snapshot.exists) {
