@@ -115,6 +115,10 @@ const listCharacters = async (msg, p) => {
     }
 
     return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        if (!realmEyeData) {
+            msg.reply("there was trouble finding that player on RealmEye...");
+            return false;
+        }
         const buffer = renders.characterListVisualization(realmEyeData, items);
         const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
         msg.channel.send(`Here are ${ign}'s characters and account info:`, attachment);

@@ -250,6 +250,12 @@ module.exports.getRealmEyeInfo = async ign => {
         const html = response.data;
         const $ = cheerio.load(html);
 
+        const playerNotFound = $(".col-md-12");
+        const header = playerNotFound[0].children[0].children[0];
+        if (header.data && header.data.startsWith("Sorry")) {
+            return null;
+        }
+
         // get summary table
         const summaryTable = $(".summary > tbody > tr");
         for (let i=0; i < summaryTable.length; i++) {

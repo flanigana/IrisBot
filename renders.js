@@ -1,4 +1,5 @@
 const axios = require("axios");
+const cheerio = require("cheerio");
 const Canvas = require("canvas");
 const { Image } = require("canvas");
 const Jimp = require("jimp");
@@ -11,7 +12,7 @@ const getDefinitions = async definitionsUrl => {
         let definitionData = response.data;
 
         // uncomment line below to test a subset of items for quicker loads
-        // definitionData = definitionData.substring(0, 486) + "};";
+        definitionData = definitionData.substring(0, 486) + "};";
 
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
@@ -170,12 +171,17 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
 
     // rank info
     ctx.fillText(`Rank:`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 1)));
-    ctx.drawImage(items[`"${starColor} star icon"`], (sizing/2 + (spacing * 7) + charactersClear) + 125, (sizing/2 + (spacing * 1) - 10), sizing, sizing);
-    ctx.fillText(`${realmEyeData.rank}`, (sizing/2 + (spacing * 7) + charactersClear) + 200, ((sizing/2 + fontSize) + (spacing * 1)));
+    ctx.drawImage(items[`"${starColor} star icon"`], (sizing/2 + (spacing * 7) + charactersClear) + 135, (sizing/2 + (spacing * 1) - 10), sizing, sizing);
+    ctx.fillText(`${realmEyeData.rank}`, (sizing/2 + (spacing * 7) + charactersClear) + 210, ((sizing/2 + fontSize) + (spacing * 1)));
 
-    ctx.fillText(`Fame: ${realmEyeData.fame}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 2)));
-    ctx.fillText(`${realmEyeData.guild}: ${realmEyeData.guildRank}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 3)));
-    ctx.fillText(`Characters: ${characters.length}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 4)));
+
+    // alive fame info
+    ctx.fillText(`Alive Fame:`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 2)));
+    ctx.drawImage(items["fame icon"], (sizing/2 + (spacing * 7) + charactersClear) + 275, (sizing/2 + (spacing * 2)), sizing, sizing);
+    ctx.fillText(`${realmEyeData.fame}`, (sizing/2 + (spacing * 7) + charactersClear) + 360, ((sizing/2 + fontSize) + (spacing * 2)));
+
+    ctx.fillText(`Characters: ${characters.length}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 3)));
+    ctx.fillText(`${realmEyeData.guild}: ${realmEyeData.guildRank}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 4)));
 
 
     return canvas.toBuffer("image/png", {resolution: `${canvasWidth} x ${canvasHeight}`});
