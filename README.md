@@ -5,7 +5,7 @@ A Discord bot for managing Realm of the Mad God servers.
 * !help : this command list.
 * !config : used to configure your server.
 * !verify : used to verify for server.
-* !characters : lists all characters and account info.
+* !characters : lists all characters and account info available on RealmEye.
 * !ppe : gives a random class name as a suggestion for a new ppe character.
 
 ### Config Commands -
@@ -22,6 +22,5 @@ A Discord bot for managing Realm of the Mad God servers.
 
 ### Coming Soon - 
 * Raid manager - automatically manages raids for guild or public server dungeon/event raids
-* Character list - get a list of your characters available on RealmEye
 * Auto updating server roles based on guild rank
 * Improved visual display of information

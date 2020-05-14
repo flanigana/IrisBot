@@ -18,7 +18,7 @@ const configPrefix = async (msg, p, args, doc) => {
     }
 }
 
-const configPermissions = async (msg, args, guildConfig, doc) => {
+const configPermissions = async (msg, p, args, guildConfig, doc) => {
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
     const admin = guildMember.hasPermission("admin");
     if (!admin) {
@@ -49,6 +49,7 @@ const configPermissions = async (msg, args, guildConfig, doc) => {
         let messageContents = `the following roles now have configuration permissions:`;
         let newPermissions = [];
         for (arg of args) {
+            console.log(args);
             const role = tools.getRoleByName(msg.guild, arg, msg);
             if (!role) {return false;}
             newPermissions.push(role.id);

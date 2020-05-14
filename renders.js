@@ -10,7 +10,7 @@ const getDefinitions = async definitionsUrl => {
     return axios.get(definitionsUrl).then(response => {
         let definitionData = response.data;
         // uncomment line below to test a subset of items for quicker loads
-        // definitionData = definitionData.substring(0, 486) + "};";
+        definitionData = definitionData.substring(0, 486) + "};";
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
         let definitions = [];

@@ -10,6 +10,8 @@ module.exports.getChannelById = (guild, id, msg) => {
     if (!channel) {
         if (msg) {
             msg.reply(`Trouble finding channel with id ${id}...`);
+        } else {
+            console.log(`Trouble finding channel with id ${id}...`);
         }
         
     }
@@ -21,6 +23,8 @@ module.exports.getChannelByName = (guild, name, msg) => {
     if (!channel) {
         if (msg) {
             msg.reply(`Trouble finding channel with name ${name}...`);
+        } else {
+            console.log(`Trouble finding channel with name ${name}...`);
         }
     }
     return channel;
@@ -31,6 +35,8 @@ module.exports.getRoleById = (guild, id, msg) => {
     if (!role) {
         if (msg) {
             msg.reply(`Trouble finding role with id ${id}...`);
+        } else {
+            console.log(`Trouble finding role with id ${id}...`);
         }
     }
     return role;
@@ -41,6 +47,8 @@ module.exports.getRoleByName = (guild, name, msg) => {
     if (!role) {
         if (msg) {
             msg.reply(`Trouble finding role with name ${name}...`);
+        } else {
+            console.log(`Trouble finding role with name ${name}...`);
         }
     }
     return role;
