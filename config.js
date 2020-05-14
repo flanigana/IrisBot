@@ -387,7 +387,7 @@ module.exports.configGuild = async (msg, db) => {
         msg.content = tools.normalizeNaming(msg);
         const p = guildConfig.prefix;
         const command = tools.getCommand(msg.content, `${p}config`);
-        const args = tools.getArgs(msg.content);
+        const args = tools.getArgs(msg.content, 2);
     
         if (command === "prefix") {
             return configPrefix(msg, p, args, doc);

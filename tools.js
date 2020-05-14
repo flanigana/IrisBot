@@ -90,10 +90,10 @@ module.exports.normalizeNaming = msg => {
     return newContent;
 }
 
-module.exports.getArgs = command => {
+module.exports.getArgs = (command, commandLength) => {
     const split = command.split(" ");
     let args = [];
-    for (let i=2; i<split.length; i++) {
+    for (let i=commandLength; i<split.length; i++) {
         const curr = split[i].trim();
         if (curr != "") {
             if (curr === "true") {
@@ -114,6 +114,91 @@ module.exports.checkRolesConfigured = guildConfig => {
     } else {
         return true;
     }
+}
+
+module.exports.classEnumerator = classValue => {
+    let value = null;
+
+    if (typeof classValue === "string") {
+        switch (classValue.toLowerCase()) {
+            case "rogue":
+                value = 0;
+                break;
+            case "archer":
+                value = 1;
+                break;
+            case "wizard":
+                value = 2;
+                break;
+            case "priest":
+                value = 3;
+                break;
+            case "warrior":
+                value = 4;
+                break;
+            case "knight":
+                value = 5;
+                break;
+            case "paladin":
+                value = 6;
+                break;
+            case "assassin":
+                value = 7;
+                break;
+            case "necromancer":
+                value = 8;
+                break;
+            case "huntress":
+                value = 9;
+                break;
+            case "mystic":
+                value = 10;
+                break;
+            case "trickster":
+                value = 11;
+                break;
+            case "sorcerer":
+                value = 12;
+                break;
+            case "ninja":
+                value = 13;
+                break;
+            case "samurai":
+                value = 14;
+                break;
+        }
+    } else if (typeof classValue === "number") {
+        const classes = ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
+            "Trickster", "Sorcerer", "Ninja", "Samurai"];
+        value = classes[classValue];
+    }
+
+    return value;
+}
+
+module.exports.getItemBaseName = itemName => {
+    if (itemName.match(/T[0-9]$/) || itemName.endsWith("UT")) {
+        return itemName.substring(0, itemName.length-3);
+    } else if (itemName.match(/T[0-9]{2}$/)) {
+        return itemName.substring(0, itemName.length-4);
+    } else {
+        return itemName;
+    }
+}
+
+module.exports.getUserIgn = async (id, db) => {
+    return db.collection("users").doc(id).get().then(snapshot => {
+        if (!snapshot.exists) {
+            return null;
+        }
+
+        const userData = snapshot.data();
+        if (!userData.ign) {
+            return null;
+        }
+
+        return userData.ign;
+    }).catch(console.error);
 }
 
 module.exports.getRealmEyeInfo = async ign => {
@@ -198,14 +283,15 @@ module.exports.getRealmEyeInfo = async ign => {
             const equipment = characters[i].children[8].children;
             let characterEquipment = [];
             for (let j=0; j < equipment.length; j++) {
-                let item = {};
-                item.imageUrl = equipment[j].children[0].attribs.href;
+                // let item = {};
+                // item.itemUrl = equipment[j].children[0].attribs.href;
                 if (equipment[j].children[0].attribs.title) {
-                    item.itemName = "empty slot";
+                    characterEquipment.push("empty slot");
                 } else {
-                    item.itemName = equipment[j].children[0].children[0].attribs.title;
+                    const baseName = this.getItemBaseName(equipment[j].children[0].children[0].attribs.title);
+                    characterEquipment.push(baseName);
                 }
-                characterEquipment.push(item);
+                // characterEquipment.push(item);
             }
             character.equipment = characterEquipment;
 

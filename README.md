@@ -5,6 +5,7 @@ A Discord bot for managing Realm of the Mad God servers.
 * !help : this command list.
 * !config : used to configure your server.
 * !verify : used to verify for server.
+* !characters : lists all characters and account info.
 * !ppe : gives a random class name as a suggestion for a new ppe character.
 
 ### Config Commands -

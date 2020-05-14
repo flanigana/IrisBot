@@ -1,9 +1,13 @@
 require("dotenv").config();
 
 const Discord = require("discord.js");
+const Canvas = require("canvas");
+const { Image } = require("canvas");
+const Jimp = require("jimp");
 const admin = require("firebase-admin");
 
 const tools = require("./tools");
+const renders = require("./renders");
 const config = require("./config");
 const verification = require("./verification");
 
@@ -17,12 +21,17 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
+const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
+const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
+let items = null;
+
 const generalHelp = (msg, p) => {
     msg.reply(`\`\`\`
     Commands -
     ${p}help : this command list.
     ${p}config : used to configure your server.
     ${p}verify : used to verify for server.
+    ${p}characters : lists all characters and account info available on RealmEye.
     ${p}ppe : gives a random class name as a suggestion for a new ppe character.\`\`\``);
 }
 
@@ -90,16 +99,40 @@ const configGuild = async (msg, p) => {
     }
 }
 
-const ppe = msg => {
-    const characterNum = Math.floor(Math.random() * 15);
+const listCharacters = async (msg, p) => {
+    const args = tools.getArgs(msg.content, 1);
+    let ign = null;
 
-    const characters = ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
-            "Trickster", "Sorcerer", "Ninja", "Samurai"];
+    if (args.length === 0) {
+        ign = await tools.getUserIgn(msg.author.id, db);
+        if (!ign) {
+            msg.reply(`You need to first verify with a server or supply an ign using \`${p}characters <ign>\``);
+            return false;
+        }
 
-    msg.reply(`you should play ${characters[characterNum].toLowerCase()} for your next ppe!`);
+    } else {
+        ign = args[0];
+    }
+
+    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        const buffer = renders.characterListVisualization(realmEyeData, items);
+        const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
+        msg.channel.send(`Here are ${ign}'s characters and account info:`, attachment);
+        return true;
+    }).catch(console.error);
 }
 
-client.on("ready", () => {
+const ppe = msg => {
+    const characterNum = Math.floor(Math.random() * 15);
+    const character = tools.classEnumerator(characterNum);
+
+    msg.reply(`you should play ${character.toLowerCase()} for your next ppe!`);
+}
+
+client.on("ready", async () => {
+    renders.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl).then(results => {
+        items = results;
+    });
     console.log(`Logged in as ${client.user.tag}`);
 });
 
@@ -135,6 +168,9 @@ client.on("message", async msg => {
                     msg.delete();
                     return true;
                 });
+
+            } else if (msg.content.startsWith(`${p}characters`)) {
+                listCharacters(msg, p);
 
             } else if (msg.content.startsWith(`${p}ppe`)) {
                 ppe(msg);
