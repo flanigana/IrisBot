@@ -185,13 +185,13 @@ const sendUserVerificationSuccess = (client, user, guild) => {
     user.send(embeded);
 }
 
-const sendGuildVerificationSuccess = async (client, logChannel, guildMember, ign, items) => {
+const sendGuildVerificationSuccess = async (client, logChannel, guildMember, realmEye, items) => {
     const roles = [];
     guildMember.roles.cache.map(role => roles.push(role));
     const embeded = tools.getStandardEmbeded(client)
     .setTitle("A New User Has Been Verified!")
-    .setURL(`https://www.realmeye.com/player/${ign}`)
-    .setDescription(`**${guildMember}** has just verified with the server as ${ign}!`)
+    .setURL(`https://www.realmeye.com/player/${realmEye.name}`)
+    .setDescription(`**${guildMember}** has just verified with the server as ${realmEye.name}!`)
     .addFields(
         {name: "Server Name", value: `${guildMember.displayName}`, inline: true},
         {name: "Discord Tag", value: `${guildMember.user.tag}`, inline: true},
@@ -266,7 +266,7 @@ const assignRoles = async (client, msg, guild, guildConfig, realmEye, db, items)
 
     sendUserVerificationSuccess(client, msg.author, guild);
     Promise.all(promises).then(() => {
-        return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEye.name, items);
+        return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEye, items);
     }).catch(console.error);
 }
 
