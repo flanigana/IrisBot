@@ -1,4 +1,5 @@
 const axios = require("axios");
+const Discord = require("discord.js");
 const Canvas = require("canvas");
 const { Image } = require("canvas");
 const Jimp = require("jimp");
@@ -11,7 +12,7 @@ const getDefinitions = async definitionsUrl => {
         let definitionData = response.data;
 
         // uncomment line below to test a subset of items for quicker loads
-        // definitionData = definitionData.substring(0, 486) + "};";
+        definitionData = definitionData.substring(0, 486) + "};";
 
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
@@ -161,6 +162,28 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
     return canvas.toBuffer("image/jpeg", {quality: 6});
 }
 
-module.exports.getCharactersBuffer = (realmEyeData, items) => {
-    return this.characterListVisualization(realmEyeData, items);
+module.exports.characterListEmbeded = (client, realmEyeData, items) => {
+    let starColor = tools.getStarColor(realmEyeData.rank);
+    if (starColor === "light blue") {
+        starColor = "lightblue";
+    }
+    starColor += "star";
+    const starEmoji = client.emojis.cache.find(emoji => emoji.name === starColor);
+    const fameEmoji = client.emojis.cache.find(emoji => emoji.name === "fameicon");
+    const buffer = this.characterListVisualization(realmEyeData, items);
+    const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
+    const embeded = tools.getStandardEmbeded(client)
+        .setTitle(`${realmEyeData.name}'s Characters`)
+        .attachFiles(attachment)
+        .setImage("attachment://characterList.png")
+        .addFields(
+            {name: "User", value: `${realmEyeData.name}`, inline: true},
+            {name: "Alive Fame", value: `${fameEmoji}${realmEyeData.fame}`, inline: true},
+            {name: "Guild", value: `${realmEyeData.guild}`, inline: true},
+            {name: "Rank", value: `${starEmoji}${realmEyeData.rank}`, inline: true},
+            {name: "Characters", value: `${realmEyeData.characters.length}`, inline: true},
+            {name: "Guild Rank", value: `${realmEyeData.guildRank}`, inline: true},
+
+        )
+    return embeded;
 }
