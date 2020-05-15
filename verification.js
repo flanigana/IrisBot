@@ -200,10 +200,10 @@ const sendGuildVerificationSuccess = async (client, logChannel, guildMember, ign
     )
     logChannel.send(embeded);
 
-    return renders.getCharactersAttachment(ign, items).then(attachment => {
-        logChannel.send("Here is their RealmEye info:", attachment);
-        return true;
-    });
+    buffer = renders.characterListVisualization(realmEyeData, items)
+    const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
+    logChannel.send("Here is their RealmEye info:", attachment);
+    return true;
 }
 
 const assignGuildRoles = async (realmEye, guild, guildConfig, guildMember) => {

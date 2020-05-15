@@ -115,8 +115,34 @@ const listCharacters = async (msg, p) => {
         ign = args[0];
     }
 
-    return renders.getCharactersAttachment(ign, items).then(attachment => {
-        msg.channel.send(`Here are ${ign}'s characters and account info:`, attachment);
+    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        if (!realmEyeData) {
+            msg.reply("there was trouble finding that player on RealmEye...");
+            return false;
+        }
+        let starColor = tools.getStarColor(realmEyeData.rank);
+        if (starColor === "light blue") {
+            starColor = "lightblue";
+        }
+        starColor += "star";
+        const starEmoji = client.emojis.cache.find(emoji => emoji.name === starColor);
+        const fameEmoji = client.emojis.cache.find(emoji => emoji.name === "fameicon");
+        const buffer = renders.characterListVisualization(realmEyeData, items);
+        const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
+        const embeded = tools.getStandardEmbeded(client)
+            .setTitle(`${ign}'s Characters`)
+            .attachFiles(attachment)
+            .setImage("attachment://characterList.png")
+            .addFields(
+                {name: "User", value: `${realmEyeData.name}`, inline: true},
+                {name: "Alive Fame", value: `${fameEmoji}${realmEyeData.fame}`, inline: true},
+                {name: "Guild", value: `${realmEyeData.guild}`, inline: true},
+                {name: "Rank", value: `${starEmoji}${realmEyeData.rank}`, inline: true},
+                {name: "Characters", value: `${realmEyeData.characters.length}`, inline: true},
+                {name: "Guild Rank", value: `${realmEyeData.guildRank}`, inline: true},
+
+            )
+        msg.channel.send(embeded);
         return true;
     }).catch(console.error);
 }
