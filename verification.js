@@ -200,7 +200,7 @@ const sendGuildVerificationSuccess = async (client, logChannel, guildMember, rea
     )
     logChannel.send(embeded);
 
-    buffer = renders.characterListVisualization(realmEyeData, items)
+    buffer = renders.characterListVisualization(realmEye, items)
     const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
     logChannel.send("Here is their RealmEye info:", attachment);
     return true;
