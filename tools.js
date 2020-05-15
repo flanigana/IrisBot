@@ -1,54 +1,96 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const Discord = require("discord.js");
 
 module.exports.getGuildById = (client, id) => {
     return client.guilds.cache.find(guild => guild.id === id);
 }
 
 module.exports.getChannelById = (guild, id, msg) => {
-    const channel = guild.channels.cache.find(channel => channel.id === id);
+    let channel = guild.channels.cache.find(channel => channel.id === id);
     if (!channel) {
         if (msg) {
             msg.reply(`Trouble finding channel with id ${id}...`);
         } else {
             console.log(`Trouble finding channel with id ${id}...`);
         }
-        
+        channel = undefined;
     }
     return channel;
 }
 
 module.exports.getChannelByName = (guild, name, msg) => {
-    const channel = guild.channels.cache.find(channel => channel.name.toLowerCase() === name.toLowerCase());
+    let channel = guild.channels.cache.find(channel => channel.name.toLowerCase() === name.toLowerCase());
     if (!channel) {
         if (msg) {
             msg.reply(`Trouble finding channel with name ${name}...`);
         } else {
             console.log(`Trouble finding channel with name ${name}...`);
         }
+        channel = undefined;
     }
     return channel;
 }
 
 module.exports.getRoleById = (guild, id, msg) => {
-    const role = guild.roles.cache.find(role => role.id === id);
+    let role = guild.roles.cache.find(role => role.id === id);
     if (!role) {
         if (msg) {
             msg.reply(`Trouble finding role with id ${id}...`);
         } else {
             console.log(`Trouble finding role with id ${id}...`);
         }
+        role = undefined;
     }
     return role;
 }
 
 module.exports.getRoleByName = (guild, name, msg) => {
-    const role = guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
+    let role = guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
     if (!role) {
         if (msg) {
             msg.reply(`Trouble finding role with name ${name}...`);
         } else {
             console.log(`Trouble finding role with name ${name}...`);
+        }
+        role = undefined;
+    }
+    return role;
+}
+
+module.exports.getChannel = (guild, channelString, msg) => {
+    let channel = undefined;
+    if (typeof channelString != "string") {
+        console.error("Invalid type for channel. Expected string.");
+
+    } else {
+        if (channelString.startsWith("<#") && channelString.endsWith(">")) {
+            channel = this.getChannelById(guild, channelString.slice(2, channelString.length-1));
+        } else if ((channelString.startsWith("\"") && channelString.endsWith("\"")) || (channelString.startsWith("\'") && channelString.endsWith("\'"))) {
+            channel = this.getChannelByName(guild, channelString.slice(1, channelString.length-1), msg);
+        } else if (channelString.endsWith(","))  {
+            channel = this.getChannelByName(guild, channelString.slice(0, channelString.length-1), msg);
+        } else {
+            channel = this.getChannelByName(guild, channelString, msg);
+        }
+    }
+    return channel;
+}
+
+module.exports.getRole = (guild, roleString, msg) => {
+    let role = undefined;
+    if (typeof roleString != "string") {
+        console.error("Invalid type for role. Expected string.");
+
+    } else {
+        if (roleString.startsWith("<@&") && roleString.endsWith(">")) {
+            role = this.getRoleById(guild, roleString.substring(3, roleString.length-1));
+        } else if ((roleString.startsWith("\"") && roleString.endsWith("\"")) || (roleString.startsWith("\'") && roleString.endsWith("\'"))) {
+            role = this.getRoleByName(guild, roleString.substring(1, roleString.length-1), msg);
+        } else if (roleString.endsWith(","))  {
+            role = this.getRoleByName(guild, roleString.substring(0, roleString.length-1), msg);
+        } else {
+            role = this.getRoleByName(guild, roleString, msg);
         }
     }
     return role;
@@ -68,43 +110,33 @@ module.exports.getPrefix = async (guildId, db) => {
 module.exports.getCommand = (fullCommand, preCommand) => {
     const preCommandTrim = fullCommand.slice(preCommand.length+1);
     const command = preCommandTrim.split(" ")[0];
-    return command;
-}
-
-module.exports.normalizeNaming = msg => {
-    const split = msg.content.split(" ");
-    let newContent = "";
-    for (part of split) {
-        let newPart = part;
-        if (newPart.endsWith(",")) {
-            newPart = newPart.slice(0, newPart.length-1);
-        }
-        if (newPart.startsWith("<") && newPart.endsWith(">")) {
-            if (newPart.charAt(1) === "@" && newPart.charAt(2) === "&") {
-                const role = this.getRoleById(msg.guild, newPart.slice(3, newPart.length-1));
-                newPart = role.name;
-            } else if (part.charAt(1) === "#") {
-                const channel = this.getChannelById(msg.guild, newPart.slice(2, newPart.length-1));
-                newPart = channel.name;
-            }
-        }
-        if (newContent === "") {
-            newContent += newPart;
-        } else {
-            newContent += " " + newPart;
-        }
-    }
-
-    return newContent;
+    return command.toLowerCase();
 }
 
 module.exports.getArgs = (command, commandLength) => {
     const split = command.split(" ");
     let args = [];
+    let openString = false;
+    let combinedArg = "";
     for (let i=commandLength; i<split.length; i++) {
-        const curr = split[i].trim();
+        let curr = split[i].trim();
         if (curr != "") {
-            if (curr === "true") {
+            if (curr.endsWith(",")) {
+                curr = curr.substring(0, curr.length-1);
+            }
+            if (openString) {
+                if (curr.endsWith("\"") || curr.endsWith("\'")) {
+                    openString = false;
+                    combinedArg += ` ${curr.substring(0, curr.length-1)}`;
+                    args.push[combinedArg];
+                } else {
+                    combinedArg += ` ${curr.substring(0, curr.length)}`;
+                }
+
+            } else if (curr.startsWith("\"") || curr.startsWith("\'")) {
+                openString = true;
+                combinedArg = curr.substring(1, curr.length);
+            } else if (curr === "true") {
                 args.push(true);
             } else if (curr === "false") {
                 args.push(false);
@@ -112,6 +144,9 @@ module.exports.getArgs = (command, commandLength) => {
                 args.push(curr);
             }
         }
+    }
+    if (combinedArg != "") {
+        args.push(combinedArg);
     }
     return args;
 }
@@ -334,4 +369,11 @@ module.exports.getRealmEyeInfo = async ign => {
         return accountInfo;
 
     }).catch(console.error);
+}
+
+module.exports.getStandardEmbeded = (client) => {
+    return new Discord.MessageEmbed()
+    .setColor("#380596")
+    .setFooter("Iris Bot", client.user.avatarURL())
+    .setTimestamp();
 }

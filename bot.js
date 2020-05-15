@@ -26,40 +26,40 @@ const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
 let items = null;
 
 const generalHelp = (msg, p) => {
-    msg.reply(`\`\`\`
-    Commands -
-    ${p}help : this command list.
-    ${p}config : used to configure your server.
-    ${p}verify : used to verify for server.
-    ${p}characters : lists all characters and account info available on RealmEye.
-    ${p}ppe : gives a random class name as a suggestion for a new ppe character.\`\`\``);
+    const embeded = tools.getStandardEmbeded(client)
+            .setTitle("Iris Bot Commands")
+            .addFields(
+                {name: "Help", value: `\`\`\`${p}help\`\`\``},
+                {name: "Server Configuration", value: `\`\`\`${p}config\`\`\``},
+                {name: "User Verification", value: `\`\`\`${p}verify\`\`\``},
+                {name: "Realm-Related", value: `\`\`\`${p}characters\n${p}ppe\`\`\``},
+            )
+    msg.channel.send(embeded);
 }
 
 const configHelp = (msg, p) => {
-    msg.reply(`\`\`\`
-    Config Commands -
-    ${p}config : this command list.
-    ${p}config prefix: used to update the bot's command prefix.
-    ${p}config list : used to list the current surver configuration.
-    ${p}config permissions : used to set which roles can change server configuration. (Note: all server admins can use config commands)
-    ${p}config guildName : used to change guild name associated with server. This is needed for verification.
-    ${p}config reqs : used to set verification requirements for server.
-    ${p}config roles : used to give roles to newly verified members by using guild rank found on RealmEye.
-    ${p}config allMemberRole : used to assign a common role to all verified members. This can be used in addition to guild rank roles.
-    ${p}config nonMemberRole : used to allow or deny non-guild-members to verify with the server. Useful if you want applicants to verify before being added to guild.
-    ${p}config verificationChannel : used to change server's verification channel and the verification log channel.\`\`\``);
+    const embeded = tools.getStandardEmbeded(client)
+        .setTitle("Iris Bot Configuration Commands")
+        .setDescription("Commands to set up your server for user verification")
+        .addFields(
+            {name: "View Current Configuration", value: `\`\`\`${p}config list\`\`\``},
+            {name: "Server Setup", value: `\`\`\`${p}config prefix\n${p}config permissions\n${p}config guildName\n${p}config verificationChannel\`\`\``},
+            {name: "Verification Requirements", value: `\`\`\`${p}config reqs\`\`\``},
+            {name: "Role Assignment", value: `\`\`\`${p}config roles\n${p}config allMemberRole\n${p}config nonMemberRole\`\`\``},
+        )
+    msg.channel.send(embeded);
 }
 
 const helpCommand = (msg, p) => {
-    if (msg.content === `${p}help`) {
+    if (msg.content.toLowerCase() === `${p}help`) {
         generalHelp(msg, p);
-    } else if (msg.content === `${p}help config`) {
+    } else if (msg.content.toLowerCase() === `${p}help config`) {
         configHelp(msg, p);
     }
 }
 
 const setUpGuild = async guild => {
-    const defaultChannelId = guild.channels.cache.first().id;
+    const defaultChannelId = msg.guild.channels.cache.find(channel => channel.type === "text");
 
     return db.collection("guilds").doc(guild.id).set({
         guildId: guild.id,
@@ -86,16 +86,17 @@ const setUpGuild = async guild => {
         initiateRole: null,
         allMemberRole: null,
         nonMemberRole: null,
+        globalVerification: true,
         verificationChannel: defaultChannelId,
         verificationLogChannel: defaultChannelId,
     });
 }
 
 const configGuild = async (msg, p) => {
-    if (msg.content === `${p}config`) {
+    if (msg.content.toLowerCase() === `${p}config`) {
         return configHelp(msg, p);
     } else {
-        return config.configGuild(msg, db);
+        return config.configGuild(client, msg, db);
     }
 }
 
@@ -114,13 +115,7 @@ const listCharacters = async (msg, p) => {
         ign = args[0];
     }
 
-    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
-        if (!realmEyeData) {
-            msg.reply("there was trouble finding that player on RealmEye...");
-            return false;
-        }
-        const buffer = renders.characterListVisualization(realmEyeData, items);
-        const attachment = new Discord.MessageAttachment(buffer, "characterList.png");
+    return renders.getCharactersAttachment(ign, items).then(attachment => {
         msg.channel.send(`Here are ${ign}'s characters and account info:`, attachment);
         return true;
     }).catch(console.error);
@@ -146,51 +141,40 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
-        const testing = false;
-        if (testing) {
-            if (msg.guild && !(msg.guild.id === "708761992705474680")) {
-                return false;
-            }
-        }
 
-        // const embeded = new Discord.MessageEmbed()
-        //     .setColor("#6c17d4")
-        //     .setTitle("Testing")
-        //     .addField("Numbers", "1, 2, 3, 4, 5")
-        //     .setDescription(`This is a response to ${msg.content}.`)
-        //     .setFooter("Iris Bot", client.user.avatarURL());
-        // msg.reply(embeded);
+        // const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
+        // verification.sendGuildVerificationSuccess(client, msg.channel, guildMember, "iAlec", items);
 
         if (msg.guild) {
             const p = await tools.getPrefix(msg.guild.id, db);
-            if (!msg.content.startsWith(p)) {
+            if (!msg.content.toLowerCase().startsWith(p)) {
                 return false;
             }
 
-            if (msg.content.startsWith(`${p}help`)) {
+            if (msg.content.toLowerCase().startsWith(`${p}help`)) {
                 helpCommand(msg, p);
 
-            } else if (msg.content.startsWith(`${p}config`)) {
+            } else if (msg.content.toLowerCase().startsWith(`${p}config`)) {
                 return configGuild(msg, p).then(() => {
                     return true;
                 });
 
-            } else if (msg.content.startsWith(`${p}verify`)) {
-                verification.beginVerification(msg, db).then(() => {
+            } else if (msg.content.toLowerCase().startsWith(`${p}verify`)) {
+                verification.beginVerification(client, msg, db).then(() => {
                     msg.delete();
                     return true;
                 });
 
-            } else if (msg.content.startsWith(`${p}characters`)) {
+            } else if (msg.content.toLowerCase().startsWith(`${p}characters`)) {
                 listCharacters(msg, p);
 
-            } else if (msg.content.startsWith(`${p}ppe`)) {
+            } else if (msg.content.toLowerCase().startsWith(`${p}ppe`)) {
                 ppe(msg);
             }
         }
 
-        if ((msg.content.startsWith("!verify")) && (msg.channel.type === "dm")) {
-            return verification.checkForVerification(msg, client, db);
+        if ((msg.content.toLowerCase().startsWith("!verify")) && (msg.channel.type === "dm")) {
+            return verification.checkForVerification(msg, client, db, items);
         }
     }
 });

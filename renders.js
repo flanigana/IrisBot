@@ -1,5 +1,5 @@
 const axios = require("axios");
-const cheerio = require("cheerio");
+const Discord = require("discord.js");
 const Canvas = require("canvas");
 const { Image } = require("canvas");
 const Jimp = require("jimp");
@@ -12,7 +12,7 @@ const getDefinitions = async definitionsUrl => {
         let definitionData = response.data;
 
         // uncomment line below to test a subset of items for quicker loads
-        definitionData = definitionData.substring(0, 486) + "};";
+        // definitionData = definitionData.substring(0, 486) + "};";
 
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
@@ -124,7 +124,7 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
     const sizing = 75;
     const spacing = sizing + 5;
     const fontSize = (2*sizing)/3;
-    const canvasWidth = 1000 + (sizing * 7);
+    const canvasWidth = 1050 + (sizing * 7);
     const canvasHeight = characters.length >= 5 ? (50 + (characters.length * spacing)) : (50 + (5 * spacing));
 
     const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
@@ -148,8 +148,8 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
         for (let j=0; j < equipment.length; j++) {
             let itemImage = items[`"${equipment[j].toLowerCase()}"`];
             if (!itemImage) {
-                // itemImage = items[`"empty slot"`];
-                itemImage = items[`"marid pet skin"`];
+                itemImage = items[`"empty slot"`];
+                // itemImage = items[`"marid pet skin"`];
             }
             ctx.drawImage(itemImage, (sizing/2 + (spacing * (j+2))), (sizing/2 + (spacing * i)), sizing, sizing);
         }
@@ -167,7 +167,7 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
     ctx.fillStyle = "#ffffff";
 
     const starColor = tools.getStarColor(realmEyeData.rank);
-    ctx.fillText(realmEyeData.name, (sizing/2 + (spacing * 7) + charactersClear) , (sizing/2 + fontSize));
+    ctx.fillText(`${realmEyeData.name}`, (sizing/2 + (spacing * 7) + charactersClear) , (sizing/2 + fontSize));
 
     // rank info
     ctx.fillText(`Rank:`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 1)));
@@ -177,12 +177,24 @@ module.exports.characterListVisualization = (realmEyeData, items) => {
 
     // alive fame info
     ctx.fillText(`Alive Fame:`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 2)));
-    ctx.drawImage(items["fame icon"], (sizing/2 + (spacing * 7) + charactersClear) + 275, (sizing/2 + (spacing * 2)), sizing, sizing);
-    ctx.fillText(`${realmEyeData.fame}`, (sizing/2 + (spacing * 7) + charactersClear) + 360, ((sizing/2 + fontSize) + (spacing * 2)));
+    ctx.drawImage(items["fame icon"], (sizing/2 + (spacing * 7) + charactersClear) + 290, (sizing/2 + (spacing * 2)), sizing, sizing);
+    ctx.fillText(`${realmEyeData.fame}`, (sizing/2 + (spacing * 7) + charactersClear) + 375, ((sizing/2 + fontSize) + (spacing * 2)));
 
     ctx.fillText(`Characters: ${characters.length}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 3)));
     ctx.fillText(`${realmEyeData.guild}: ${realmEyeData.guildRank}`, (sizing/2 + (spacing * 7) + charactersClear) , ((sizing/2 + fontSize) + (spacing * 4)));
 
 
-    return canvas.toBuffer("image/png", {resolution: `${canvasWidth} x ${canvasHeight}`});
+    return canvas.toBuffer("image/png");
+}
+
+module.exports.getCharactersAttachment = async (ign, items) => {
+    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        if (!realmEyeData) {
+            msg.reply("there was trouble finding that player on RealmEye...");
+            return false;
+        }
+
+        const buffer = this.characterListVisualization(realmEyeData, items);
+        return attachment = new Discord.MessageAttachment(buffer, "characterList.png");
+    }).catch(console.error);
 }
