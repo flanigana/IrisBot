@@ -1,4 +1,5 @@
 const admin = require("firebase-admin");
+const Discord = require("discord.js");
 const tools = require("./tools");
 const renders = require("./renders");
 

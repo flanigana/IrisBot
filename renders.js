@@ -1,5 +1,4 @@
 const axios = require("axios");
-const Discord = require("discord.js");
 const Canvas = require("canvas");
 const { Image } = require("canvas");
 const Jimp = require("jimp");
