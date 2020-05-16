@@ -2,28 +2,28 @@ const tools = require("./tools");
 
 const configPrefix = async (client, msg, p, args, doc) => {
     if (args.length === 0) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Command Prefix")
             .addFields(
                 {name: "Instructions", value: `Change the command prefix for Iris Bot by using:\`\`\`${p}config prefix <prefix>\`\`\``},
                 {name: "Current Configuration", value: `${p}`},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else {
         return doc.update({
             "prefix": args[0],
         }).then(() => {
-            const embeded = tools.getStandardEmbeded(client)
+            const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Command Prefix")
                 .addFields(
                     {name: "Success!", value: "The command prefix was successfully changed!"},
                     {name: "New Prefix", value: `${args[0]}`},
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
@@ -52,7 +52,7 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
             permissionsList = "No permissions set.";
         }
 
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Configuration Permissions")
             .addFields(
@@ -60,7 +60,7 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
                 {name: "Permissions", value: `${permissionsList}`},
                 {name: "Important Note", value: "All server admins have configuration permissions."}
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else {
@@ -83,7 +83,7 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
         return doc.update({
             "permissions": newPermissions,
         }).then(() => {
-            const embeded = tools.getStandardEmbeded(client)
+            const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Configuration Permissions")
                 .addFields(
@@ -91,7 +91,7 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
                     {name: "New Permissions", value: `${permissionsList}`},
                     {name: "Important Note", value: "All server admins have configuration permissions."}
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
@@ -100,21 +100,21 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
 const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const guildName = guildConfig.realmGuildName ? guildConfig.realmGuildName : undefined;
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Guild Name")
             .addFields(
                 {name: "Instructions", value: `Change the guild name by using:\`\`\`${p}config guildName <name>\`\`\``},
                 {name: "Current Configuration", value: `${guildName}`},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else {
         return doc.update({
             "realmGuildName": args[0],
         }).then(() => {
-            const embeded = tools.getStandardEmbeded(client)
+            const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Guild Name")
                 .addFields(
@@ -122,7 +122,7 @@ const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
                     {name: "New Guild Name", value: `${args[0]}`},
                     
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
@@ -130,7 +130,7 @@ const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
 
 const configReqs = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Verification Requirements")
             .addFields(
@@ -144,7 +144,7 @@ ${p}config reqs <fame> <stars>\n${p}config reqs <fame> <stars> <6/8s> <8/8s>\n${
                 {name: "6/8 Melees", value: `${guildConfig.sixEightMeleeReq}`, inline: true},
                 {name: "8/8 Melees", value: `${guildConfig.eightEightMeleeReq}`, inline: true},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else {
@@ -164,7 +164,7 @@ ${p}config reqs <fame> <stars>\n${p}config reqs <fame> <stars> <6/8s> <8/8s>\n${
             "eightEightMeleeReq": eightEightMelee,
 
         }).then(() => {
-            const embeded = tools.getStandardEmbeded(client)
+            const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Verification Requirements")
                 .addFields(
@@ -176,7 +176,7 @@ ${p}config reqs <fame> <stars>\n${p}config reqs <fame> <stars> <6/8s> <8/8s>\n${
                     {name: "6/8 Melees", value: `${sixEightMelee}`, inline: true},
                     {name: "8/8 Melees", value: `${eightEightMelee}`, inline: true},
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
@@ -192,7 +192,7 @@ const configRoles = async (client, msg, p, args, guildConfig, doc) => {
 
     let promise = null;
     if (args.length === 0) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Auto-Assigned Roles")
             .addFields(
@@ -209,7 +209,7 @@ To turn on/off automatic role assignment:
                 {name: "Initiate Role", value: `${initiate}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role values, assignment for it will automatically be turned on."},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else if (typeof args[0] === "boolean") {
@@ -247,7 +247,7 @@ To turn on/off automatic role assignment:
     }
 
     promise.then(() => {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Auto-Assigned Roles")
                 .addFields(
@@ -259,7 +259,7 @@ To turn on/off automatic role assignment:
                     {name: "Member Role", value: `${member}`, inline: true},
                     {name: "Initiate", value: `${initiate}`, inline: true},
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
     }).catch(console.error);
 }
@@ -270,7 +270,7 @@ const configAllMemberRole = async (client, msg, p, args, guildConfig, doc) => {
 
     let promise = null;
     if (args.length === 0) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("All-Member Role Assignment")
             .addFields(
@@ -283,7 +283,7 @@ To turn on/off all-member role assignment:
                 {name: "All Member Role", value: `${allMemberRole}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role value, assignment for it will automatically be turned on."},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else if (typeof args[0] === "boolean") {
@@ -307,7 +307,7 @@ To turn on/off all-member role assignment:
     }
 
     promise.then(() => {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("All-Member Role Assignment")
                 .addFields(
@@ -315,7 +315,7 @@ To turn on/off all-member role assignment:
                     {name: "Auto-Assign?", value: `${assignAllMember}`, inline: true},
                     {name: "All Member Role", value: `${allMemberRole}`, inline: true},
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
     }).catch(console.error);
 }
@@ -326,7 +326,7 @@ const configNonMemberRole = async (client, msg, p, args, guildConfig, doc) => {
 
     let promise = null;
     if (args.length === 0) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Non-Member Role Assignment")
             .addFields(
@@ -339,7 +339,7 @@ To turn on/off non-member role assignment:
                 {name: "Non Member Role", value: `${nonMemberRole}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role value, assignment for it will automatically be turned on."},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else if (typeof args[0] === "boolean") {
@@ -363,7 +363,7 @@ To turn on/off non-member role assignment:
     }
 
     promise.then(() => {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Non-Member Role Assignment")
                 .addFields(
@@ -371,7 +371,7 @@ To turn on/off non-member role assignment:
                     {name: "Auto-Assign?", value: `${assignNonMember}`, inline: true},
                     {name: "All Member Role", value: `${nonMemberRole}`, inline: true},
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
     }).catch(console.error);
 }
@@ -383,7 +383,7 @@ const configVerificationChannel = async (client, msg, p, args, guildConfig, doc)
 
     let promise = null;
     if (args.length === 0) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Configuration")
             .setDescription("Verification Channel")
             .addFields(
@@ -396,7 +396,7 @@ To turn on/off global verification (ability to begin verification from any chann
                 {name: "Verification Channel", value: `${verificationChannel}`, inline: true},
                 {name: "Verification Log Channel", value: `${verificationLogChannel}`, inline: true},
             )
-        msg.channel.send(embeded);
+        msg.channel.send(embed);
         return true;
 
     } else if (typeof args[0] === "boolean") {
@@ -426,7 +426,7 @@ To turn on/off global verification (ability to begin verification from any chann
     }
 
     promise.then(() => {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
                 .setTitle("Configuration")
                 .setDescription("Verification Channel")
                 .addFields(
@@ -435,7 +435,7 @@ To turn on/off global verification (ability to begin verification from any chann
                     {name: "Verification Channel", value: `${verificationChannel}`, inline: true},
                     {name: "Verification Log Channel", value: `${verificationLogChannel}`, inline: true},
                 )
-            msg.channel.send(embeded);
+            msg.channel.send(embed);
             return true;
     }).catch(console.error);
 }
@@ -455,7 +455,7 @@ const configList = (client, msg, guildConfig) => {
         permissionsList = "No permissions set.";
     }
 
-    const embeded = tools.getStandardEmbeded(client)
+    const embed = tools.getStandardEmbed(client)
         .setTitle("Configuration")
         .setDescription("Current Configuration List")
         .addFields(
@@ -495,7 +495,7 @@ Initiate: ${guildConfig.initiateRole ? tools.getRoleById(msg.guild, guildConfig.
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
         )
-    msg.channel.send(embeded);
+    msg.channel.send(embed);
     return true;
 }
 

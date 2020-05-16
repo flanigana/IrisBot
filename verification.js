@@ -4,7 +4,7 @@ const tools = require("./tools");
 const renders = require("./renders");
 
 const sendVerificationMessage = (client, msg, veriCode) => {
-    const embeded = tools.getStandardEmbeded(client)
+    const embed = tools.getStandardEmbed(client)
         .setTitle("Verification Started")
         .setDescription(`Thank you for beginning your verification process with ${msg.guild.name}! Follow the steps below to complete your verification.`)
         .addFields(
@@ -12,7 +12,7 @@ const sendVerificationMessage = (client, msg, veriCode) => {
             {name: "Step 2", value: `Come back here and reply with \`!verify <ign>.\``},
             {name: "Step 3", value: `Once completed successfully, you'll receive a message verifying completion!`},
         )
-    msg.author.send(embeded);
+    msg.author.send(embed);
     return true;
 }
 
@@ -51,10 +51,10 @@ module.exports.beginVerification = async (client, msg, db) => {
                 if (userData[`${guildId}`]) {
                     // user is already verified
                     if (userData[`${guildId}`] === "verified") {
-                        const embeded = tools.getStandardEmbeded(client)
+                        const embed = tools.getStandardEmbed(client)
                             .setTitle("Already Verified!")
                             .setDescription(`You have already been verified in **${msg.guild.name}**!`);
-                        msg.author.send(embeded);
+                        msg.author.send(embed);
                         return false;
                     // user is not already verified, re-use code
                     } else {
@@ -93,14 +93,14 @@ const isMelee = className => {
     return false;
 }
 
-const meetsReqs = (guildConfig, realmEye) => {
-    if (realmEye.fame < guildConfig.fameReq) {return false;}
-    if (realmEye.rank < guildConfig.rankReq) {return false;}
+const meetsReqs = (guildConfig, realmEyeData) => {
+    if (realmEyeData.fame < guildConfig.fameReq) {return false;}
+    if (realmEyeData.rank < guildConfig.rankReq) {return false;}
     let sixEights = 0;
     let eightEights = 0;
     let sixEightMelees = 0;
     let eightEightMelees = 0;
-    for (character of realmEye.characters) {
+    for (character of realmEyeData.characters) {
         if ((character.stats === "6/8") || (character.stats === "7/8")) {
             sixEights++;
             if (isMelee(character.class)) {
@@ -144,10 +144,10 @@ const updateVerification = async (userId, guildId, guildConfig, ign, db) => {
     }).catch(console.error);
 }
 
-const getRankRole = (realmEye, guildConfig) => {
+const getRankRole = (realmEyeData, guildConfig) => {
     let roleId = undefined;
     if (tools.checkRolesConfigured(guildConfig)) {
-        switch (realmEye.guildRank.toLowerCase()) {
+        switch (realmEyeData.guildRank.toLowerCase()) {
             case "founder":
                 roleId = guildConfig.founderRole;
                 break;
@@ -169,47 +169,47 @@ const getRankRole = (realmEye, guildConfig) => {
 }
 
 const sendUserVerificationFailure = (client, user, guild, guildConfig) => {
-    let embeded = tools.getStandardEmbeded(client)
+    let embed = tools.getStandardEmbed(client)
         .setTitle("Verification Failure")
     if (!guildConfig.realmGuildName) {
-        embeded.setDescription(`Sorry! **${guild.name}** hasn't set up their guild name in the bot configuration and does not allow non-guild-members to verify.Try contacting a server admin to have them finish configuration and then try verfying again.`);
+        embed.setDescription(`Sorry! **${guild.name}** hasn't set up their guild name in the bot configuration and does not allow non-guild-members to verify.Try contacting a server admin to have them finish configuration and then try verfying again.`);
     } else {
-        embeded.setDescription(`Sorry! You are not a guild member of **${guildConfig.realmGuildName}** on RealmEye and this server does not allow for vefication of non-members.`);
+        embed.setDescription(`Sorry! You are not a guild member of **${guildConfig.realmGuildName}** on RealmEye and this server does not allow for vefication of non-members.`);
     }
-    user.send(embeded);
+    user.send(embed);
 }
 
 const sendUserVerificationSuccess = (client, user, guild) => {
-    const embeded = tools.getStandardEmbeded(client)
+    const embed = tools.getStandardEmbed(client)
     .setTitle("Verification Success")
     .setDescription(`Congratulations! You have been successfully verified with **${guild.name}**.`);
-    user.send(embeded);
+    user.send(embed);
 }
 
-const sendGuildVerificationSuccess = async (client, logChannel, guildMember, realmEye, items) => {
+const sendGuildVerificationSuccess = async (client, logChannel, guildMember, realmEyeData, items) => {
     const roles = [];
     guildMember.roles.cache.map(role => roles.push(role));
-    const embeded = tools.getStandardEmbeded(client)
+    const embed = tools.getStandardEmbed(client)
     .setTitle("A New User Has Been Verified!")
-    .setURL(`https://www.realmeye.com/player/${realmEye.name}`)
-    .setDescription(`**${guildMember}** has just verified with the server as ${realmEye.name}!`)
+    .setURL(`https://www.realmeye.com/player/${realmEyeData.name}`)
+    .setDescription(`**${guildMember}** has just verified with the server as ${realmEyeData.name}!`)
     .addFields(
         {name: "Server Name", value: `${guildMember.displayName}`, inline: true},
         {name: "Discord Tag", value: `${guildMember.user.tag}`, inline: true},
         {name: "Discord Id", value: guildMember.id, inline: true},
         {name: "Roles", value: `${roles}`},
     )
-    logChannel.send(embeded);
+    logChannel.send(embed);
 
-    buffer = renders.characterListVisualization(realmEye, items)
-    const embeddedCharacterList = renders.characterListEmbeded(client, realmEye, items);
-    logChannel.send(embeddedCharacterList);
+    // buffer = renders.characterListEmbed(client, realmEyeData, items)
+    // const embeddedCharacterList = renders.characterListEmbed(client, realmEyeData, items);
+    // logChannel.send(embeddedCharacterList);
     return true;
 }
 
-const assignGuildRoles = async (realmEye, guild, guildConfig, guildMember) => {
+const assignGuildRoles = async (realmEyeData, guild, guildConfig, guildMember) => {
     if (guildConfig.assignRoles) {
-        const rankRoleId = getRankRole(realmEye, guildConfig);
+        const rankRoleId = getRankRole(realmEyeData, guildConfig);
         if (rankRoleId) {
             const rankRole = tools.getRoleById(guild, rankRoleId);
             if (!rankRole) {return false;}
@@ -234,7 +234,7 @@ const assignNonMemberRole = async (guild, guildConfig, guildMember) => {
     return guildMember.roles.add(role.id);
 }
 
-const assignRoles = async (client, msg, guild, guildConfig, realmEye, db, items) => {
+const assignRoles = async (client, msg, guild, guildConfig, realmEyeData, db, items) => {
     const guildMember = guild.members.cache.find(user => user.id === msg.author.id);
     const verificationLogChannel = tools.getChannelById(guild, guildConfig.verificationLogChannel);
     if (!verificationLogChannel) {return false}
@@ -243,11 +243,11 @@ const assignRoles = async (client, msg, guild, guildConfig, realmEye, db, items)
     if (!guildMember.manageable) {
         verificationLogChannel.send(`${guildMember} outranks IrisBot so no roles were assigned and server nickname was not changed to ign!`);
         // remove pending verification
-        promises.push(updateVerification(msg.author.id, guild.id, guildConfig, realmEye.name, db));
+        promises.push(updateVerification(msg.author.id, guild.id, guildConfig, realmEyeData.name, db));
     } else {
-        if (guildConfig.realmGuildName && (realmEye.guild.toLowerCase() === guildConfig.realmGuildName.toLowerCase())) {
+        if (guildConfig.realmGuildName && (realmEyeData.guild.toLowerCase() === guildConfig.realmGuildName.toLowerCase())) {
             // assign role based on guild rank
-            promises.push(assignGuildRoles(realmEye, guild, guildConfig, guildMember));
+            promises.push(assignGuildRoles(realmEyeData, guild, guildConfig, guildMember));
             // check for role to assign to all members
             promises.push(assignAllMemberRole(guild, guildConfig, guildMember));
     
@@ -260,33 +260,33 @@ const assignRoles = async (client, msg, guild, guildConfig, realmEye, db, items)
             return false;
         }
         // remove pending verification
-        promises.push(updateVerification(msg.author.id, guild.id, guildConfig, realmEye.name, db).then(() => {
-            return guildMember.setNickname(realmEye.name);
+        promises.push(updateVerification(msg.author.id, guild.id, guildConfig, realmEyeData.name, db).then(() => {
+            return guildMember.setNickname(realmEyeData.name);
         }).catch(console.error));
     }
 
     sendUserVerificationSuccess(client, msg.author, guild);
     Promise.all(promises).then(() => {
-        return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEye, items);
+        return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEyeData, items);
     }).catch(console.error);
 }
 
 module.exports.checkForVerification = async (msg, client, db, items) => {
     if (msg.content.split(" ").length <= 1) {
-        const embeded = tools.getStandardEmbeded(client)
+        const embed = tools.getStandardEmbed(client)
             .setTitle("Error")
             .setDescription(`You need to include your ign in the command. Try: \`!verify <ign>\``);
-        msg.author.send(embeded);
+        msg.author.send(embed);
         return false;
     }
 
     const userDoc = db.collection("users").doc(msg.author.id);
     return userDoc.get().then(snapshot => {
         if (!snapshot.exists) {
-            const embeded = tools.getStandardEmbeded(client)
+            const embed = tools.getStandardEmbed(client)
                 .setTitle("Error")
                 .setDescription(`Sorry. It doesn't look like you started the verification process with any server. First go to a server's verification channel with this bot and type !verify to get a code to verify with that server.`);
-            msg.author.send(embeded);
+            msg.author.send(embed);
             return false;
         }
 
@@ -294,7 +294,14 @@ module.exports.checkForVerification = async (msg, client, db, items) => {
         const userProps = Object.keys(userData);
         const ign = msg.content.split(" ")[1];
 
-        return tools.getRealmEyeInfo(ign).then(realmEye => {
+        return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+            if (!realmEyeData.exists) {
+                const embed = tools.getStandardEmbed(client)
+                    .setTitle("User Not Found")
+                    .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. Make sure you typed your username correctly or make sure you profile is not private.`);
+                msg.author.send(embed);
+                return false;
+            }
 
             for (prop of userProps) {
                 if (!prop || prop === "ign" || (userData[prop] === "verified")) {
@@ -304,23 +311,23 @@ module.exports.checkForVerification = async (msg, client, db, items) => {
                 const veriCode = userData[guildId];
 
                 // if user's RealmEye description has the correct verificiation code
-                if (realmEye.description.includes(veriCode)) {
+                if (realmEyeData.description.includes(veriCode)) {
                     const guild = tools.getGuildById(client, guildId);
 
                     return db.collection("guilds").doc(guildId).get().then(snapshot => {
                         if (!snapshot.exists) {
-                            const embeded = tools.getStandardEmbeded(client)
+                            const embed = tools.getStandardEmbed(client)
                                 .setTitle("Error")
                                 .setDescription(`There doesn't seem to be any data for ${guild.name}.`);
-                            msg.author.send(embeded);
+                            msg.author.send(embed);
                             return false;
                         }
                         const guildConfig = snapshot.data();
 
-                        if (meetsReqs(guildConfig, realmEye)) {
-                            return assignRoles(client, msg, guild, guildConfig, realmEye, db, items);
+                        if (meetsReqs(guildConfig, realmEyeData)) {
+                            return assignRoles(client, msg, guild, guildConfig, realmEyeData, db, items);
                         } else {
-                            const embeded = tools.getStandardEmbeded(client)
+                            const embed = tools.getStandardEmbed(client)
                                 .setTitle("You Do Not Meet Verification Requirements")
                                 .setDescription(`Sorry. You don't meet the verification requirements to join ${guild.name}. They are listed below.`)
                                 .addFields(
@@ -331,16 +338,16 @@ module.exports.checkForVerification = async (msg, client, db, items) => {
                                     {name: "6/8 Melees", value: `${guildConfig.sixEightMeleeReq}`, inline: true},
                                     {name: "8/8 Melees", value: `${guildConfig.eightEightMeleeReq}`, inline: true},
                                 );
-                            msg.author.send(embeded);
+                            msg.author.send(embed);
                             return false;
                         }
                     }).catch(console.error);
                 }
             }
-            const embeded = tools.getStandardEmbeded(client)
+            const embed = tools.getStandardEmbed(client)
                 .setTitle("Error")
                 .setDescription(`Sorry. there was trouble finding a valid verification code in your RealmEye description... Please try again.`);
-            msg.author.send(embeded);
+            msg.author.send(embed);
             return false;
         }).catch(console.error);
     }).catch(console.error);

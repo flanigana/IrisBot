@@ -262,6 +262,18 @@ module.exports.getUserIgn = async (id, db) => {
     }).catch(console.error);
 }
 
+module.exports.getGuildName = async (id, db) => {
+    return db.collection("guilds").doc(id).get().then(snapshot => {
+        if (!snapshot.exists) {
+            return null;
+        }
+
+        const guildConfig = snapshot.data();
+
+        return guildConfig.realmGuildName;
+    }).catch(console.error);
+}
+
 module.exports.getRealmEyeInfo = async ign => {
     const options = {
         url: `https://www.realmeye.com/player/${ign}`,
@@ -272,12 +284,15 @@ module.exports.getRealmEyeInfo = async ign => {
 
     let accountInfo = {
         name: ign,
+        exists: false,
+        charactersCount: 0,
         fame: 0,
         rank: 0,
         guild: "",
         guildRank: "",
         lastSeen: "",
         description: "",
+        hiddenCharacters: false,
         characters: [],
     };
 
@@ -285,11 +300,16 @@ module.exports.getRealmEyeInfo = async ign => {
         const html = response.data;
         const $ = cheerio.load(html);
 
-        const playerNotFound = $(".col-md-12");
-        const header = playerNotFound[0].children[0].children[0];
+        const playerNameBox = $(".col-md-12")[0].children[0];
+        const header = playerNameBox.children[0];
         if (header.data && header.data.startsWith("Sorry")) {
-            return null;
+            return accountInfo;
         }
+
+        // get proper name format
+        const name = header.children[0].data;
+        accountInfo.name = name;
+        accountInfo.exists = true;
 
         // get summary table
         const summaryTable = $(".summary > tbody > tr");
@@ -298,7 +318,7 @@ module.exports.getRealmEyeInfo = async ign => {
             const rowLabel = row[0].children[0].data.toLowerCase();
 
             if (rowLabel === "characters") {
-                accountInfo.characters = parseInt(row[1].children[0].data);
+                accountInfo.charactersCount = parseInt(row[1].children[0].data);
 
             } else if (rowLabel === "fame") {
                 accountInfo.fame = parseInt(row[1].children[0].children[0].data);
@@ -334,20 +354,92 @@ module.exports.getRealmEyeInfo = async ign => {
             }
         }
 
+        // check if characters are hidden
+        const characterHiddenHeader = $(".col-md-12 > h3")[0];
+        if (characterHiddenHeader && characterHiddenHeader.children[0].data === "Characters are hidden") {
+            accountInfo.hiddenCharacters = true;
+        } else {
+            // get character table
+            const characters = $(".table-responsive > .table > tbody > tr");
+            let characterList = [];
+            for (let i=0; i < characters.length; i++) {
+                let character = {};
+
+                const characterRow = characters[i];
+                character.class = characterRow.children[2].children[0].data;
+                character.fame = parseInt(characterRow.children[5].children[0].data);
+                character.stats = characters[i].children[9].children[0].children[0].data;
+
+                // get equipment
+                const equipment = characters[i].children[8].children;
+                let characterEquipment = [];
+                for (let j=0; j < equipment.length; j++) {
+                    // let item = {};
+                    // item.itemUrl = equipment[j].children[0].attribs.href;
+                    if (equipment[j].children[0].attribs.title) {
+                        characterEquipment.push("empty slot");
+                    } else {
+                        const baseName = this.getItemBaseName(equipment[j].children[0].children[0].attribs.title);
+                        characterEquipment.push(baseName);
+                    }
+                    // characterEquipment.push(item);
+                }
+                character.equipment = characterEquipment;
+
+                characterList.push(character);
+            }
+            accountInfo.characters = characterList;
+        }
+
+        return accountInfo;
+
+    }).catch(console.error);
+}
+
+module.exports.getGuildUrlForm = guildName => {
+    const split = guildName.split(" ");
+    let url = `${split[0]}`;
+
+    for (let i=1; i<split.length; i++) {
+        if (split[i] === "") {
+            continue;
+        }
+        url += `%20${split[i]}`;
+    }
+
+    return url;
+}
+
+const getTopCharacters = async guildName => {
+    const url = this.getGuildUrlForm(guildName);
+    const options = {
+        url: `https://www.realmeye.com/top-characters-of-guild/${url}`,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
+        }
+    }
+
+    return axios(options).then(response => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+
         // get character table
         const characters = $(".table-responsive > .table > tbody > tr");
         let characterList = [];
         for (let i=0; i < characters.length; i++) {
-            let character = {
-            };
+            let character = {};
 
             const characterRow = characters[i];
-            character.class = characterRow.children[2].children[0].data;
-            character.fame = parseInt(characterRow.children[5].children[0].data);
-            character.stats = characters[i].children[9].children[0].children[0].data;
+            if (characterRow.children[2].children[0].data && characterRow.children[2].children[0].data === "Private") {
+                continue;
+            }
+            character.name = characterRow.children[2].children[0].children[0].data;
+            character.fame = parseInt(characterRow.children[3].children[0].data);
+            character.class = characterRow.children[5].children[0].data;
+            character.stats = characters[i].children[7].children[0].children[0].data;
 
             // get equipment
-            const equipment = characters[i].children[8].children;
+            const equipment = characters[i].children[6].children;
             let characterEquipment = [];
             for (let j=0; j < equipment.length; j++) {
                 // let item = {};
@@ -364,16 +456,130 @@ module.exports.getRealmEyeInfo = async ign => {
 
             characterList.push(character);
         }
-        accountInfo.characters = characterList;
+        return characterList;
+        
+    }).catch(console.error);
+}
 
-        return accountInfo;
+module.exports.getRealmEyeGuildInfo = async guildName => {
+    const url = this.getGuildUrlForm(guildName);
+    const options = {
+        url: `https://www.realmeye.com/guild/${url}`,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
+        }
+    }
+
+    let guildInfo = {
+        name: guildName,
+        exists: false,
+        membersCount: 0,
+        charactersCount: 0,
+        fame: 0,
+        fameRank: 0,
+        server: "",
+        serverRank: "",
+        description: "",
+        members: [],
+    };
+
+    return axios(options).then(response => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+
+        const guildNameBox = $(".col-md-12")[0].children[0];
+        const header = guildNameBox.children[0];
+        if (header.data && header.data.startsWith("Sorry")) {
+            return guildInfo;
+        }
+
+        // get proper name format
+        const name = header.children[0].data;
+        guildInfo.name = name;
+        guildInfo.exists = true;
+
+        // get summary table
+        const summaryTable = $(".summary > tbody > tr");
+        for (let i=0; i < summaryTable.length; i++) {
+            const row = $(summaryTable[i]).find("td");
+            const rowLabel = row[0].children[0].data.toLowerCase();
+
+            if (rowLabel === "members") {
+                guildInfo.membersCount = parseInt(row[1].children[0].data);
+
+            } else if (rowLabel === "characters") {
+                guildInfo.charactersCount = parseInt(row[1].children[0].data);
+
+            } else if (rowLabel === "fame") {
+                guildInfo.fame = parseInt(row[1].children[0].children[0].data);
+                guildInfo.fameRank = parseInt(row[1].children[2].children[0].data);
+
+            } else if (rowLabel === "most active on") {
+                guildInfo.server = row[1].children[0].children[0].data;
+                guildInfo.serverRank = parseInt(row[1].children[1].data.substring(2));
+
+            }
+        }
+
+        // get description
+        const description = $(".description-line");
+        for (let i=0; i < description.length; i++) {
+            if (description[i].children[0]) {
+                if (guildInfo.description === "") {
+                    guildInfo.description += description[i].children[0].data;
+                } else {
+                    guildInfo.description += "\n" + description[i].children[0].data;
+                }
+            }
+        }
+
+        // get character table
+        const members = $(".table-responsive > .table > tbody > tr");
+        let membersList = [];
+        let colMod = 0;
+        for (let i=0; i < members.length; i++) {
+            let member = {
+            };
+
+            const memberRow = members[i];
+
+            if (memberRow.children[0].children.length === 0) {
+                colMod = 1;
+            } 
+            
+            if (memberRow.children[colMod+0].children[0].data && memberRow.children[colMod+0].children[0].data === "Private") {
+                member.name = memberRow.children[colMod+0].children[0].data;
+                member.guildRank = memberRow.children[colMod+1].children[0].data;
+
+            } else {
+                member.name = memberRow.children[colMod+0].children[0].children[0].children[0].data;
+                member.guildRank = memberRow.children[colMod+1].children[0].data;
+                member.fame = memberRow.children[colMod+2].children[0].children[0].data;
+                member.rank = memberRow.children[colMod+4].children[0].data;
+                member.charactersCount = memberRow.children[colMod+5].children[0].data;
+            }
+            membersList.push(member);
+        }
+        guildInfo.members = membersList;
+        return getTopCharacters(guildName).then(topCharacters => {
+            guildInfo.topCharacters = topCharacters;
+            return guildInfo;
+        });
 
     }).catch(console.error);
 }
 
-module.exports.getStandardEmbeded = (client) => {
+module.exports.getStandardEmbed = client => {
     return new Discord.MessageEmbed()
-    .setColor("#380596")
+    .setColor("#7542d4")
     .setFooter("Iris Bot", client.user.avatarURL())
     .setTimestamp();
+}
+
+module.exports.getHighestFame = characters => {
+    let highestFame = 0;
+    for (char of characters) {
+        highestFame = char.fame > highestFame ? char.fame : highestFame;
+    }
+    return highestFame;
 }
