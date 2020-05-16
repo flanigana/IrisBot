@@ -234,7 +234,7 @@ module.exports.characterListEmbed = (client, realmEyeData, items) => {
 
     let attachment = null;
     if (!realmEyeData.hiddenCharacters && (realmEyeData.charactersCount > 0)) {
-        const buffer = characterListVisualization(realmEyeData, items);
+        const buffer = characterListVisualization(realmEyeData.characters, items);
         attachment = new Discord.MessageAttachment(buffer, "characterList.png");
     }
 
