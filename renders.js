@@ -123,7 +123,8 @@ const characterListVisualization = (characters, items, guildCharacters=false) =>
     const highestFame = tools.getHighestFame(characters);
 
     const sizing = 75;
-    const spacing = sizing + 5;
+    const space = 6;
+    const spacing = sizing + space;
     const fontSize = (3*sizing)/4;
 
     // get width of highest fame and stat column in order to set width of actual canvas
@@ -150,7 +151,7 @@ const characterListVisualization = (characters, items, guildCharacters=false) =>
     const xMargin = 20;
     const characterElements = guildCharacters ? 6 : 7;
     const canvasWidth = xMargin + longestNameWidth + statsWidth + (characterElements * spacing) + 5 + longestFameWidth + xMargin;
-    const canvasHeight = borderWidth + (characters.length * spacing);
+    const canvasHeight = borderWidth + (characters.length * spacing) + borderWidth;
     const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext("2d");
 
@@ -163,14 +164,14 @@ const characterListVisualization = (characters, items, guildCharacters=false) =>
     // alternate background color for character list
     ctx.fillStyle = `rgba(83, 83, 138, 0.3)`;
     for (let i=1; i < characters.length; i = i+2) {
-        ctx.fillRect(0, (spacing*i), canvasWidth, spacing);
+        ctx.fillRect(0, borderWidth + (spacing*i), canvasWidth, spacing);
     }
 
     ctx.font = `${fontSize}px sans-serif`;
     ctx.fillStyle = '#ffffff';
 
-    let yMod = borderWidth;
-
+    
+    let yMod = borderWidth + space/2;
     // list each character row
     for (char of characters) {
         let xMod = xMargin;
