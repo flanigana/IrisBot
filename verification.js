@@ -1,7 +1,4 @@
-const admin = require("firebase-admin");
-const Discord = require("discord.js");
 const tools = require("./tools");
-const renders = require("./renders");
 
 const sendVerificationMessage = (client, msg, veriCode) => {
     const embed = tools.getStandardEmbed(client)
@@ -186,7 +183,7 @@ const sendUserVerificationSuccess = (client, user, guild) => {
     user.send(embed);
 }
 
-const sendGuildVerificationSuccess = async (client, logChannel, guildMember, realmEyeData, items) => {
+const sendGuildVerificationSuccess = async (client, logChannel, guildMember, realmEyeData) => {
     const roles = [];
     guildMember.roles.cache.map(role => roles.push(role));
     const embed = tools.getStandardEmbed(client)
@@ -200,10 +197,6 @@ const sendGuildVerificationSuccess = async (client, logChannel, guildMember, rea
         {name: "Roles", value: `${roles}`},
     )
     logChannel.send(embed);
-
-    // buffer = renders.characterListEmbed(client, realmEyeData, items)
-    // const embeddedCharacterList = renders.characterListEmbed(client, realmEyeData, items);
-    // logChannel.send(embeddedCharacterList);
     return true;
 }
 
@@ -234,7 +227,7 @@ const assignNonMemberRole = async (guild, guildConfig, guildMember) => {
     return guildMember.roles.add(role.id);
 }
 
-const assignRoles = async (client, msg, guild, guildConfig, realmEyeData, db, items) => {
+const assignRoles = async (client, msg, guild, guildConfig, realmEyeData, db) => {
     const guildMember = guild.members.cache.find(user => user.id === msg.author.id);
     const verificationLogChannel = tools.getChannelById(guild, guildConfig.verificationLogChannel);
     if (!verificationLogChannel) {return false}
@@ -267,11 +260,11 @@ const assignRoles = async (client, msg, guild, guildConfig, realmEyeData, db, it
 
     sendUserVerificationSuccess(client, msg.author, guild);
     Promise.all(promises).then(() => {
-        return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEyeData, items);
+        return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEyeData);
     }).catch(console.error);
 }
 
-module.exports.checkForVerification = async (msg, client, db, items) => {
+module.exports.checkForVerification = async (msg, client, db) => {
     if (msg.content.split(" ").length <= 1) {
         const embed = tools.getStandardEmbed(client)
             .setTitle("Error")
@@ -325,7 +318,7 @@ module.exports.checkForVerification = async (msg, client, db, items) => {
                         const guildConfig = snapshot.data();
 
                         if (meetsReqs(guildConfig, realmEyeData)) {
-                            return assignRoles(client, msg, guild, guildConfig, realmEyeData, db, items);
+                            return assignRoles(client, msg, guild, guildConfig, realmEyeData, db);
                         } else {
                             const embed = tools.getStandardEmbed(client)
                                 .setTitle("You Do Not Meet Verification Requirements")

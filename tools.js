@@ -113,12 +113,13 @@ module.exports.getCommand = (fullCommand, preCommand) => {
     return command.toLowerCase();
 }
 
-module.exports.getArgs = (command, commandLength) => {
-    const split = command.split(" ");
+module.exports.getArgs = (fullCommand, p, commandsLength) => {
+    fullCommand = fullCommand.substring(p.length);
+    const split = fullCommand.split(" ");
     let args = [];
     let openString = false;
     let combinedArg = "";
-    for (let i=commandLength; i<split.length; i++) {
+    for (let i=commandsLength; i<split.length; i++) {
         let curr = split[i].trim();
         if (curr != "") {
             if (curr.endsWith(",")) {
@@ -271,16 +272,25 @@ module.exports.getUserIgn = async (id, db) => {
     }).catch(console.error);
 }
 
-module.exports.getGuildName = async (id, db) => {
-    return db.collection("guilds").doc(id).get().then(snapshot => {
+module.exports.getGuildConfig = async (id, db, msg) => {
+    const doc = db.collection("guilds").doc(id);
+    return doc.get().then(snapshot => {
         if (!snapshot.exists) {
-            return null;
+            if (msg) {
+                msg.channel.send("Server data not found!");
+            } else {
+                console.log("Server data not found!")
+            }
+            return undefined;
         }
-
-        const guildConfig = snapshot.data();
-
-        return guildConfig.realmGuildName;
+        return snapshot.data();
     }).catch(console.error);
+}
+
+module.exports.getGuildName = async (id, db) => {
+    return this.getGuildConfig(id, db).then(guildConfig => {
+        return guildConfig.realmGuildName;
+    });
 }
 
 module.exports.getRealmEyeInfo = async ign => {

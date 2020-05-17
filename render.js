@@ -11,8 +11,8 @@ const getDefinitions = async definitionsUrl => {
     return axios.get(definitionsUrl).then(response => {
         let definitionData = response.data;
 
-        // uncomment line below to test a subset of items for quicker loads
-        // definitionData = definitionData.substring(0, 486) + "};";
+        // uncomment line below to test a subset of renders for quicker loads
+        definitionData = definitionData.substring(0, 486) + "};";
 
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
@@ -56,18 +56,18 @@ module.exports.getDefaultClassSkinUrl = className => {
 
 module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     let promises = [];
-    let items = {};
+    let renders = {};
 
-    // load all items from RealmEye renders image
+    // load all renders from RealmEye renders image
     promises.push(getDefinitions(definitionsUrl).then(definitions => {
-        return Jimp.read(rendersUrl).then(renders => {
+        return Jimp.read(rendersUrl).then(allRenders => {
             
             for (definition of definitions) {
                 const name = definition.name;
-                promises.push(renders.clone().crop(definition.startX+6, definition.startY+6, 34, 34).getBufferAsync("image/png").then(buffer => {
-                    const item = new Image();
-                    item.src = buffer;
-                    items[`"${name}"`] = item;
+                promises.push(allRenders.clone().crop(definition.startX+6, definition.startY+6, 34, 34).getBufferAsync("image/png").then(buffer => {
+                    const render = new Image();
+                    render.src = buffer;
+                    renders[`"${name}"`] = render;
                     return true;
                 }).catch(console.error));
             }
@@ -76,7 +76,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
 
     // load fame icon
     promises.push(Canvas.loadImage("./fame-icon.png").then(image => {
-        items["fame icon"] = image;
+        renders["fame icon"] = image;
         return true;
     }));
 
@@ -88,9 +88,9 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
         for (let i=0; i < stars.length; i++) {
             const starName = stars[i];
             promises.push(starRenders.clone().crop(0, 24*i, 24, 24).getBufferAsync("image/png").then(buffer => {
-                const item = new Image();
-                item.src = buffer;
-                items[`"${starName} star icon"`] = item;
+                const render = new Image();
+                render.src = buffer;
+                renders[`"${starName} star icon"`] = render;
                 return true;
             }).catch(console.error));
         }
@@ -104,9 +104,9 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
         const skinUrl = this.getDefaultClassSkinUrl(classes[i]);
         promises.push(Jimp.read(skinUrl).then(image => {
             return image.getBufferAsync("image/png").then(buffer => {
-                const item = new Image();
-                item.src = buffer;
-                items[`"${classes[i]} default skin"`] = item;
+                const render = new Image();
+                render.src = buffer;
+                renders[`"${classes[i]} default skin"`] = render;
                 return true;
 
         }).catch(console.error);
@@ -115,11 +115,11 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
 
     return Promise.all(promises).then(() => {
         console.log("All images loaded.");
-        return items;
+        return renders;
     });
 }
 
-const characterListVisualization = (characters, items, guildCharacters=false) => {
+const characterListVisualization = (characters, renders, guildCharacters=false) => {
     const highestFame = tools.getHighestFame(characters);
 
     const sizing = 75;
@@ -186,31 +186,31 @@ const characterListVisualization = (characters, items, guildCharacters=false) =>
         xMod += statsWidth;
 
         // character skin (default for now)
-        ctx.drawImage(items[`"${char.class.toLowerCase()} default skin"`], xMod, yMod, sizing, sizing);
+        ctx.drawImage(renders[`"${char.class.toLowerCase()} default skin"`], xMod, yMod, sizing, sizing);
         xMod += spacing;
 
         // character equipment
         const equipment = char.equipment;
         for (equip of equipment) {
-            let itemImage = items[`"${equip.toLowerCase()}"`];
-            if (!itemImage) {
-                itemImage = items[`"empty slot"`];
-                // itemImage = items[`"marid pet skin"`];
+            let renderImage = renders[`"${equip.toLowerCase()}"`];
+            if (!renderImage) {
+                renderImage = renders[`"empty slot"`];
+                // renderImage = renders[`"marid pet skin"`];
             }
-            ctx.drawImage(itemImage, xMod, yMod, sizing, sizing);
+            ctx.drawImage(renderImage, xMod, yMod, sizing, sizing);
             xMod += spacing;
         }
 
         if (!guildCharacters) {
             // if character has no backpack, add empty slot
             if (equipment.length < 5) {
-                ctx.drawImage(items[`"empty slot"`], xMod, yMod, sizing, sizing);
+                ctx.drawImage(renders[`"empty slot"`], xMod, yMod, sizing, sizing);
                 xMod += spacing;
             }
         }
 
         // character fame
-        ctx.drawImage(items["fame icon"], xMod, yMod, sizing, sizing);
+        ctx.drawImage(renders["fame icon"], xMod, yMod, sizing, sizing);
         xMod += spacing + 5;
         ctx.fillText(`${char.fame}`, xMod, textHeightAdjustment+yMod);
         yMod += spacing;
@@ -219,13 +219,12 @@ const characterListVisualization = (characters, items, guildCharacters=false) =>
     return canvas.toBuffer("image/png");
 }
 
-module.exports.characterListEmbed = (client, realmEyeData, items) => {
+const characterListEmbed = (client, realmEyeData, renders) => {
     let starColor = tools.getStarColor(realmEyeData.rank);
     if (starColor === "light blue") {
         starColor = "lightblue";
     }
-    starColor += "star";
-    const starEmoji = tools.getEmoji(client, starColor);
+    const starEmoji = tools.getEmoji(client, `${starColor}star`);
     const rankText = `${starEmoji}${realmEyeData.rank}`;
     const fameEmoji = tools.getEmoji(client, "fameicon");
     const fameText = `${fameEmoji} ${realmEyeData.fame}`;
@@ -234,7 +233,7 @@ module.exports.characterListEmbed = (client, realmEyeData, items) => {
 
     let attachment = null;
     if (!realmEyeData.hiddenCharacters && (realmEyeData.charactersCount > 0)) {
-        const buffer = characterListVisualization(realmEyeData.characters, items);
+        const buffer = characterListVisualization(realmEyeData.characters, renders);
         attachment = new Discord.MessageAttachment(buffer, "characterList.png");
     }
 
@@ -259,10 +258,37 @@ module.exports.characterListEmbed = (client, realmEyeData, items) => {
     return embed;
 }
 
-module.exports.guildEmbed = (client, realmEyeGuildData, items) => {
+module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, renders) => {
+    if (ign === "") {
+        ign = await tools.getUserIgn(userId, db);
+        if (!ign) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("User Not Found")
+                .setDescription(`You need to first verify with a server or supply an ign using \`${p}realmEye <ign>\``);
+            channel.send(embed);
+            return false;
+        }
+
+    }
+
+    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        if (!realmEyeData.exists) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle(`${ign} Not Found`)
+                .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.`);
+            msg.channel.send(embed);
+            return false;
+        }
+        const embed = characterListEmbed(client, realmEyeData, renders);
+        channel.send(embed);
+        return true;
+    }).catch(console.error);
+}
+
+const guildEmbed = (client, realmEyeGuildData, renders) => {
     let attachment = null;
     if (realmEyeGuildData.topCharacters.length > 0) {
-        const buffer = characterListVisualization(realmEyeGuildData.topCharacters.slice(0, 10), items, true);
+        const buffer = characterListVisualization(realmEyeGuildData.topCharacters.slice(0, 10), renders, true);
         attachment = new Discord.MessageAttachment(buffer, "characterList.png");
     }
 
@@ -302,4 +328,33 @@ module.exports.guildEmbed = (client, realmEyeGuildData, items) => {
     }
 
     return embed;
+}
+
+module.exports.guildDisplay = async (client, p, guildName, guildId, channel, db, renders) => {
+    if (guildName === "") {
+        guildName = await tools.getGuildName(guildId, db);
+        if (!guildName) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("Guild Display")
+                .setDescription(`To list a guild's RealmEye information, use \`${p}guild <guildName>\`.
+Setting this server's guild will automatically display it when using \`${p}guild\`.`);
+            channel.send(embed);
+            return false;
+        }
+
+    }
+
+    
+    return tools.getRealmEyeGuildInfo(guildName).then(realmEyeData => {
+        if (!realmEyeData.exists) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle(`${guildName} Not Found`)
+                .setDescription(`It looks like **${guildName}** couldn't be found on RealmEye.`);
+            channel.send(embed);
+            return false;
+        }
+        const embed = guildEmbed(client, realmEyeData, renders);
+        channel.send(embed);
+        return true;
+    }).catch(console.error);
 }

@@ -499,62 +499,54 @@ Initiate: ${guildConfig.initiateRole ? tools.getRoleById(msg.guild, guildConfig.
     return true;
 }
 
-module.exports.configGuild = async (client, msg, db) => {
+module.exports.configGuild = async (client, msg, guildConfig, db) => {
     const doc = db.collection("guilds").doc(msg.guild.id);
-    doc.get().then(snapshot => {
-        if (!snapshot.exists) {
-            msg.channel.send("Server data not found!");
-            return false
-        }
-        const guildConfig = snapshot.data();
+    
+    const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
+    const admin = guildMember.hasPermission("admin");
 
-        const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
-        const admin = guildMember.hasPermission("admin");
-    
-        if (!admin) {
-            const permissions = guildConfig.permissions;
-            let hasPermission = false;
-            for (role of permissions) {
-                if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
-                    hasPermission = true;
-                    break;
-                }
-            }
-        
-            if (!hasPermission) {
-                msg.reply("you do not have permission to change the server configuration!");
-                return false;
+    if (!admin) {
+        const permissions = guildConfig.permissions;
+        let hasPermission = false;
+        for (role of permissions) {
+            if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
+                hasPermission = true;
+                break;
             }
         }
     
-        // msg.content = tools.normalizeNaming(msg);
-        const p = guildConfig.prefix;
-        const command = tools.getCommand(msg.content, `${p}config`);
-        const args = tools.getArgs(msg.content, 2);
-    
-        if (command === "prefix") {
-            return configPrefix(client, msg, p, args, doc);
-        } else if (command === "permissions") {
-            return configPermissions(client, msg, p, args, guildConfig, doc);
-        } else if (command === "guildname") {
-            return configGuildName(client, msg, p, args, guildConfig, doc);
-        } else if (command === "reqs") {
-            return configReqs(client, msg, p, args, guildConfig, doc);
-        } else if (command === "roles") {
-            return configRoles(client, msg, p, args, guildConfig, doc);
-        } else if (command === "allmemberrole") {
-            return configAllMemberRole(client, msg, p, args, guildConfig, doc);
-        } else if (command === "nonmemberrole") {
-            return configNonMemberRole(client, msg, p, args, guildConfig, doc);
-        } else if (command === "verificationchannel") {
-            return configVerificationChannel(client, msg, p, args, guildConfig, doc);
-        } else if (command === "list") {
-            return configList(client, msg, guildConfig);
-        } else {
-            const fullCommand = `${p}config ${command}`;
-            msg.reply(`"${fullCommand}" is not a valid command!`);
+        if (!hasPermission) {
+            msg.reply("you do not have permission to change the server configuration!");
             return false;
         }
+    }
 
-    }).catch(console.error);
+    // msg.content = tools.normalizeNaming(msg);
+    const p = guildConfig.prefix;
+    const command = tools.getCommand(msg.content, `${p}config`);
+    const args = tools.getArgs(msg.content, p, 2);
+
+    if (command === "prefix") {
+        return configPrefix(client, msg, p, args, doc);
+    } else if (command === "permissions") {
+        return configPermissions(client, msg, p, args, guildConfig, doc);
+    } else if (command === "guildname") {
+        return configGuildName(client, msg, p, args, guildConfig, doc);
+    } else if (command === "reqs") {
+        return configReqs(client, msg, p, args, guildConfig, doc);
+    } else if (command === "roles") {
+        return configRoles(client, msg, p, args, guildConfig, doc);
+    } else if (command === "allmemberrole") {
+        return configAllMemberRole(client, msg, p, args, guildConfig, doc);
+    } else if (command === "nonmemberrole") {
+        return configNonMemberRole(client, msg, p, args, guildConfig, doc);
+    } else if (command === "verificationchannel") {
+        return configVerificationChannel(client, msg, p, args, guildConfig, doc);
+    } else if (command === "list") {
+        return configList(client, msg, guildConfig);
+    } else {
+        const fullCommand = `${p}config ${command}`;
+        msg.reply(`"${fullCommand}" is not a valid command!`);
+        return false;
+    }
 }

@@ -1,13 +1,10 @@
 require("dotenv").config();
 
 const Discord = require("discord.js");
-const Canvas = require("canvas");
-const { Image } = require("canvas");
-const Jimp = require("jimp");
 const admin = require("firebase-admin");
 
 const tools = require("./tools");
-const renders = require("./renders");
+const render = require("./render");
 const config = require("./config");
 const verification = require("./verification");
 
@@ -23,7 +20,7 @@ const db = admin.firestore();
 
 const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
 const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
-let items = null;
+let renders = null;
 
 const generalHelp = (msg, p) => {
     const embed = tools.getStandardEmbed(client)
@@ -92,80 +89,12 @@ const setUpGuild = async guild => {
     });
 }
 
-const configGuild = async (msg, p) => {
+const configGuild = async (msg, p, guildConfig) => {
     if (msg.content.toLowerCase() === `${p}config`) {
         return configHelp(msg, p);
     } else {
-        return config.configGuild(client, msg, db);
+        return config.configGuild(client, msg, guildConfig, db);
     }
-}
-
-const realmEyeDisplay = async (msg, p) => {
-    const args = tools.getArgs(msg.content, 1);
-    let ign = null;
-
-    if (args.length === 0) {
-        ign = await tools.getUserIgn(msg.author.id, db);
-        if (!ign) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle("User Not Found")
-                .setDescription(`You need to first verify with a server or supply an ign using \`${p}realmEye <ign>\``);
-            msg.channel.send(embed);
-            return false;
-        }
-
-    } else {
-        ign = args[0];
-    }
-
-    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
-        if (!realmEyeData.exists) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle(`${ign} Not Found`)
-                .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.`);
-            msg.channel.send(embed);
-            return false;
-        }
-        const embed = renders.characterListEmbed(client, realmEyeData, items);
-        msg.channel.send(embed);
-        return true;
-    }).catch(console.error);
-}
-
-const guildDisplay = async (msg, p) => {
-    const preCommandLength = p.length + msg.content.substring(p.length).split(" ")[0].length;
-    const arg = msg.content.substring(preCommandLength+1);
-
-    let guildName = null;
-
-    if (arg === "") {
-        guildName = await tools.getGuildName(msg.guild.id, db);
-        if (!guildName) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle("Guild Display")
-                .setDescription(`To list a guild's RealmEye information, use \`${p}guild <guildName>\`.
-Setting this server's guild will automatically display it when using \`${p}guild\`.`);
-            msg.channel.send(embed);
-            return false;
-        }
-
-    } else {
-        guildName = arg;
-    }
-
-    
-    return tools.getRealmEyeGuildInfo(guildName).then(realmEyeData => {
-        if (!realmEyeData.exists) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle(`${guildName} Not Found`)
-                .setDescription(`It looks like **${guildName}** couldn't be found on RealmEye.`);
-            msg.channel.send(embed);
-            return false;
-        }
-        const embed = renders.guildEmbed(client, realmEyeData, items);
-        msg.channel.send(embed);
-        return true;
-    }).catch(console.error);
 }
 
 const endPpeReactionCollector = (collected, msg, originalMsg) => {
@@ -188,9 +117,9 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
     }
     // generate class based on selected classes
     const characterNum = Math.floor(Math.random() * selectedCharacters.length);
-    const character = selectedCharacters[characterNum];
+    let character = selectedCharacters[characterNum];
     character = character.charAt(0).toUpperCase() + character.slice(1);
-    const characterImage = renders.getDefaultClassSkinUrl(character);
+    const characterImage = render.getDefaultClassSkinUrl(character);
 
     // edit embed in message to class selection
     const embed = tools.getStandardEmbed(client)
@@ -203,7 +132,7 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
 const ppe = msg => {
     const emojiList = [];
     for (char of tools.getClasses()) {
-        emojiList.push(tools.getEmoji(client, char.toLowerCase()));
+        emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`));
     }
     emojiList.push("✅");
     emojiList.push("❌");
@@ -238,8 +167,8 @@ React with ❌ to cancel.`);
 }
 
 client.on("ready", async () => {
-    renders.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl).then(results => {
-        items = results;
+    render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl).then(results => {
+        renders = results;
     });
     console.log(`Logged in as ${client.user.tag}`);
 });
@@ -252,16 +181,18 @@ client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
 
         if (msg.guild) {
-            const p = await tools.getPrefix(msg.guild.id, db);
+            const guildConfig = await tools.getGuildConfig(msg.guild.id, db);
+            const p = guildConfig.prefix;
             if (!msg.content.toLowerCase().startsWith(p)) {
                 return false;
             }
+            const args = tools.getArgs(msg.content, p, 1);
 
             if (msg.content.toLowerCase().startsWith(`${p}help`)) {
                 helpCommand(msg, p);
 
             } else if (msg.content.toLowerCase().startsWith(`${p}config`)) {
-                return configGuild(msg, p).then(() => {
+                return configGuild(msg, p, guildConfig).then(() => {
                     return true;
                 });
 
@@ -272,10 +203,13 @@ client.on("message", async msg => {
                 });
 
             } else if (msg.content.toLowerCase().startsWith(`${p}realmeye`)) {
-                realmEyeDisplay(msg, p);
+                const ign = args[0] ? args[0] : "";
+                render.realmEyeDisplay(client, p, ign, msg.author.id, msg.channel, db, renders);
 
             } else if (msg.content.toLowerCase().startsWith(`${p}guild`)) {
-                guildDisplay(msg, p);
+                let guildName = args[0] ? args[0] : "";
+                for (let i=1; i<args.length; i++) {guildName += ` ${args[i]}`}
+                render.guildDisplay(client, p, guildName, msg.guild.id, msg.channel, db, renders);
 
             } else if (msg.content.toLowerCase().startsWith(`${p}ppe`)) {
                 ppe(msg);
@@ -283,7 +217,7 @@ client.on("message", async msg => {
         }
 
         if ((msg.content.toLowerCase().startsWith("!verify")) && (msg.channel.type === "dm")) {
-            return verification.checkForVerification(msg, client, db, items);
+            return verification.checkForVerification(msg, client, db);
         }
     }
 });
