@@ -44,7 +44,7 @@ const getDefinitions = async definitionsUrl => {
     }).catch(console.error);
 }
 
-const getDefaultClassSkinUrl = className => {
+module.exports.getDefaultClassSkinUrl = className => {
     const classSkins = ["https://www.realmeye.com/s/a/img/wiki/Rogue.PNG", "https://www.realmeye.com/s/a/img/wiki/Archer_0.PNG", "https://www.realmeye.com/s/a/img/wiki/Wizard_0.PNG",
             "https://www.realmeye.com/s/a/img/wiki/Priest_1.PNG", "https://www.realmeye.com/s/a/img/wiki/Warrior_1.PNG", "https://www.realmeye.com/s/a/img/wiki/Knight_1.PNG",
             "https://www.realmeye.com/s/a/img/wiki/Paladin.PNG", "https://www.realmeye.com/s/a/img/wiki/assassin_0.PNG", "https://www.realmeye.com/s/a/img/wiki/Necromancer.png",
@@ -101,12 +101,12 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     const classes = ["rogue", "archer", "wizard", "priest", "warrior", "knight", "paladin", "assassin", "necromancer", "huntress", "mystic", 
     "trickster", "sorcerer", "ninja", "samurai"];
     for (let i=0; i < classes.length; i++) {
-        const skinUrl = getDefaultClassSkinUrl(classes[i]);
+        const skinUrl = this.getDefaultClassSkinUrl(classes[i]);
         promises.push(Jimp.read(skinUrl).then(image => {
             return image.getBufferAsync("image/png").then(buffer => {
                 const item = new Image();
                 item.src = buffer;
-                items[`"${classes[i]} classic skin"`] = item;
+                items[`"${classes[i]} default skin"`] = item;
                 return true;
 
         }).catch(console.error);
@@ -186,7 +186,7 @@ const characterListVisualization = (characters, items, guildCharacters=false) =>
         xMod += statsWidth;
 
         // character skin (default for now)
-        ctx.drawImage(items[`"${char.class.toLowerCase()} classic skin"`], xMod, yMod, sizing, sizing);
+        ctx.drawImage(items[`"${char.class.toLowerCase()} default skin"`], xMod, yMod, sizing, sizing);
         xMod += spacing;
 
         // character equipment
@@ -225,11 +225,11 @@ module.exports.characterListEmbed = (client, realmEyeData, items) => {
         starColor = "lightblue";
     }
     starColor += "star";
-    const starEmoji = client.emojis.cache.find(emoji => emoji.name === starColor);
+    const starEmoji = tools.getEmoji(client, starColor);
     const rankText = `${starEmoji}${realmEyeData.rank}`;
-    const fameEmoji = client.emojis.cache.find(emoji => emoji.name === "fameicon");
+    const fameEmoji = tools.getEmoji(client, "fameicon");
     const fameText = `${fameEmoji} ${realmEyeData.fame}`;
-    const guildRankEmoji = client.emojis.cache.find(emoji => emoji.name === `${realmEyeData.guildRank.toLowerCase()}rank`);
+    const guildRankEmoji = tools.getEmoji(client, `${realmEyeData.guildRank.toLowerCase()}rank`);
     const guildRankText = `${guildRankEmoji} ${realmEyeData.guildRank}`;
 
     let attachment = null;
@@ -279,7 +279,7 @@ module.exports.guildEmbed = (client, realmEyeGuildData, items) => {
         membersList = "No members.";
     }
 
-    const fameEmoji = client.emojis.cache.find(emoji => emoji.name === "fameicon");
+    const fameEmoji = tools.getEmoji(client, "fameicon");
     const fameText = `${fameEmoji} ${realmEyeGuildData.fame}`;
 
     let embed = tools.getStandardEmbed(client)

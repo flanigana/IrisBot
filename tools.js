@@ -159,6 +159,11 @@ module.exports.checkRolesConfigured = guildConfig => {
     }
 }
 
+module.exports.getClasses = () => {
+    return ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
+            "Trickster", "Sorcerer", "Ninja", "Samurai"];
+}
+
 module.exports.classEnumerator = classValue => {
     let value = null;
 
@@ -211,12 +216,16 @@ module.exports.classEnumerator = classValue => {
                 break;
         }
     } else if (typeof classValue === "number") {
-        const classes = ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
-            "Trickster", "Sorcerer", "Ninja", "Samurai"];
+        const classes = this.getClasses();
         value = classes[classValue];
     }
 
     return value;
+}
+
+module.exports.getEmoji = (client, emojiName) => {
+    const emojiGuildIds = ["708761992705474680", "710578568211464192"];
+    return client.emojis.cache.find(emoji => ((emoji.name === emojiName) && emojiGuildIds.includes(emoji.guild.id)));
 }
 
 module.exports.getItemBaseName = itemName => {

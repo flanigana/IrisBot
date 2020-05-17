@@ -110,7 +110,7 @@ const realmEyeDisplay = async (msg, p) => {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("User Not Found")
                 .setDescription(`You need to first verify with a server or supply an ign using \`${p}realmEye <ign>\``);
-            msg.author.send(embed);
+            msg.channel.send(embed);
             return false;
         }
 
@@ -168,11 +168,72 @@ Setting this server's guild will automatically display it instead by using \`${p
     }).catch(console.error);
 }
 
-const ppe = msg => {
-    const characterNum = Math.floor(Math.random() * 15);
-    const character = tools.classEnumerator(characterNum);
+const endPpeReactionCollector = (collected, msg, originalMsg) => {
+    let selectedCharacters = [];
+    // delete message if cancelled
+    if (collected.has("❌")) {
+        msg.delete();
+        originalMsg.delete();
+        return false;
+    }
+    // add selected classes to class list
+    collected.map(reaction => {
+        if (reaction.emoji.name != "✅") {
+            selectedCharacters.push(reaction.emoji.name);
+        }
+    });
+    // set list to all classes if none are selected
+    if (selectedCharacters.length === 0) {
+        selectedCharacters = tools.getClasses();
+    }
+    // generate class based on selected classes
+    const characterNum = Math.floor(Math.random() * selectedCharacters.length);
+    const character = selectedCharacters[characterNum];
+    const characterImage = renders.getDefaultClassSkinUrl(character);
 
-    msg.reply(`you should play ${character.toLowerCase()} for your next ppe!`);
+    // edit embed in message to class selection
+    const embed = tools.getStandardEmbed(client)
+        .setTitle(`You Should Play ${character}`)
+        .setImage(characterImage);
+    msg.edit(embed);
+    msg.reactions.removeAll().catch(console.error);
+}
+
+const ppe = msg => {
+    const emojiList = [];
+    for (char of tools.getClasses()) {
+        emojiList.push(tools.getEmoji(client, char.toLowerCase()));
+    }
+    emojiList.push("✅");
+    emojiList.push("❌");
+
+    let embed = tools.getStandardEmbed(client)
+        .setTitle("PPE Recommendation")
+        .setDescription(`React with the classes you are willing to play or select none for all to be chosen.
+Once classes are selected, react with ✅ to recieve your recommendation.
+React with ❌ to cancel.`);
+
+    const reactionFilter = (reaction, user) => ((user.id === msg.author.id) && (emojiList.includes(reaction.emoji) || reaction.emoji.name === "✅" || reaction.emoji.name === "❌"))
+    let collector = null;
+    msg.channel.send(embed).then(m => {
+        collector = m.createReactionCollector(reactionFilter, {time: 60000});
+        collector.on("collect", reaction => {
+            if (reaction.emoji.name === "✅" || reaction.emoji.name === "❌") {
+                collector.stop();
+            }
+        });
+        collector.on("end", collected => {
+            endPpeReactionCollector(collected, m, msg);
+        });
+
+        let promises = [];
+        for (emoji of emojiList) {
+            promises.push(m.react(emoji));
+        }
+        Promise.all(promises).then(() => {
+            return true;
+        });
+    });
 }
 
 client.on("ready", async () => {
