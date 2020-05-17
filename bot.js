@@ -144,7 +144,7 @@ const guildDisplay = async (msg, p) => {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("Guild Display")
                 .setDescription(`To list a guild's RealmEye information, use \`${p}guild <guildName>\`.
-Setting this server's guild will automatically display it instead by using \`${p}guild\`.`);
+Setting this server's guild will automatically display it when using \`${p}guild\`.`);
             msg.channel.send(embed);
             return false;
         }
@@ -189,6 +189,7 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
     // generate class based on selected classes
     const characterNum = Math.floor(Math.random() * selectedCharacters.length);
     const character = selectedCharacters[characterNum];
+    character = character.charAt(0).toUpperCase() + character.slice(1);
     const characterImage = renders.getDefaultClassSkinUrl(character);
 
     // edit embed in message to class selection
