@@ -10,7 +10,7 @@ module.exports.getChannelById = (guild, id, msg) => {
     let channel = guild.channels.cache.find(channel => channel.id === id);
     if (!channel) {
         if (msg) {
-            msg.reply(`Trouble finding channel with id ${id}...`);
+            msg.reply(`Trouble finding channel with id **${id}**...`);
         } else {
             console.log(`Trouble finding channel with id ${id}...`);
         }
@@ -19,13 +19,11 @@ module.exports.getChannelById = (guild, id, msg) => {
     return channel;
 }
 
-module.exports.getChannelByName = (guild, name, msg) => {
-    let channel = guild.channels.cache.find(channel => channel.name.toLowerCase() === name.toLowerCase());
+module.exports.getChannelByName = (guild, name, type, msg) => {
+    let channel = guild.channels.cache.find(channel => ((channel.name.toLowerCase() === name.toLowerCase()) && (channel.type === type)));
     if (!channel) {
         if (msg) {
-            msg.reply(`Trouble finding channel with name ${name}...`);
-        } else {
-            console.log(`Trouble finding channel with name ${name}...`);
+            msg.reply(`Trouble finding channel named **${name}**...`);
         }
         channel = undefined;
     }
@@ -36,7 +34,7 @@ module.exports.getRoleById = (guild, id, msg) => {
     let role = guild.roles.cache.find(role => role.id === id);
     if (!role) {
         if (msg) {
-            msg.reply(`Trouble finding role with id ${id}...`);
+            msg.reply(`Trouble finding role with id **${id}**...`);
         } else {
             console.log(`Trouble finding role with id ${id}...`);
         }
@@ -49,16 +47,14 @@ module.exports.getRoleByName = (guild, name, msg) => {
     let role = guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
     if (!role) {
         if (msg) {
-            msg.reply(`Trouble finding role with name ${name}...`);
-        } else {
-            console.log(`Trouble finding role with name ${name}...`);
+            msg.reply(`Trouble finding role named **${name}**...`);
         }
         role = undefined;
     }
     return role;
 }
 
-module.exports.getChannel = (guild, channelString, msg) => {
+module.exports.getChannel = (guild, channelString, type, msg) => {
     let channel = undefined;
     if (typeof channelString != "string") {
         console.error("Invalid type for channel. Expected string.");
@@ -67,11 +63,11 @@ module.exports.getChannel = (guild, channelString, msg) => {
         if (channelString.startsWith("<#") && channelString.endsWith(">")) {
             channel = this.getChannelById(guild, channelString.slice(2, channelString.length-1));
         } else if ((channelString.startsWith("\"") && channelString.endsWith("\"")) || (channelString.startsWith("\'") && channelString.endsWith("\'"))) {
-            channel = this.getChannelByName(guild, channelString.slice(1, channelString.length-1), msg);
+            channel = this.getChannelByName(guild, channelString.slice(1, channelString.length-1), type, msg);
         } else if (channelString.endsWith(","))  {
-            channel = this.getChannelByName(guild, channelString.slice(0, channelString.length-1), msg);
+            channel = this.getChannelByName(guild, channelString.slice(0, channelString.length-1), type, msg);
         } else {
-            channel = this.getChannelByName(guild, channelString, msg);
+            channel = this.getChannelByName(guild, channelString, type, msg);
         }
     }
     return channel;
@@ -107,49 +103,63 @@ module.exports.getPrefix = async (guildId, db) => {
     }).catch(console.error);
 }
 
-module.exports.getCommand = (fullCommand, preCommand) => {
-    const preCommandTrim = fullCommand.slice(preCommand.length+1);
-    const command = preCommandTrim.split(" ")[0];
-    return command.toLowerCase();
-}
-
-module.exports.getArgs = (fullCommand, p, commandsLength) => {
-    fullCommand = fullCommand.substring(p.length);
+module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
+    if (p) {
+        fullCommand = fullCommand.substring(p.length);
+    }
     const split = fullCommand.split(" ");
-    let args = [];
+    let allArgs = [];
     let openString = false;
-    let combinedArg = "";
-    for (let i=commandsLength; i<split.length; i++) {
+    let opener = ``;
+    let combinedArg = ``;
+    for (let i=0; i<split.length; i++) {
         let curr = split[i].trim();
         if (curr != "") {
             if (curr.endsWith(",")) {
+                // allows comma-separated args
                 curr = curr.substring(0, curr.length-1);
             }
             if (openString) {
-                if (curr.endsWith("\"") || curr.endsWith("\'")) {
+                // if a "long arg" formatted string is open
+                if (curr.endsWith(opener)) {
+                    // checks for ending of long arg such as ' arg" '
                     openString = false;
                     combinedArg += ` ${curr.substring(0, curr.length-1)}`;
-                    args.push[combinedArg];
+                    allArgs.push(combinedArg);
+                    combinedArg = ``;
                 } else {
-                    combinedArg += ` ${curr.substring(0, curr.length)}`;
+                    // add to current arg if it hasn't closed
+                    combinedArg += ` ${curr}`;
                 }
 
             } else if (curr.startsWith("\"") || curr.startsWith("\'")) {
-                openString = true;
-                combinedArg = curr.substring(1, curr.length);
+                opener = curr.charAt(0);
+                // if an arg is the beginning of a long are as "long arg"
+                if (!curr.endsWith(opener)) {
+                    // if the arg is not single arg surrounded by quotes of the same type such as "arg" or 'arg'
+                    openString = true;
+                    combinedArg = curr.substring(1);
+                } else {
+                    // resets opener if it is a single arg
+                    opener = ``;
+                    allArgs.push(curr);
+                }
             } else if (curr === "true") {
-                args.push(true);
+                // converts true string to boolean
+                allArgs.push(true);
+                // convers false string to boolean
             } else if (curr === "false") {
-                args.push(false);
+                allArgs.push(false);
             } else {
-                args.push(curr);
+                allArgs.push(curr);
             }
         }
     }
     if (combinedArg != "") {
-        args.push(combinedArg);
+        allArgs.push(combinedArg);
     }
-    return args;
+
+    return allArgs.slice(commandsLength);
 }
 
 module.exports.checkRolesConfigured = guildConfig => {
@@ -224,9 +234,56 @@ module.exports.classEnumerator = classValue => {
     return value;
 }
 
-module.exports.getEmoji = (client, emojiName) => {
-    const emojiGuildIds = ["708761992705474680", "710578568211464192"];
+module.exports.getClientEmoji = (client, emojiName, trimEnds=false, frontTrim=0, backTrim=0) => {
+    const emojiGuildIds = ["708761992705474680", "710578568211464192", "711504382394630194", "711491483588493313"];
+    if (trimEnds) {
+        emojiName = emojiName.substring(frontTrim, emojiName.length-backTrim);
+    }
     return client.emojis.cache.find(emoji => ((emoji.name === emojiName) && emojiGuildIds.includes(emoji.guild.id)));
+}
+
+module.exports.isUnicodeEmoji = (emoji) => {
+    const emojiRanges = [
+        '(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])' // U+1F680 to U+1F6FF
+    ];
+    if (emoji.match(emojiRanges.join('|'))) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+module.exports.getEmoji = (client, emojiName) => {
+    if (this.isUnicodeEmoji(emojiName)) {
+        return emojiName;
+    } else if (emojiName.startsWith("<") && emojiName.endsWith(">")) {
+        return this.getClientEmoji(client, emojiName, true, 1, 1);
+    } else {
+        return this.getClientEmoji(client, emojiName);
+    }
+}
+
+module.exports.createClientEmojisList = client => {
+    let types = ["Portal", "Key", "Class", "Ability"];
+    let emojisList = new Array(types.length);
+    client.emojis.cache.map(emoji => {
+        for (let i=0; i<types.length; i++) {
+
+            if (emoji.name.endsWith(types[i].toLowerCase())) {
+
+                if (emojisList[i] === undefined) {
+                    emojisList[i] = `${emoji}`;
+                } else {
+                    emojisList[i] += ` | ${emoji}`;
+                }
+            }
+        }
+    });
+
+    return {
+        types: types,
+        emojisList: emojisList,
+    }
 }
 
 module.exports.getItemBaseName = itemName => {
@@ -279,7 +336,7 @@ module.exports.getGuildConfig = async (id, db, msg) => {
             if (msg) {
                 msg.channel.send("Server data not found!");
             } else {
-                console.log("Server data not found!")
+                console.error("Server data not found!")
             }
             return undefined;
         }
@@ -291,6 +348,27 @@ module.exports.getGuildName = async (id, db) => {
     return this.getGuildConfig(id, db).then(guildConfig => {
         return guildConfig.realmGuildName;
     });
+}
+
+module.exports.hasPermission = (guildMember, guildConfig, msg) => {
+    const admin = guildMember.hasPermission("admin");
+
+    if (!admin) {
+        const permissions = guildConfig.permissions;
+        for (role of permissions) {
+            if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
+                return true;
+            }
+        }
+        if (msg) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("You do not have the required permissions to do that.")
+            msg.channel.send(embed);
+        }
+        return false;
+    } else {
+        return true;
+    }
 }
 
 module.exports.getRealmEyeInfo = async ign => {
@@ -429,7 +507,7 @@ module.exports.getGuildUrlForm = guildName => {
     return url;
 }
 
-const getTopCharacters = async guildName => {
+module.exports.getTopCharacters = async guildName => {
     const url = this.getGuildUrlForm(guildName);
     const options = {
         url: `https://www.realmeye.com/top-characters-of-guild/${url}`,
@@ -580,7 +658,7 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
             membersList.push(member);
         }
         guildInfo.members = membersList;
-        return getTopCharacters(guildName).then(topCharacters => {
+        return this.getTopCharacters(guildName).then(topCharacters => {
             guildInfo.topCharacters = topCharacters;
             return guildInfo;
         });
@@ -601,4 +679,46 @@ module.exports.getHighestFame = characters => {
         highestFame = char.fame > highestFame ? char.fame : highestFame;
     }
     return highestFame;
+}
+
+module.exports.isRaidLeader = (guildMember, guildConfig) => {
+    const raidLeaderRoles = guildConfig.raidLeaderRoles;
+    for (roleId of raidLeaderRoles) {
+        if (guildMember.roles.cache.find(memberRole => memberRole.id === roleId)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+module.exports.raidTemplateExists = (templateName, guildConfig) => {
+    const templateNames = guildConfig.raidTemplateNames;
+    for (let i=0; i<templateNames.length; i++) {
+        if (templateNames[i].toLowerCase() === templateName.toLowerCase()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+module.exports.getRaidTemplate = async (templateName, guildConfig, db, client, msg) => {
+    let actualName = null;
+    const templateNames = guildConfig.raidTemplateNames;
+    for (let i=0; i<templateNames.length; i++) {
+        if (templateNames[i].toLowerCase() === templateName.toLowerCase()) {
+            actualName = templateNames[i]
+        }
+    }
+    return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("raidTemplates").doc(`${actualName}`).get().then(snapshot => {
+        if (!snapshot) {
+            if (msg) {
+                const embed = this.getStandardEmbed(client)
+                    .setTitle("No Raid Template Found")
+                    .setDescription(`There is no existing raid template with the name ${templateName} for this server.`)
+                msg.channel.send(embed);
+            }
+            return undefined
+        }
+        return snapshot.data();
+    }).catch(console.error);
 }

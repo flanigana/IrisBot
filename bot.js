@@ -4,9 +4,10 @@ const Discord = require("discord.js");
 const admin = require("firebase-admin");
 
 const tools = require("./tools");
-const render = require("./render");
 const config = require("./config");
 const verification = require("./verification");
+const render = require("./render");
+const raidManager = require("./raidManager/raidManager");
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -26,24 +27,36 @@ const generalHelp = (msg, p) => {
     const embed = tools.getStandardEmbed(client)
             .setTitle("Iris Bot Commands")
             .addFields(
-                {name: "Help", value: `\`\`\`${p}help\`\`\``},
                 {name: "Server Configuration", value: `\`\`\`${p}config\`\`\``},
+                {name: "Raid Manager", value: `\`\`\`${p}raid\`\`\``},
                 {name: "User Verification", value: `\`\`\`${p}verify\`\`\``},
                 {name: "Realm-Related", value: `\`\`\`${p}realmEye\n${p}ppe\`\`\``},
-            )
+            );
     msg.channel.send(embed);
 }
 
 const configHelp = (msg, p) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Configuration Commands")
-        .setDescription("Commands to set up your server for user verification")
+        .setDescription("Commands to set up your server for user verification.")
         .addFields(
             {name: "View Current Configuration", value: `\`\`\`${p}config list\`\`\``},
             {name: "Server Setup", value: `\`\`\`${p}config prefix\n${p}config permissions\n${p}config guildName\n${p}config verificationChannel\`\`\``},
             {name: "Verification Requirements", value: `\`\`\`${p}config reqs\`\`\``},
             {name: "Role Assignment", value: `\`\`\`${p}config roles\n${p}config allMemberRole\n${p}config nonMemberRole\`\`\``},
-        )
+        );
+    msg.channel.send(embed);
+}
+
+const raidHelp = (msg, p) => {
+    const embed = tools.getStandardEmbed(client)
+    .setTitle("Iris Bot Raid Commands")
+    .setDescription("Commands to run raids in your server.")
+    .addFields(
+        {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
+        {name: "Raid Template Setup", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
+        {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
+    );
     msg.channel.send(embed);
 }
 
@@ -56,7 +69,7 @@ const helpCommand = (msg, p) => {
 }
 
 const setUpGuild = async guild => {
-    const defaultChannelId = msg.guild.channels.cache.find(channel => channel.type === "text");
+    const defaultChannelId = guild.channels.cache.find(channel => channel.type === "text");
 
     return db.collection("guilds").doc(guild.id).set({
         guildId: guild.id,
@@ -86,14 +99,27 @@ const setUpGuild = async guild => {
         globalVerification: true,
         verificationChannel: defaultChannelId,
         verificationLogChannel: defaultChannelId,
+        raidLeaderRoles: [],
+        raidTemplateNames: [],
+        raidTemplateNamesIds: [],
     });
 }
 
 const configGuild = async (msg, p, guildConfig) => {
-    if (msg.content.toLowerCase() === `${p}config`) {
+    const args = tools.getArgs(msg.content, p, 1);
+    if (args.length === 0) {
         return configHelp(msg, p);
     } else {
         return config.configGuild(client, msg, guildConfig, db);
+    }
+}
+
+const raid = async (msg, p, guildConfig) => {
+    const args = tools.getArgs(msg.content, p, 1);
+    if (args.length === 0) {
+        return raidHelp(msg, p);
+    } else {
+        return raidManager.raid(client, msg, p, guildConfig, db);
     }
 }
 
@@ -118,6 +144,7 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
     // generate class based on selected classes
     const characterNum = Math.floor(Math.random() * selectedCharacters.length);
     let character = selectedCharacters[characterNum];
+    character = character.substring(0, character.length-5);
     character = character.charAt(0).toUpperCase() + character.slice(1);
     const characterImage = render.getDefaultClassSkinUrl(character);
 
@@ -130,7 +157,7 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
 }
 
 const ppe = msg => {
-    const emojiList = [];
+    let emojiList = [];
     for (char of tools.getClasses()) {
         emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`));
     }
@@ -143,10 +170,9 @@ const ppe = msg => {
 Once classes are selected, react with ✅ to recieve your recommendation.
 React with ❌ to cancel.`);
 
-    const reactionFilter = (reaction, user) => ((user.id === msg.author.id) && (emojiList.includes(reaction.emoji) || reaction.emoji.name === "✅" || reaction.emoji.name === "❌"))
-    let collector = null;
+    const reactionFilter = (reaction, user) => ((user.id === msg.author.id) && (emojiList.includes(reaction.emoji) || reaction.emoji.name === "✅" || reaction.emoji.name === "❌"));
     msg.channel.send(embed).then(m => {
-        collector = m.createReactionCollector(reactionFilter, {time: 60000});
+        const collector = m.createReactionCollector(reactionFilter, {time: 60000});
         collector.on("collect", reaction => {
             if (reaction.emoji.name === "✅" || reaction.emoji.name === "❌") {
                 collector.stop();
@@ -160,7 +186,8 @@ React with ❌ to cancel.`);
         for (emoji of emojiList) {
             promises.push(m.react(emoji));
         }
-        Promise.all(promises).then(() => {
+
+        return Promise.all(promises).then(() => {
             return true;
         });
     });
@@ -192,15 +219,11 @@ client.on("message", async msg => {
                 helpCommand(msg, p);
 
             } else if (msg.content.toLowerCase().startsWith(`${p}config`)) {
-                return configGuild(msg, p, guildConfig).then(() => {
-                    return true;
-                });
+                configGuild(msg, p, guildConfig);
 
             } else if (msg.content.toLowerCase().startsWith(`${p}verify`)) {
-                verification.beginVerification(client, msg, db).then(() => {
-                    msg.delete();
-                    return true;
-                });
+                verification.beginVerification(client, msg, db);
+                msg.delete();
 
             } else if (msg.content.toLowerCase().startsWith(`${p}realmeye`)) {
                 const ign = args[0] ? args[0] : "";
@@ -213,11 +236,14 @@ client.on("message", async msg => {
 
             } else if (msg.content.toLowerCase().startsWith(`${p}ppe`)) {
                 ppe(msg);
+
+            } else if (msg.content.toLowerCase().startsWith(`${p}raid`)) {
+                raid(msg, p, guildConfig);
             }
         }
 
         if ((msg.content.toLowerCase().startsWith("!verify")) && (msg.channel.type === "dm")) {
-            return verification.checkForVerification(msg, client, db);
+            verification.checkForVerification(msg, client, db);
         }
     }
 });
