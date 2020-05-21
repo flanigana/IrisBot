@@ -300,7 +300,7 @@ module.exports.getItemBaseName = itemName => {
 }
 
 module.exports.getStarColor = rank => {
-    const starRequirements = [75, 60, 45, 30, 15, 0];
+    const starRequirements = [80, 64, 48, 32, 16, 0];
 
     if (rank === starRequirements[0]) {
         return "white";
