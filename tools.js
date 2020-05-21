@@ -172,7 +172,7 @@ module.exports.checkRolesConfigured = guildConfig => {
 
 module.exports.getClasses = () => {
     return ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
-            "Trickster", "Sorcerer", "Ninja", "Samurai"];
+            "Trickster", "Sorcerer", "Ninja", "Samurai", "Bard"];
 }
 
 module.exports.classEnumerator = classValue => {
@@ -224,6 +224,9 @@ module.exports.classEnumerator = classValue => {
                 break;
             case "samurai":
                 value = 14;
+                break;
+            case "bard":
+                value = 15;
                 break;
         }
     } else if (typeof classValue === "number") {
