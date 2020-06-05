@@ -8,6 +8,7 @@ const config = require("./config");
 const verification = require("./verification");
 const render = require("./render");
 const raidManager = require("./raidManager/raidManager");
+const raidShorthand = require("./raidManager/raidShorthand");
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -23,7 +24,7 @@ const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
 const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
 let renders = null;
 
-const generalHelp = (msg, p) => {
+const generalHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
             .setTitle("Iris Bot Commands")
             .addFields(
@@ -35,7 +36,7 @@ const generalHelp = (msg, p) => {
     msg.channel.send(embed);
 }
 
-const configHelp = (msg, p) => {
+const configHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Configuration Commands")
         .setDescription("Commands to set up your server for user verification.")
@@ -48,23 +49,23 @@ const configHelp = (msg, p) => {
     msg.channel.send(embed);
 }
 
-const raidHelp = (msg, p) => {
+const raidHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
     .setTitle("Iris Bot Raid Commands")
     .setDescription("Commands to run raids in your server.")
     .addFields(
         {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
-        {name: "Raid Template Setup", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
+        {name: "Raid Template Management", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
         {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
     );
     msg.channel.send(embed);
 }
 
-const helpCommand = (msg, p) => {
+const helpCommand = (p, msg) => {
     if (msg.content.toLowerCase() === `${p}help`) {
-        generalHelp(msg, p);
+        generalHelp(p, msg);
     } else if (msg.content.toLowerCase() === `${p}help config`) {
-        configHelp(msg, p);
+        configHelp(p, msg);
     }
 }
 
@@ -105,21 +106,21 @@ const setUpGuild = async guild => {
     });
 }
 
-const configGuild = async (msg, p, guildConfig) => {
+const configGuild = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
     if (args.length === 0) {
-        return configHelp(msg, p);
+        return configHelp(p, msg);
     } else {
-        return config.configGuild(client, msg, guildConfig, db);
+        return config.configGuild(client, p, msg, guildConfig, db);
     }
 }
 
-const raid = async (msg, p, guildConfig) => {
+const raid = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
     if (args.length === 0) {
-        return raidHelp(msg, p);
+        return raidHelp(p, msg);
     } else {
-        return raidManager.raid(client, msg, p, guildConfig, db);
+        return raidManager.raid(client, p, msg, guildConfig, db);
     }
 }
 
@@ -206,39 +207,44 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
-
+        
         if (msg.guild) {
             const guildConfig = await tools.getGuildConfig(msg.guild.id, db);
             const p = guildConfig.prefix;
             if (!msg.content.toLowerCase().startsWith(p)) {
                 return false;
             }
-            const args = tools.getArgs(msg.content, p, 1);
+            const args = tools.getArgs(msg.content, p, 0);
 
-            if (msg.content.toLowerCase().startsWith(`${p}help`)) {
-                helpCommand(msg, p);
-
-            } else if (msg.content.toLowerCase().startsWith(`${p}config`)) {
-                configGuild(msg, p, guildConfig);
-
-            } else if (msg.content.toLowerCase().startsWith(`${p}verify`)) {
-                verification.beginVerification(client, msg, db);
-                msg.delete();
-
-            } else if (msg.content.toLowerCase().startsWith(`${p}realmeye`)) {
-                const ign = args[0] ? args[0] : "";
-                render.realmEyeDisplay(client, p, ign, msg.author.id, msg.channel, db, renders);
-
-            } else if (msg.content.toLowerCase().startsWith(`${p}guild`)) {
-                let guildName = args[0] ? args[0] : "";
-                for (let i=1; i<args.length; i++) {guildName += ` ${args[i]}`}
-                render.guildDisplay(client, p, guildName, msg.guild.id, msg.channel, db, renders);
-
-            } else if (msg.content.toLowerCase().startsWith(`${p}ppe`)) {
-                ppe(msg);
-
-            } else if (msg.content.toLowerCase().startsWith(`${p}raid`)) {
-                raid(msg, p, guildConfig);
+            switch (args[0]) {
+                case "help":
+                    helpCommand(p, msg);
+                    break;
+                case "config":
+                    configGuild(p, msg, guildConfig);
+                    break;
+                case "verify":
+                    verification.beginVerification(client, msg, db);
+                    msg.delete();
+                    break;
+                case "realmeye":
+                    const ign = args[1] ? args[1] : "";
+                    render.realmEyeDisplay(client, p, ign, msg.author.id, msg.channel, db, renders);
+                    break;
+                case "guild":
+                    let guildName = args[1] ? args[1] : "";
+                    for (let i=2; i<args.length; i++) {guildName += ` ${args[i]}`}
+                    render.guildDisplay(client, p, guildName, msg.guild.id, msg.channel, db, renders);
+                    break;
+                case "ppe":
+                    ppe(msg);
+                    break;
+                case "raid":
+                    raid(p, msg, guildConfig);
+                    break;
+                case "r":
+                    raidShorthand.startShorthand(client, p, msg, guildConfig, db);
+                    break;
             }
         }
 

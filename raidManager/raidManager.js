@@ -1,7 +1,9 @@
 const tools = require("../tools");
+const raidConfig = require("./raidConfig");
 const raidTools = require("./raidTools");
 const raidStart = require("./raidStart");
 const raidEdit = require("./raidEdit");
+const raidShorthand = require("./raidShorthand");
 
 const deleteTemplate = (templateName, guildConfig, db) => {
     let promises = [];
@@ -39,7 +41,7 @@ const templateNotFound = (client, templateName, msg) => {
     msg.channel.send(embed);
 }
 
-module.exports.deleteRaidTemplate = async (client, msg, p, guildConfig, db) => {
+module.exports.deleteRaidTemplate = async (client, p, msg, guildConfig, db) => {
     const templateName = tools.getArgs(msg.content, p, 2)[0];
     const templateExists = tools.raidTemplateExists(templateName, guildConfig);
     if (!templateExists) {
@@ -70,7 +72,7 @@ Reply with **yes** or **no**.`)
     }).catch(console.error);
 }
 
-const listRaidTemplates = async (client, msg, p, guildConfig, db) => {
+const listRaidTemplates = async (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 2);
 
     if (args.length === 0) {
@@ -87,7 +89,12 @@ const listRaidTemplates = async (client, msg, p, guildConfig, db) => {
         msg.channel.send(embed);
 
     } else {
-        const templateName = args[0];
+        let templateName = args[0];
+        for (name of guildConfig.raidTemplateNames) {
+            if (templateName.toLowerCase() === name.toLowerCase()) {
+                templateName = name;
+            }
+        }
 
         return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("raidTemplates").doc(`${templateName}`).get().then(snapshot => {
             if (!snapshot.exists) {
@@ -97,11 +104,11 @@ const listRaidTemplates = async (client, msg, p, guildConfig, db) => {
 
             let templateDescription =  undefined;
             if (raidTemplate.description) {
-                templateDescription = raidTools.formatRaidDescription(client, raidTemplate.description);
+                templateDescription = raidTools.formatRaidDescription(client, raidTemplate.description, msg.guild.id);
             }
-            const primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate);
-            const secondaryEmojis = raidTools.formatSecondaryEmojis(client, raidTemplate);
-            const selectedList = raidTools.formatReactsListString(client, raidTemplate);
+            const primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate, msg.guild.id);
+            const secondaryEmojis = raidTools.formatSecondaryEmojis(client, raidTemplate, msg.guild.id);
+            const selectedList = raidTools.formatReactsListString(client, raidTemplate, msg.guild.id);
         
             let embed = tools.getStandardEmbed(client)
                 .setTitle(`${raidTemplate.name} Raid Template`)
@@ -123,10 +130,10 @@ To delete this template, use: \`${p}raid delete ${raidTemplate.name}\``);
             );
             
             if (raidTemplate.secondaryNum > 0) {
-                embed = embed.addField("---------------------------------------------------------------------------------------------------------------------------------Required Secondary Reacts-----------------------------------",
+                embed = embed.addField("-----------------------------------------------------------------------------------------------------------------------------------Secondary React Limits-------------------------------------",
                     `-----------------------------------------------------------------------------------------------`);
                 for (let i=0; i<raidTemplate.secondaryNum; i++) {
-                    embed = embed.addField(`${secondaryEmojis[i]}`, `${raidTemplate.secondaryMins[i]}`, true);
+                    embed = embed.addField(`${secondaryEmojis[i]}`, `${raidTemplate.secondaryLimits[i]}`, true);
                 }
             }
             
@@ -140,7 +147,7 @@ To delete this template, use: \`${p}raid delete ${raidTemplate.name}\``);
     }
 }
 
-const raidEditHelp = (client, msg, p, guildConfig) => {
+const raidEditHelp = (client, p, msg, guildConfig) => {
     let existingNames = ``;
     for (name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
@@ -153,7 +160,7 @@ const raidEditHelp = (client, msg, p, guildConfig) => {
     msg.channel.send(embed);
 }
 
-const raidDeleteHelp = (client, msg, p, guildConfig) => {
+const raidDeleteHelp = (client, p, msg, guildConfig) => {
     let existingNames = ``;
     for (name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
@@ -166,7 +173,7 @@ const raidDeleteHelp = (client, msg, p, guildConfig) => {
     msg.channel.send(embed);
 }
 
-const raidStartHelp = (client, msg, p, guildConfig) => {
+const raidStartHelp = (client, p, msg, guildConfig) => {
     let existingNames = ``;
     for (name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
@@ -193,46 +200,64 @@ const raidStartHelp = (client, msg, p, guildConfig) => {
     msg.channel.send(embed);
 }
 
-module.exports.raid = (client, msg, p, guildConfig, db) => {
+module.exports.raid = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 1);
+    if (args[0] != "start") {
+        const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
+        if (!tools.isAdmin(guildMember, guildConfig)) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("Must be Server Admin to Access This Command");
+            msg.channel.send(embed);
+            return false;
+        }
+    }
 
-    if (args.length > 1 && args[0] != "create" && !tools.raidTemplateExists(args[1], guildConfig)) {
+    if ((args.length > 1) && ((args[0] != "create") && (args[0] != "shorthand") && (args[0] != "config")) && (!tools.raidTemplateExists(args[1], guildConfig))) {
         const embed = tools.getStandardEmbed(client)
             .setTitle("Raid Template Does Not Exist")
             .setDescription(`There is no raid template named **${args[1]}** in this server.`)
         msg.channel.send(embed);
         return false;
-    } else if (args.length > 1 && args[0] === "create" && tools.raidTemplateExists(args[1], guildConfig)){
+    } else if ((args.length > 1) && (args[0] === "create") && (tools.raidTemplateExists(args[1], guildConfig))){
         const embed = tools.getStandardEmbed(client)
-            .setTitle("Raid Template Does Not Exist")
+            .setTitle("Raid Template Already Exists")
             .setDescription(`There is already a raid template named **${args[1]}** in this server. If you would like to edit it, use:
 \`\`\`${p}raid edit ${args[1]}\`\`\`
 Otherwise, please enter a unique raid template name.`)
         msg.channel.send(embed);
         return false;
     }
-    
-    if (args[0] === "list") {
-        return listRaidTemplates(client, msg, p, guildConfig, db);
-    } else if (args[0] === "create") {
-        return raidEdit.editRaidTemplate(client, msg, p, guildConfig, db, true);
-    } else if (args[0] === "edit") {
-        if (args.length < 2) {
-            return raidEditHelp(client, msg, p, guildConfig);
-        } else {
-            return raidEdit.editRaidTemplate(client, msg, p, guildConfig, db);
-        }
-    } else if (args[0] === "delete") {
-        if (args.length < 2) {
-            return raidDeleteHelp(client, msg, p, guildConfig);
-        } else {
-            return this.deleteRaidTemplate(client, msg, p, guildConfig, db);
-        }
-    } else if (args[0] === "start") {
-        if (args.length < 2) {
-            return raidStartHelp(client, msg, p, guildConfig);
-        } else {
-            return raidStart.startRaid(client, msg, p, guildConfig, db);
-        }
+
+    switch (args[0]) {
+        case "config":
+            return raidConfig.configRaid(client, p, msg, guildConfig, db);
+        case "list":
+            return listRaidTemplates(client, p, msg, guildConfig, db);
+        case "create":
+            return raidEdit.editRaidTemplate(client, p, msg, guildConfig, db, true);
+        case "edit":
+            if (args.length < 2) {
+                return raidEditHelp(client, p, msg, guildConfig);
+            } else {
+                return raidEdit.editRaidTemplate(client, p, msg, guildConfig, db);
+            }
+        case "delete":
+            if (args.length < 2) {
+                return raidDeleteHelp(client, p, msg, guildConfig);
+            } else {
+                return this.deleteRaidTemplate(client, p, msg, guildConfig, db);
+            }
+        case "start":
+            if (args.length < 2) {
+                return raidStartHelp(client, p, msg, guildConfig);
+            } else {
+                return raidStart.startRaid(client, p, msg, guildConfig, db);
+            }
+        case "shorthand":
+            return raidShorthand.shorthand(client, p, msg, guildConfig, db);
+        default:
+            const fullCommand = `${p}raid ${args[0]}`;
+            msg.reply(`"${fullCommand}" is not a valid command!`);
+            return false;
     }
 }

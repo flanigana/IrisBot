@@ -3,9 +3,16 @@ const raidTools = require("./raidTools");
 
 const addClientEmojisToEmbed = (clientEmojisList, embed) => {
     const types = clientEmojisList.types;
-    const emojisList = clientEmojisList.emojisList;
     for (let i=0; i<types.length; i++) {
-        embed = embed.addField(`${types[i]}`, `${emojisList[i]}`);
+        let typeName = types[i];
+        if (typeName.startsWith("Guild")) {
+            typeSplit = typeName.split("_");
+            typeName = typeSplit[0];
+            if (parseInt(typeSplit[1]) > 0) {
+                typeName += " Continued"
+            }
+        }
+        embed = embed.addField(typeName, `${clientEmojisList[`${types[i]}`]}`);
     }
     return embed;
 }
@@ -84,12 +91,12 @@ If you would like to edit an existing raid, use the \`${p}raid edit <templateNam
 const displayDescriptionPage = (client, raidTemplate, clientEmojisList, msg, pageInfo) => {
     let description =  undefined;
     if (raidTemplate.description) {
-        description = raidTools.formatRaidDescription(client, raidTemplate.description);
+        description = raidTools.formatRaidDescription(client, raidTemplate.description, msg.guild.id);
     }
 
     const exampleDescription = `Please react with <losthallsportal> in order to be included in the raid. If you have a key, please react with <losthallskey>.
 We would like to get at least 5 <warriorclass>, <knightclass>, and <paladinclass> for this raid.`;
-    const actualExample = raidTools.formatRaidDescription(client, exampleDescription);
+    const actualExample = raidTools.formatRaidDescription(client, exampleDescription, msg.guild.id);
 
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${raidTemplate.name} Description`)
@@ -112,7 +119,7 @@ We would like to get at least 5 <warriorclass>, <knightclass>, and <paladinclass
 }
 
 const displayPrimaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
-    let primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate);
+    let primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate, msg.guild.id);
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${raidTemplate.name} Primary React`)
         .setDescription(`Respond with the emoji you would like raiders to react with in order to be counted in the raid and subsequently moved into the destination channel.
@@ -156,15 +163,15 @@ const displaySecondaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg,
     let secondaryEmoji = undefined;
     const emoji = raidTemplate.secondaryEmojis[pageInfo.currentSecondaryPos-1];
     if (emoji) {
-        const guildEmoji = tools.getEmoji(client, emoji);
+        const guildEmoji = tools.getEmoji(client, emoji, msg.guild.id);
         secondaryEmoji = guildEmoji ? guildEmoji : emoji;
     }
     
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${raidTemplate.name} Secondary React ${pageInfo.currentSecondaryPos} of ${raidTemplate.secondaryNum}`)
-        .setDescription(`Respond with the emoji you would like to be used an additional check. This is best used as a key check by using a key emoji and setting the min as 1.
-\nThe number of reacts will be checked before starting the raid, and if there aren't enough, the raid will fail.
-Leave this blank or use 0 if you don't want a minimum. If this is your intention though, it should be included as a normal reaction and not a secondary reaction.
+        .setDescription(`Respond with the emoji you would like to be used as a confirmation check. This is best used as a key check by using a key emoji.
+\nThose who react with this emoji will recieve a message from the bot to confirm. Once they confirm, they will recieve the location for the raid.
+\nAlong with the emoji, include a limit you would like. This is the max number of confirmations the bot will receive and give location to. Leave this blank or use 0 if you don't want a limit.
 \nRemember to type any custom emojis as **<emojiname>**.
 \nAll available emojis you can use are listed below.`)
         .addField("Examples", `\`<losthallskey>\` or \`<losthallskey> 1\``);
@@ -174,14 +181,14 @@ Leave this blank or use 0 if you don't want a minimum. If this is your intention
         {name: "--------------------------------------------------------------------------------------------------",
             value: `-----------------------------------------------------------------------------------------------`},
             {name: `Secondary React ${pageInfo.currentSecondaryPos} of ${raidTemplate.secondaryNum}`, value: `${secondaryEmoji}`, inline: true},
-            {name: "Minimum Reacts", value: `${raidTemplate.secondaryMins[pageInfo.currentSecondaryPos-1]}`, inline: true},
+            {name: "React Limit", value: `${raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1]}`, inline: true},
     )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
 }
 
 const displayReactsPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
-    const selectedList = raidTools.formatReactsListString(client, raidTemplate);
+    const selectedList = raidTools.formatReactsListString(client, raidTemplate, msg.guild.id);
 
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${raidTemplate.name} Reacts`)
@@ -206,11 +213,11 @@ const displayEndPage = (client, p, raidTemplate, msg, finished=false, pageInfo) 
     const commandDisplayName = nameSplit.length > 1 ? `"${raidTemplate.name}"` : `${raidTemplate.name}`;
     let templateDescription =  undefined;
     if (raidTemplate.description) {
-        templateDescription = raidTools.formatRaidDescription(client, raidTemplate.description);
+        templateDescription = raidTools.formatRaidDescription(client, raidTemplate.description, msg.guild.id);
     }
-    const primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate);
-    const secondaryEmojis = raidTools.formatSecondaryEmojis(client, raidTemplate);
-    const selectedList = raidTools.formatReactsListString(client, raidTemplate);
+    const primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate, msg.guild.id);
+    const secondaryEmojis = raidTools.formatSecondaryEmojis(client, raidTemplate, msg.guild.id);
+    const selectedList = raidTools.formatReactsListString(client, raidTemplate, msg.guild.id);
 
     let embed = tools.getStandardEmbed(client);
     if (!finished) {
@@ -245,10 +252,10 @@ ${descriptionPiece}
     );
     
     if (raidTemplate.secondaryNum > 0) {
-        embed = embed.addField("---------------------------------------------------------------------------------------------------------------------------------Required Secondary Reacts-----------------------------------",
+        embed = embed.addField("----------------------------------------------------------------------------------------------------------------------------------------Secondary Reacts---------------------------------------",
 `-----------------------------------------------------------------------------------------------`);
         for (let i=0; i<raidTemplate.secondaryNum; i++) {
-            embed = embed.addField(`${secondaryEmojis[i]}`, `${raidTemplate.secondaryMins[i]}`, true);
+            embed = embed.addField(`${secondaryEmojis[i]}`, `${raidTemplate.secondaryLimits[i]}`, true);
         }
     }
     
@@ -289,7 +296,7 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
         case "primary":
             if (res) {
                 const split = res.split(" ");
-                if (tools.getEmoji(client, split[0])) {
+                if (tools.getEmoji(client, split[0], msg.guild.id)) {
                     raidTemplate.primaryEmoji = split[0];
                     if (split[1] && (split[1] != "")) {
                         const attemptedNum = parseInt(split[1].trim());
@@ -313,12 +320,12 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
                     raidTemplate.secondaryNum = 0;
                     if (attemptedNum < raidTemplate.secondaryNum) {
                         raidTemplate.secondaryEmojis = raidTemplate.secondaryEmojis.slice(0, attemptedNum);
-                        raidTemplate.secondaryMins = raidTemplate.secondaryMins.slice(0, attemptedNum);
+                        raidTemplate.secondaryLimits = raidTemplate.secondaryLimits.slice(0, attemptedNum);
                     }
                 } else {
                     if (attemptedNum < raidTemplate.secondaryNum) {
                         raidTemplate.secondaryEmojis = raidTemplate.secondaryEmojis.slice(0, attemptedNum);
-                        raidTemplate.secondaryMins = raidTemplate.secondaryMins.slice(0, attemptedNum);
+                        raidTemplate.secondaryLimits = raidTemplate.secondaryLimits.slice(0, attemptedNum);
                     }
                     raidTemplate.secondaryNum = attemptedNum;
                 }
@@ -332,25 +339,25 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
             if (res) {
                 const split = res.split(" ");
                 // checks that it's a valid emoji
-                if (tools.getEmoji(client, split[0])) {
+                if (tools.getEmoji(client, split[0], msg.guild.id)) {
                     // check that the emoji doesn't exist in the list already and that it is not the primary emoji
-                    if (!raidTemplate.secondaryEmojis.includes(split[0]) && (raidTemplate.primaryEmoji != split[0])) {
+                    if (raidTemplate.primaryEmoji != split[0]) {
                         raidTemplate.secondaryEmojis[pageInfo.currentSecondaryPos-1] = split[0];
                         if (split[1] && (split[1] != "")) {
                             const attemptedNum = parseInt(split[1].trim());
                             if (Number.isNaN(attemptedNum) || attemptedNum < 0) {
-                                raidTemplate.secondaryMins[pageInfo.currentSecondaryPos-1] = 0;
+                                raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = 0;
                             } else {
-                                raidTemplate.secondaryMins[pageInfo.currentSecondaryPos-1] = attemptedNum;
+                                raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = attemptedNum;
                             }
                             
                         } else {
-                            raidTemplate.secondaryMins[pageInfo.currentSecondaryPos-1] = 0;
+                            raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = 0;
                         }
                     }
                 }
             }
-            displaySecondaryEmojiPage(client, raidTemplate, clientEmojisList,  msg, pageInfo);
+            displaySecondaryEmojiPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
             break;
 
         case "reacts":
@@ -359,7 +366,7 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
                 let emojis = [];
                 for (emoji of split) {
                     const partTrim = emoji.trim();
-                    if (tools.getEmoji(client, partTrim)) {
+                    if (tools.getEmoji(client, partTrim, msg.guild.id)) {
                         if (partTrim.startsWith("<") && partTrim.endsWith(">")) {
                             emojis.push(partTrim);
                         } else if (partTrim.startsWith("<") && (partTrim.charAt(partTrim.length-2) === ">")) {
@@ -395,7 +402,7 @@ const updateTemplateDatabase = async (raidTemplate, guildConfig, newTemplate, ms
         "primaryMin": raidTemplate.primaryMin,
         "secondaryNum": raidTemplate.secondaryNum,
         "secondaryEmojis": raidTemplate.secondaryEmojis,
-        "secondaryMins": raidTemplate.secondaryMins,
+        "secondaryLimits": raidTemplate.secondaryLimits,
         "reacts": raidTemplate.reacts,
     }));
 
@@ -427,7 +434,7 @@ const updatePagesList = (newTemplate, secondaryNum) => {
     return pages;
 }
 
-const getTemplateData = async (client, msg, p, guildConfig, db, newTemplate) => {
+const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => {
     let raidTemplate = null;
     const templateName = tools.getArgs(msg.content, p, 2)[0];
     if (!newTemplate) {
@@ -440,14 +447,14 @@ const getTemplateData = async (client, msg, p, guildConfig, db, newTemplate) => 
             primaryMin: 0,
             secondaryNum: 0,
             secondaryEmojis: [],
-            secondaryMins: [],
+            secondaryLimits: [],
             reacts: [],
         }
     }
     return raidTemplate;
 }
 
-const processCollection = (client, msg, p, collector, reaction, type, newTemplate, raidTemplate, guildConfig, pageInfo, clientEmojisList, m, db) => {
+const processCollection = (client, p, msg, collector, reaction, type, newTemplate, raidTemplate, guildConfig, pageInfo, clientEmojisList, m, db) => {
     pageInfo.pages = updatePagesList(newTemplate, raidTemplate.secondaryNum);
     pageInfo.pagesLength = pageInfo.pages.length + pageInfo.secondaryNum;
     if (reaction.emoji.name === "❌") {
@@ -502,15 +509,10 @@ const processCollection = (client, msg, p, collector, reaction, type, newTemplat
     }
 }
 
-module.exports.editRaidTemplate = async (client, msg, p, guildConfig, db, newTemplate = false) => {
-    const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
-    if (!tools.hasPermission(guildMember, guildConfig)) {
-        return false
-    }
+module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTemplate = false) => {
+    let raidTemplate = await getTemplateData(client, p, msg, guildConfig, db, newTemplate);
 
-    let raidTemplate = await getTemplateData(client, msg, p, guildConfig, db, newTemplate);
-
-    const clientEmojisList = tools.createClientEmojisList(client);
+    const clientEmojisList = tools.createClientEmojisList(client, msg.guild);
     let type = newTemplate ? "Create" : "Edit";
     let pages = updatePagesList(newTemplate, raidTemplate.secondaryNum);
     let pageInfo = {
@@ -542,7 +544,7 @@ module.exports.editRaidTemplate = async (client, msg, p, guildConfig, db, newTem
 
         const collector = m.createReactionCollector(reactionFilter, {time: 300000});
         collector.on("collect", reaction => {
-            processCollection(client, msg, p, collector, reaction, type, newTemplate, raidTemplate, guildConfig, pageInfo, clientEmojisList, m, db);
+            processCollection(client, p, msg, collector, reaction, type, newTemplate, raidTemplate, guildConfig, pageInfo, clientEmojisList, m, db);
         });
 
         collector.on("end", collected => {

@@ -97,65 +97,6 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
     }
 }
 
-const configRaidLeaderRoles = async (client, msg, p, args, guildConfig, doc) => {
-    if (args.length === 0) {
-        const roles = guildConfig.raidLeaderRoles;
-        let rolesList = ``;
-        for (roleId of roles) {
-            const role = tools.getRoleById(msg.guild, roleId);
-            if (rolesList === "") {
-                rolesList += `${role}`;
-            } else {
-                rolesList += ` | ${role}`;
-            }
-        }
-        if (rolesList === "") {
-            rolesList = "No roles set.";
-        }
-
-        const embed = tools.getStandardEmbed(client)
-            .setTitle("Configuration")
-            .setDescription("Raid Leader Roles")
-            .addFields(
-                {name: "Instructions", value: `Change the raid leader roles by using:\`\`\`${p}config raidLeaderRoles <role> <role2> ... <roleN>\`\`\``},
-                {name: "Raid Leader Roles", value: `${rolesList}`},
-            )
-        msg.channel.send(embed);
-        return true;
-
-    } else {
-        let rolesList = ``;
-        let newRoles = [];
-        for (arg of args) {
-            const role = tools.getRole(msg.guild, arg, msg);
-            if (!role) {continue;}
-            newRoles.push(role.id);
-            if (rolesList === "") {
-                rolesList += `${role}`;
-            } else {
-                rolesList += ` | ${role}`;
-            }
-        }
-        if (rolesList === "") {
-            rolesList = "No roles set.";
-        }
-
-        return doc.update({
-            "raidLeaderRoles": newRoles,
-        }).then(() => {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle("Configuration")
-                .setDescription("Raid Leader Roles")
-                .addFields(
-                    {name: "Success!", value: "Raid leader roles were successfully changed!"},
-                    {name: "New Raid Leader Roles", value: `${rolesList}`},
-                )
-            msg.channel.send(embed);
-            return true;
-        }).catch(console.error);
-    }
-}
-
 const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const guildName = guildConfig.realmGuildName ? guildConfig.realmGuildName : undefined;
@@ -295,8 +236,9 @@ To turn on/off automatic role assignment:
         initiate = tools.getRole(msg.guild, args[4], msg);
         if (!founder || !leader || !officer || !member || !initiate) {return false;}
 
+        assignRoles = true;
         promise = doc.update({
-            "assignRoles": true,
+            "assignRoles": assignRoles,
             "founderRole": founder.id,
             "leaderRole": leader.id,
             "officerRole": officer.id,
@@ -359,8 +301,9 @@ To turn on/off all-member role assignment:
     } else {
         allMemberRole = tools.getRole(msg.guild, args[0], msg);
         if (!allMemberRole) {return false;}
+        assignAllMember = true;
         promise = doc.update({
-            "assignAllMember": true,
+            "assignAllMember": assignAllMember,
             "allMemberRole": allMemberRole.id,
         }).then(() => {return true;}).catch(console.error);
     }
@@ -415,8 +358,10 @@ To turn on/off non-member role assignment:
     } else {
         nonMemberRole = tools.getRole(msg.guild, args[0], msg);
         if (!nonMemberRole) {return false;}
+
+        assignNonMember = true;
         promise = doc.update({
-            "assignNonMember": true,
+            "assignNonMember": assignNonMember,
             "nonMemberRole": nonMemberRole.id,
         }).then(() => {return true;}).catch(console.error);
     }
@@ -504,28 +449,9 @@ const configList = (client, msg, guildConfig) => {
     let permissionsList = ``;
     for (roleId of permissions) {
         const role = tools.getRoleById(msg.guild, roleId);
-        if (permissionsList === "") {
-            permissionsList += `${role}`;
-        } else {
-            permissionsList += ` | ${role}`;
-        }
+        permissionsList += permissionsList === "" ? `${role}` : ` | ${role}`;
     }
-    if (permissionsList === "") {
-        permissionsList = "No permissions set.";
-    }
-    const roles = guildConfig.raidLeaderRoles;
-    let rolesList = ``;
-    for (roleId of roles) {
-        const role = tools.getRoleById(msg.guild, roleId);
-        if (rolesList === "") {
-            rolesList += `${role}`;
-        } else {
-            rolesList += ` | ${role}`;
-        }
-    }
-    if (rolesList === "") {
-        rolesList = "No roles set.";
-    }
+    permissionsList = permissionsList != "" ? permissionsList : "No permissions set.";
 
     const embed = tools.getStandardEmbed(client)
         .setTitle("Configuration")
@@ -534,7 +460,6 @@ const configList = (client, msg, guildConfig) => {
             {name: "Command Prefix", value: `${guildConfig.prefix}`, inline: true},
             {name: "Guild Name", value: `${guildConfig.realmGuildName}`, inline: true},
             {name: "Permissions", value: `${permissionsList}`, inline: true},
-            {name: "Raid Leader Roles", value: `${rolesList}`},
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
             {name: "Verification Requirements", value: `-----------------------------------------------------------------------------------------------`},
@@ -570,43 +495,40 @@ Initiate: ${guildConfig.initiateRole ? tools.getRoleById(msg.guild, guildConfig.
     return true;
 }
 
-module.exports.configGuild = async (client, msg, guildConfig, db) => {
+module.exports.configGuild = async (client, p, msg, guildConfig, db) => {
     const doc = db.collection("guilds").doc(msg.guild.id);
     
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
-    if (!tools.hasPermission(guildMember, guildConfig)) {
+    if (!tools.isAdmin(guildMember, guildConfig)) {
         return false;
     }
 
-    // msg.content = tools.normalizeNaming(msg);
-    const p = guildConfig.prefix;
     let args = tools.getArgs(msg.content, p, 1);
     const command = args[0].toLowerCase();
     args = args.slice(1);
 
-    if (command === "prefix") {
-        return configPrefix(client, msg, p, args, doc);
-    } else if (command === "permissions") {
-        return configPermissions(client, msg, p, args, guildConfig, doc);
-    } else if (command === "raidleaderroles") {
-        return configRaidLeaderRoles(client, msg, p, args, guildConfig, doc);
-    } else if (command === "guildname") {
-        return configGuildName(client, msg, p, args, guildConfig, doc);
-    } else if (command === "reqs") {
-        return configReqs(client, msg, p, args, guildConfig, doc);
-    } else if (command === "roles") {
-        return configRoles(client, msg, p, args, guildConfig, doc);
-    } else if (command === "allmemberrole") {
-        return configAllMemberRole(client, msg, p, args, guildConfig, doc);
-    } else if (command === "nonmemberrole") {
-        return configNonMemberRole(client, msg, p, args, guildConfig, doc);
-    } else if (command === "verificationchannel") {
-        return configVerificationChannel(client, msg, p, args, guildConfig, doc);
-    } else if (command === "list") {
-        return configList(client, msg, guildConfig);
-    } else {
-        const fullCommand = `${p}config ${command}`;
-        msg.reply(`"${fullCommand}" is not a valid command!`);
-        return false;
+    switch (command) {
+        case "prefix":
+            return configPrefix(client, msg, p, args, doc);
+        case "permissions":
+            return configPermissions(client, msg, p, args, guildConfig, doc);
+        case "guildname":
+            return configGuildName(client, msg, p, args, guildConfig, doc);
+        case "reqs":
+            return configReqs(client, msg, p, args, guildConfig, doc);
+        case "roles":
+            return configRoles(client, msg, p, args, guildConfig, doc);
+        case "allmemberrole":
+            return configAllMemberRole(client, msg, p, args, guildConfig, doc);
+        case "nonmemberrole":
+            return configNonMemberRole(client, msg, p, args, guildConfig, doc);
+        case "verificationchannel":
+            return configVerificationChannel(client, msg, p, args, guildConfig, doc);
+        case "list":
+            return configList(client, msg, guildConfig);
+        default:
+            const fullCommand = `${p}config ${command}`;
+            msg.reply(`"${fullCommand}" is not a valid command!`);
+            return false;
     }
 }

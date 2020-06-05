@@ -142,7 +142,7 @@ module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
                 } else {
                     // resets opener if it is a single arg
                     opener = ``;
-                    allArgs.push(curr);
+                    allArgs.push(curr.substring(1, curr.length-1));
                 }
             } else if (curr === "true") {
                 // converts true string to boolean
@@ -237,8 +237,11 @@ module.exports.classEnumerator = classValue => {
     return value;
 }
 
-module.exports.getClientEmoji = (client, emojiName, trimEnds=false, frontTrim=0, backTrim=0) => {
-    const emojiGuildIds = ["708761992705474680", "710578568211464192", "711504382394630194", "711491483588493313"];
+module.exports.getGuildEmoji = (client, guildId, emojiName, trimEnds=false, frontTrim=0, backTrim=0) => {
+    let emojiGuildIds = ["708761992705474680", "711504382394630194", "711491483588493313"];
+    if (guildId) {
+        emojiGuildIds.push(guildId);
+    }
     if (trimEnds) {
         emojiName = emojiName.substring(frontTrim, emojiName.length-backTrim);
     }
@@ -256,37 +259,53 @@ module.exports.isUnicodeEmoji = (emoji) => {
     }
 }
 
-module.exports.getEmoji = (client, emojiName) => {
+module.exports.getEmoji = (client, emojiName, guildId) => {
     if (this.isUnicodeEmoji(emojiName)) {
         return emojiName;
     } else if (emojiName.startsWith("<") && emojiName.endsWith(">")) {
-        return this.getClientEmoji(client, emojiName, true, 1, 1);
+        return this.getGuildEmoji(client, guildId, emojiName, true, 1, 1);
     } else {
-        return this.getClientEmoji(client, emojiName);
+        return this.getGuildEmoji(client, guildId, emojiName);
     }
 }
 
-module.exports.createClientEmojisList = client => {
+module.exports.createClientEmojisList = (client, guild) => {
     let types = ["Portal", "Key", "Class", "Ability"];
-    let emojisList = new Array(types.length);
+    let typesLength = types.length;
+    let emojisList = {};
+    let guildLength = 0;
+
     client.emojis.cache.map(emoji => {
-        for (let i=0; i<types.length; i++) {
-
+        for (let i=0; i<typesLength; i++) {
             if (emoji.name.endsWith(types[i].toLowerCase())) {
-
-                if (emojisList[i] === undefined) {
-                    emojisList[i] = `${emoji}`;
+                if (emojisList[`${types[i]}`] === undefined) {
+                    emojisList[`${types[i]}`] = `${emoji}`;
                 } else {
-                    emojisList[i] += ` | ${emoji}`;
+                    emojisList[`${types[i]}`] += ` | ${emoji}`;
                 }
+            }
+        }
+        if (guild && (emoji.guild === guild)) {
+            const emojiString = `${emoji}`;
+
+            if (emojisList[`Guild_${guildLength}`] === undefined) {
+                types.push(`Guild_${guildLength}`);
+                emojisList[`Guild_${guildLength}`] = emojiString;
+
+            } else if ((emojisList[`Guild_${guildLength}`].length + ` | ${emojiString}`.length) < 1024) {
+                emojisList[`Guild_${guildLength}`] += ` | ${emojiString}`;
+
+            } else {
+                guildLength++;
+                types.push(`Guild_${guildLength}`);
+                emojisList[`Guild_${guildLength}`] = emojiString;
             }
         }
     });
 
-    return {
-        types: types,
-        emojisList: emojisList,
-    }
+    emojisList.types = types;
+
+    return emojisList;
 }
 
 module.exports.getItemBaseName = itemName => {
@@ -353,7 +372,7 @@ module.exports.getGuildName = async (id, db) => {
     });
 }
 
-module.exports.hasPermission = (guildMember, guildConfig, msg) => {
+module.exports.isAdmin = (guildMember, guildConfig, msg) => {
     const admin = guildMember.hasPermission("admin");
 
     if (!admin) {
@@ -682,16 +701,6 @@ module.exports.getHighestFame = characters => {
         highestFame = char.fame > highestFame ? char.fame : highestFame;
     }
     return highestFame;
-}
-
-module.exports.isRaidLeader = (guildMember, guildConfig) => {
-    const raidLeaderRoles = guildConfig.raidLeaderRoles;
-    for (roleId of raidLeaderRoles) {
-        if (guildMember.roles.cache.find(memberRole => memberRole.id === roleId)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 module.exports.raidTemplateExists = (templateName, guildConfig) => {
