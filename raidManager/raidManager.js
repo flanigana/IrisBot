@@ -178,11 +178,13 @@ const raidStartHelp = (client, p, msg, guildConfig) => {
     for (name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
+    existingNames = existingNames === "" ? "No existing raid templates." : existingNames;
     let raidLeaderRoles = ``;
     for (role of guildConfig.raidLeaderRoles) {
         const actualRole = tools.getRoleById(msg.guild, role);
         raidLeaderRoles += raidLeaderRoles === "" ? `${actualRole}` : ` | ${actualRole}`;
     }
+    raidLeaderRoles = raidLeaderRoles === "" ? "No raid leader roles." : raidLeaderRoles;
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Raid Commands")
         .setDescription(`A member with one of the raid leader roles can start a raid, using the following command:

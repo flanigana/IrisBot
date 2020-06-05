@@ -70,7 +70,7 @@ const helpCommand = (p, msg) => {
 }
 
 const setUpGuild = async guild => {
-    const defaultChannelId = guild.channels.cache.find(channel => channel.type === "text");
+    const defaultChannelId = guild.channels.cache.find(channel => channel.type === "text").id;
 
     return db.collection("guilds").doc(guild.id).set({
         guildId: guild.id,
