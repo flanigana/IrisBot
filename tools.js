@@ -478,6 +478,27 @@ module.exports.getRealmEyeInfo = async ign => {
         if (characterHiddenHeader && characterHiddenHeader.children[0].data === "Characters are hidden") {
             accountInfo.hiddenCharacters = true;
         } else {
+            let classPos = 0;
+            let famePos = 0;
+            let equipPos = 0;
+            let statsPos = 0;
+            const thead = $(".table-responsive > .table > thead > tr > th");
+            for (let i=0; i < thead.length; i++) {
+                if (thead[i].children && thead[i].children[0]) {
+                    if (thead[i].children[0].data) {
+                        if (thead[i].children[0].data.toLowerCase() === "class") {
+                            classPos = i;
+                        } else if (thead[i].children[0].data.toLowerCase() === "fame") {
+                            famePos = i;
+                        } else if (thead[i].children[0].data.toLowerCase() === "equipment") {
+                            equipPos = i;
+                        } else if (thead[i].children[0].data.toLowerCase() === "stats") {
+                            statsPos = i;
+                        }
+                    }
+                }
+            }
+
             // get character table
             const characters = $(".table-responsive > .table > tbody > tr");
             let characterList = [];
@@ -485,12 +506,12 @@ module.exports.getRealmEyeInfo = async ign => {
                 let character = {};
 
                 const characterRow = characters[i];
-                character.class = characterRow.children[2].children[0].data;
-                character.fame = parseInt(characterRow.children[5].children[0].data);
-                character.stats = characters[i].children[9].children[0].children[0].data;
+                character.class = characterRow.children[classPos].children[0].data;
+                character.fame = parseInt(characterRow.children[famePos].children[0].data);
+                character.stats = characters[i].children[statsPos].children[0].children[0].data;
 
                 // get equipment
-                const equipment = characters[i].children[8].children;
+                const equipment = characters[i].children[equipPos].children;
                 let characterEquipment = [];
                 for (let j=0; j < equipment.length; j++) {
                     // let item = {};

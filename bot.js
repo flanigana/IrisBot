@@ -207,6 +207,9 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
+
+        const yep = await tools.getRealmEyeInfo("EraofMod");
+        console.log(yep);
         
         if (msg.guild) {
             const guildConfig = await tools.getGuildConfig(msg.guild.id, db);
