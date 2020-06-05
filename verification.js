@@ -13,13 +13,21 @@ const sendVerificationMessage = (client, msg, veriCode) => {
     return true;
 }
 
-const makeNewVeriCode = async (userDoc, guildId, guildName) => {
+const makeNewVeriCode = async (userDoc, guildId, guildName, newUser = false) => {
     const veriCode = `${guildName}_${Math.floor(Math.random() * Math.floor(1000000000000))}`;
-    return userDoc.update({
-        [`${guildId}`]: veriCode,
-    }).then(() => {
-        return veriCode;
-    }).catch(console.error);
+    if (newUser) {
+        return userDoc.set({
+            [`${guildId}`]: veriCode,
+        }).then(() => {
+            return veriCode;
+        }).catch(console.error);
+    } else {
+        return userDoc.update({
+            [`${guildId}`]: veriCode,
+        }).then(() => {
+            return veriCode;
+        }).catch(console.error);
+    }
 }
 
 module.exports.beginVerification = async (client, msg, db) => {
@@ -67,7 +75,7 @@ module.exports.beginVerification = async (client, msg, db) => {
                 }
 
             } else {
-                return makeNewVeriCode(userDoc, guildId, guildName).then(code => {
+                return makeNewVeriCode(userDoc, guildId, guildName, true).then(code => {
                     veriCode = code;
                     return true;
                 }).catch(console.error);

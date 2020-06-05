@@ -85,6 +85,7 @@ const listRaidTemplates = async (client, p, msg, guildConfig, db) => {
         for (template of templateNames) {
             nameList += nameList === "" ? `${template}` : ` | ${template}`;
         }
+        nameList = nameList === "" ? "No raid templates" : nameList;
         embed = embed.addField("Existing Templates", `${nameList}`);
         msg.channel.send(embed);
 
