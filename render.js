@@ -277,7 +277,7 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
             const embed = tools.getStandardEmbed(client)
                 .setTitle(`${ign} Not Found`)
                 .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.`);
-            msg.channel.send(embed);
+            channel.send(embed);
             return false;
         }
         const embed = characterListEmbed(client, realmEyeData, renders);

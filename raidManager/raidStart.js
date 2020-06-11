@@ -199,8 +199,14 @@ const confirmReaction = async (reaction, user) => {
 
 const createConfirmationEmbed = (client, destVc, location, secondaryEmojis, secondaryConfirms) => {
     let confirms = tools.getStandardEmbed(client)
-        .setTitle(`Raid Confirmations for "${destVc.name}" at ${location}`)
         .setDescription("The following people have been confirmed for each seconary react.");
+    
+    if (location) {
+        confirms = confirms.setTitle(`Raid Confirmations for "${destVc.name}" at ${location}`);
+    } else {
+        
+        confirms = confirms.setTitle(`Raid Confirmations for "${destVc.name}"`);
+    }
 
     for (let i=0; i<secondaryEmojis.length; i++) {
         let confirmedUsers = ``;
@@ -240,7 +246,10 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
     let remainingTime = runTime;
 
     const args = tools.getArgs(msg.content, p, 2);
-    const location = args[4];
+    let location = null;
+    if (args.length >= 5) {
+        location = args[4];
+    }
     const templateName = args[0];
     const raidTemplate = await tools.getRaidTemplate(templateName, guildConfig, db, client, msg);
     if (!raidTemplate) {return false;}
@@ -344,7 +353,11 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                         if (confirmed && (secondaryConfirms[secondaryIndex].length < reactionLimit)) {
                             const guildMember = guildMembers.find(mem => mem.id === user.id);
                             secondaryConfirms[secondaryIndex].push(guildMember);
-                            user.send(`You are now confirmed with ${reaction.emoji} for the raid. Please go to \`${location}\` with your ${reaction.emoji}.`);
+                            if (location) {
+                                user.send(`You are now confirmed with ${reaction.emoji} for the raid. Please go to \`${location}\` with your ${reaction.emoji}.`);
+                            } else {
+                                user.send(`You are now confirmed with ${reaction.emoji} for the raid. Please go to location announced with your ${reaction.emoji}.`);
+                            }
                             confirmedMessage.edit(createConfirmationEmbed(client, destinationVc, location, secondaryEmojis, secondaryConfirms));
                         } else if (confirmed) {
                             user.send(`The raid has already reached the limit for ${reaction.emoji}'s. You can still join the raid, but will no longer be given early location.`);
@@ -355,7 +368,11 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                 }
 
             } else if (reaction.emoji === nitroEmoji) {
-                user.send(`Thanks for being a Nitro Booster for the server! The location for this raid is \`${location}\`.`);
+                if (location) {
+                    user.send(`Thanks for being a Nitro Booster for the server! The location for this raid is \`${location}\`.`);
+                } else {
+                    user.send(`Thanks for being a Nitro Booster for the server! The location for this raid has not been set. Please wait for the location to be announced.`);
+                }
             }
         });
 

@@ -189,14 +189,14 @@ const raidStartHelp = (client, p, msg, guildConfig) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Raid Commands")
         .setDescription(`A member with one of the raid leader roles can start a raid, using the following command:
-\`\`\`!raid start <templateName> <idleVoiceChannel> <destVoiceChannel> <?alertTextChannel> <?runTime>\`\`\``)
+\`\`\`${p}raid start <templateName> <idleVoiceChannel> <destVoiceChannel> <?alertTextChannel> <?runTime>\`\`\``)
         .addFields(
             {name: "Existing Template Names", value: `${existingNames}`},
             {name: "<templateName>", value: `The raid template you would like to use for the raid check.`},
             {name: "<idleVoiceChannel>", value: `The voice channel raiders must be in to be dragged into at the end of the check.`},
             {name: "<destVoiceChannel>", value: `The voice channel raiders will be dragged into at the end of the check.`},
             {name: "<?alertTextChannel> : optional", value: `The text channel that the raid status will be sent to.\nThe alert will be sent to the same channel as the command was sent in by default.`},
-            {name: "<?runTime> : optional", value: `The number of seconds that you would like the raid check to last for.\nThe default setting is 2 minutes.`},
+            {name: "<?location> : optional", value: `The location of the raid that will be given to those who respond with and confirm secondary reacts.`},
             {name: "Additional Info", value: `If you have a raid leader role:\nReact with ✅ to end the check early.\nReact with ❌ to cancel the check.`},
             {name: "Current Raid Leader Roles", value: `${raidLeaderRoles}`},
         )

@@ -395,7 +395,7 @@ const configVerificationChannel = async (client, msg, p, args, guildConfig, doc)
 To set the verification channel with a different channel for the logs use:
 \`\`\`${p}config verificationChannel <verificationChannel>\n        <logChannel>\`\`\`
 To turn on/off global verification (ability to begin verification from any channel):
-\`\`\`${p}config nonMemberRole <true/false>\`\`\``},
+\`\`\`${p}config verificationChannel <true/false>\`\`\``},
                 {name: "Allow Global Verification?", value: `${globalVerification}`, inline: true},
                 {name: "Verification Channel", value: `${verificationChannel}`, inline: true},
                 {name: "Verification Log Channel", value: `${verificationLogChannel}`, inline: true},

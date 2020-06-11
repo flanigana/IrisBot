@@ -106,7 +106,7 @@ const meetsReqs = (guildConfig, realmEyeData) => {
     let sixEightMelees = 0;
     let eightEightMelees = 0;
     for (character of realmEyeData.characters) {
-        if ((character.stats === "6/8") || (character.stats === "7/8")) {
+        if ((character.stats === "6/8") || (character.stats === "7/8") || (character.stats === "8/8")) {
             sixEights++;
             if (isMelee(character.class)) {
                 sixEightMelees++;
