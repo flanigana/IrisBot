@@ -77,9 +77,9 @@ const endRaidStartReactionCollector = async (client, collected, cancelled, raidM
     }
 };
 
-const moveAfk = async (raiders, destinationVc) => {
+const moveAfk = async (raiders, destinationVc, guildConfig) => {
     destinationVc.members.map(guildMember => {
-        if (!raiders.has(guildMember)) {
+        if (!raiders.has(guildMember) && !raidTools.isRaidLeader(guildMember, guildConfig)) {
             guildMember.voice.kick("Failed to react to raid check.");
         }
     });
@@ -382,7 +382,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
         collector.on("end", collected => {
             clearInterval(interval);
             if (!cancelled) {
-                moveAfk(raiders, destinationVc);
+                moveAfk(raiders, destinationVc, guildConfig);
             }
             endRaidStartReactionCollector(client, collected, cancelled, raidMsg, raidStarter, raidName, primaryEmoji, primaryMin, destinationVc, guildMembers, raiders.size, raidLeaders.size);
             notifMessage.delete();
