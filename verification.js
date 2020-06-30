@@ -8,10 +8,10 @@ const sendVerificationMessage = (client, msg, veriCode) => {
             {name: "Step 1", value: `Login to your RealmEye account and put **${veriCode}** in any part of your description.`},
             {name: "Step 2", value: `Come back here and reply with \`!verify <ign>.\``},
             {name: "Step 3", value: `Once completed successfully, you'll receive a message verifying completion!`},
-        )
+        );
     msg.author.send(embed);
     return true;
-}
+};
 
 const makeNewVeriCode = async (userDoc, guildId, guildName, newUser = false) => {
     const veriCode = `${guildName}_${Math.floor(Math.random() * Math.floor(1000000000000))}`;
@@ -28,7 +28,7 @@ const makeNewVeriCode = async (userDoc, guildId, guildName, newUser = false) => 
             return veriCode;
         }).catch(console.error);
     }
-}
+};
 
 module.exports.beginVerification = async (client, msg, db) => {
     let guildConfig = null;
@@ -89,14 +89,14 @@ module.exports.beginVerification = async (client, msg, db) => {
             return true;
         }
     }).catch(console.error);
-}
+};
 
 const isMelee = className => {
-    if (className.toLowerCase() === "knight") {return true}
-    if (className.toLowerCase() === "warrior") {return true}
-    if (className.toLowerCase() === "paladin") {return true}
+    if (className.toLowerCase() === "knight") {return true;}
+    if (className.toLowerCase() === "warrior") {return true;}
+    if (className.toLowerCase() === "paladin") {return true;}
     return false;
-}
+};
 
 const meetsReqs = (guildConfig, realmEyeData) => {
     if (realmEyeData.fame < guildConfig.fameReq) {return false;}
@@ -105,7 +105,7 @@ const meetsReqs = (guildConfig, realmEyeData) => {
     let eightEights = 0;
     let sixEightMelees = 0;
     let eightEightMelees = 0;
-    for (character of realmEyeData.characters) {
+    for (let character of realmEyeData.characters) {
         if ((character.stats === "6/8") || (character.stats === "7/8") || (character.stats === "8/8")) {
             sixEights++;
             if (isMelee(character.class)) {
@@ -123,7 +123,7 @@ const meetsReqs = (guildConfig, realmEyeData) => {
     if (sixEightMelees < guildConfig.sixEightMeleeReq) {return false;}
     if (eightEightMelees < guildConfig.eightEightMeleeReq) {return false;}
     return true;
-}
+};
 
 const updateVerification = async (userId, guildId, guildConfig, ign, db) => {
     const userDoc = db.collection("users").doc(userId);
@@ -147,10 +147,10 @@ const updateVerification = async (userId, guildId, guildConfig, ign, db) => {
         }
 
     }).catch(console.error);
-}
+};
 
 const getRankRole = (realmEyeData, guildConfig) => {
-    let roleId = undefined;
+    let roleId;
     if (tools.checkRolesConfigured(guildConfig)) {
         switch (realmEyeData.guildRank.toLowerCase()) {
             case "founder":
@@ -171,25 +171,25 @@ const getRankRole = (realmEyeData, guildConfig) => {
         }
     }
     return roleId;
-}
+};
 
 const sendUserVerificationFailure = (client, user, guild, guildConfig) => {
     let embed = tools.getStandardEmbed(client)
-        .setTitle("Verification Failure")
+        .setTitle("Verification Failure");
     if (!guildConfig.realmGuildName) {
         embed.setDescription(`Sorry! **${guild.name}** hasn't set up their guild name in the bot configuration and does not allow non-guild-members to verify.Try contacting a server admin to have them finish configuration and then try verfying again.`);
     } else {
         embed.setDescription(`Sorry! You are not a guild member of **${guildConfig.realmGuildName}** on RealmEye and this server does not allow for vefication of non-members.`);
     }
     user.send(embed);
-}
+};
 
 const sendUserVerificationSuccess = (client, user, guild) => {
     const embed = tools.getStandardEmbed(client)
     .setTitle("Verification Success")
     .setDescription(`Congratulations! You have been successfully verified with **${guild.name}**.`);
     user.send(embed);
-}
+};
 
 const sendGuildVerificationSuccess = async (client, logChannel, guildMember, realmEyeData) => {
     const roles = [];
@@ -203,10 +203,10 @@ const sendGuildVerificationSuccess = async (client, logChannel, guildMember, rea
         {name: "Discord Tag", value: `${guildMember.user.tag}`, inline: true},
         {name: "Discord Id", value: guildMember.id, inline: true},
         {name: "Roles", value: `${roles}`},
-    )
+    );
     logChannel.send(embed);
     return true;
-}
+};
 
 const assignGuildRoles = async (realmEyeData, guild, guildConfig, guildMember) => {
     if (guildConfig.assignRoles) {
@@ -217,7 +217,7 @@ const assignGuildRoles = async (realmEyeData, guild, guildConfig, guildMember) =
             return guildMember.roles.add(rankRole);
         }
     }
-}
+};
 
 const assignAllMemberRole = async (guild, guildConfig, guildMember) => {
     if (guildConfig.assignAllMember) {
@@ -227,18 +227,18 @@ const assignAllMemberRole = async (guild, guildConfig, guildMember) => {
             return guildMember.roles.add(allMemberRole);
         }
     }
-}
+};
 
 const assignNonMemberRole = async (guild, guildConfig, guildMember) => {
     const role = tools.getRoleById(guild, guildConfig.nonMemberRole);
     if (!role) {return false;}
     return guildMember.roles.add(role.id);
-}
+};
 
 const assignRoles = async (client, msg, guild, guildConfig, realmEyeData, db) => {
     const guildMember = guild.members.cache.find(user => user.id === msg.author.id);
     const verificationLogChannel = tools.getChannelById(guild, guildConfig.verificationLogChannel);
-    if (!verificationLogChannel) {return false}
+    if (!verificationLogChannel) {return false;}
     
     let promises = [];
     if (!guildMember.manageable) {
@@ -270,7 +270,7 @@ const assignRoles = async (client, msg, guild, guildConfig, realmEyeData, db) =>
     Promise.all(promises).then(() => {
         return sendGuildVerificationSuccess(client, verificationLogChannel, guildMember, realmEyeData);
     }).catch(console.error);
-}
+};
 
 module.exports.checkForVerification = async (msg, client, db) => {
     if (msg.content.split(" ").length <= 1) {
@@ -304,7 +304,7 @@ module.exports.checkForVerification = async (msg, client, db) => {
                 return false;
             }
 
-            for (prop of userProps) {
+            for (let prop of userProps) {
                 if (!prop || prop === "ign" || (userData[prop] === "verified")) {
                     continue;
                 }
@@ -352,4 +352,4 @@ module.exports.checkForVerification = async (msg, client, db) => {
             return false;
         }).catch(console.error);
     }).catch(console.error);
-}
+};

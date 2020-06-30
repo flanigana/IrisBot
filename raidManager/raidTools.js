@@ -4,7 +4,7 @@ module.exports.formatRaidDescription = (client, description, guildId) => {
     let list = description.split(/\s+/);
 
     let actualDescription = ``;
-    for (part of list) {
+    for (let part of list) {
         if (part === "") {
             continue;
         }
@@ -25,51 +25,51 @@ module.exports.formatRaidDescription = (client, description, guildId) => {
         }
     }
     return actualDescription;
-}
+};
 
 module.exports.formatPrimaryEmoji = (client, raidTemplate, guildId) => {
-    let primaryEmoji = undefined;
+    let primaryEmoji;
     if (raidTemplate.primaryEmoji) {
         primaryEmoji = tools.getEmoji(client, raidTemplate.primaryEmoji, guildId);
     }
     return primaryEmoji;
-}
+};
 
 module.exports.formatSecondaryEmojis = (client, raidTemplate, guildId) => {
     let emojiList = [];
     for (let i=0; i<raidTemplate.secondaryNum; i++) {
-        let currentEmoji = undefined;
+        let currentEmoji;
         const emoji = raidTemplate.secondaryEmojis[i];
         if (emoji) {
-            currentEmoji = tools.getEmoji(client, raidTemplate.secondaryEmojis[i], guildId);;
+            currentEmoji = tools.getEmoji(client, raidTemplate.secondaryEmojis[i], guildId);
             emojiList.push(currentEmoji);
         }
     }
     return emojiList;
-}
+};
 
 module.exports.formatReactsListString = (client, raidTemplate, guildId) => {
     let reactsList = ``;
-    for (emoji of raidTemplate.reacts) {
+    for (let emoji of raidTemplate.reacts) {
         emoji = tools.getEmoji(client, emoji, guildId);
         reactsList += reactsList === "" ? `${emoji}` : ` ${emoji}`;
     }
     return reactsList != "" ? reactsList : "No reactions selected.";
-}
+};
 
 module.exports.isRaidLeader = (guildMember, guildConfig) => {
     const raidLeaderRoles = guildConfig.raidLeaderRoles;
-    for (roleId of raidLeaderRoles) {
+    for (let roleId of raidLeaderRoles) {
         if (guildMember.roles.cache.find(memberRole => memberRole.id === roleId)) {
             return true;
         }
     }
     return false;
-}
+};
 
 module.exports.isNitroBooster = (guildMember, guildConfig) => {
     if (guildMember.roles.cache.find(memberRole => memberRole.id === guildConfig.boosterRole)) {
         return true;
     }
     return false;
-}
+};

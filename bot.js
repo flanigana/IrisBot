@@ -34,7 +34,7 @@ const generalHelp = (p, msg) => {
                 {name: "Realm-Related", value: `\`\`\`${p}realmEye\n${p}ppe\`\`\``},
             );
     msg.channel.send(embed);
-}
+};
 
 const configHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
@@ -47,19 +47,20 @@ const configHelp = (p, msg) => {
             {name: "Role Assignment", value: `\`\`\`${p}config roles\n${p}config allMemberRole\n${p}config nonMemberRole\`\`\``},
         );
     msg.channel.send(embed);
-}
+};
 
 const raidHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
     .setTitle("Iris Bot Raid Commands")
     .setDescription("Commands to run raids in your server.")
     .addFields(
+        {name: "Raid Configuration", value: `\`\`\`${p}raid config\n${p}raid shorthand\`\`\``},
         {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
         {name: "Raid Template Management", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
         {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
     );
     msg.channel.send(embed);
-}
+};
 
 const helpCommand = (p, msg) => {
     if (msg.content.toLowerCase() === `${p}help`) {
@@ -67,7 +68,7 @@ const helpCommand = (p, msg) => {
     } else if (msg.content.toLowerCase() === `${p}help config`) {
         configHelp(p, msg);
     }
-}
+};
 
 const setUpGuild = async guild => {
     const defaultChannelId = guild.channels.cache.find(channel => channel.type === "text").id;
@@ -102,9 +103,12 @@ const setUpGuild = async guild => {
         verificationLogChannel: defaultChannelId,
         raidLeaderRoles: [],
         raidTemplateNames: [],
-        raidTemplateNamesIds: [],
+        defaultRunTimeSec: 120,
+        sendConfirmations: false,
+        allowBooster: false,
+        shorthandNames: [],
     });
-}
+};
 
 const configGuild = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
@@ -113,7 +117,7 @@ const configGuild = async (p, msg, guildConfig) => {
     } else {
         return config.configGuild(client, p, msg, guildConfig, db);
     }
-}
+};
 
 const raid = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
@@ -122,7 +126,7 @@ const raid = async (p, msg, guildConfig) => {
     } else {
         return raidManager.raid(client, p, msg, guildConfig, db);
     }
-}
+};
 
 const endPpeReactionCollector = (collected, msg, originalMsg) => {
     let selectedCharacters = [];
@@ -155,7 +159,7 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
         .setImage(characterImage);
     msg.edit(embed);
     msg.reactions.removeAll().catch(console.error);
-}
+};
 
 const ppe = msg => {
     let emojiList = [];
@@ -184,7 +188,7 @@ React with ❌ to cancel.`);
         });
 
         let promises = [];
-        for (emoji of emojiList) {
+        for (let emoji of emojiList) {
             promises.push(m.react(emoji));
         }
 
@@ -192,7 +196,7 @@ React with ❌ to cancel.`);
             return true;
         });
     });
-}
+};
 
 client.on("ready", async () => {
     render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl).then(results => {
@@ -233,7 +237,7 @@ client.on("message", async msg => {
                     break;
                 case "guild":
                     let guildName = args[1] ? args[1] : "";
-                    for (let i=2; i<args.length; i++) {guildName += ` ${args[i]}`}
+                    for (let i=2; i<args.length; i++) {guildName += ` ${args[i]}`;}
                     render.guildDisplay(client, p, guildName, msg.guild.id, msg.channel, db, renders);
                     break;
                 case "ppe":

@@ -4,7 +4,7 @@ const Discord = require("discord.js");
 
 module.exports.getGuildById = (client, id) => {
     return client.guilds.cache.find(guild => guild.id === id);
-}
+};
 
 module.exports.getChannelById = (guild, id, msg) => {
     let channel = guild.channels.cache.find(channel => channel.id === id);
@@ -17,7 +17,7 @@ module.exports.getChannelById = (guild, id, msg) => {
         channel = undefined;
     }
     return channel;
-}
+};
 
 module.exports.getChannelByName = (guild, name, type, msg) => {
     let channel = guild.channels.cache.find(channel => ((channel.name.toLowerCase() === name.toLowerCase()) && (channel.type === type)));
@@ -28,7 +28,7 @@ module.exports.getChannelByName = (guild, name, type, msg) => {
         channel = undefined;
     }
     return channel;
-}
+};
 
 module.exports.getRoleById = (guild, id, msg) => {
     let role = guild.roles.cache.find(role => role.id === id);
@@ -41,7 +41,7 @@ module.exports.getRoleById = (guild, id, msg) => {
         role = undefined;
     }
     return role;
-}
+};
 
 module.exports.getRoleByName = (guild, name, msg) => {
     let role = guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
@@ -52,10 +52,10 @@ module.exports.getRoleByName = (guild, name, msg) => {
         role = undefined;
     }
     return role;
-}
+};
 
 module.exports.getChannel = (guild, channelString, type, msg) => {
-    let channel = undefined;
+    let channel;
     if (typeof channelString != "string") {
         console.error("Invalid type for channel. Expected string.");
 
@@ -71,10 +71,10 @@ module.exports.getChannel = (guild, channelString, type, msg) => {
         }
     }
     return channel;
-}
+};
 
 module.exports.getRole = (guild, roleString, msg) => {
-    let role = undefined;
+    let role;
     if (typeof roleString != "string") {
         console.error("Invalid type for role. Expected string.");
 
@@ -90,7 +90,7 @@ module.exports.getRole = (guild, roleString, msg) => {
         }
     }
     return role;
-}
+};
 
 module.exports.getPrefix = async (guildId, db) => {
     return db.collection("guilds").doc(guildId).get().then(snapshot => {
@@ -101,7 +101,7 @@ module.exports.getPrefix = async (guildId, db) => {
             return "!";
         }
     }).catch(console.error);
-}
+};
 
 module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
     if (p) {
@@ -160,7 +160,7 @@ module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
     }
 
     return allArgs.slice(commandsLength);
-}
+};
 
 module.exports.checkRolesConfigured = guildConfig => {
     if (!guildConfig.founderRole || !guildConfig.leaderRole || !guildConfig.officerRole || !guildConfig.memberRole || !guildConfig.initiateRole) {
@@ -168,12 +168,12 @@ module.exports.checkRolesConfigured = guildConfig => {
     } else {
         return true;
     }
-}
+};
 
 module.exports.getClasses = () => {
     return ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
             "Trickster", "Sorcerer", "Ninja", "Samurai", "Bard"];
-}
+};
 
 module.exports.classEnumerator = classValue => {
     let value = null;
@@ -235,7 +235,7 @@ module.exports.classEnumerator = classValue => {
     }
 
     return value;
-}
+};
 
 module.exports.getGuildEmoji = (client, guildId, emojiName, trimEnds=false, frontTrim=0, backTrim=0) => {
     let emojiGuildIds = ["708761992705474680", "711504382394630194", "711491483588493313"];
@@ -246,7 +246,7 @@ module.exports.getGuildEmoji = (client, guildId, emojiName, trimEnds=false, fron
         emojiName = emojiName.substring(frontTrim, emojiName.length-backTrim);
     }
     return client.emojis.cache.find(emoji => ((emoji.name === emojiName) && emojiGuildIds.includes(emoji.guild.id)));
-}
+};
 
 module.exports.isUnicodeEmoji = (emoji) => {
     const emojiRanges = [
@@ -257,7 +257,7 @@ module.exports.isUnicodeEmoji = (emoji) => {
     } else {
         return false;
     }
-}
+};
 
 module.exports.getEmoji = (client, emojiName, guildId) => {
     if (this.isUnicodeEmoji(emojiName)) {
@@ -267,7 +267,7 @@ module.exports.getEmoji = (client, emojiName, guildId) => {
     } else {
         return this.getGuildEmoji(client, guildId, emojiName);
     }
-}
+};
 
 module.exports.createClientEmojisList = (client, guild) => {
     let types = ["Portal", "Key", "Class", "Ability"];
@@ -306,7 +306,7 @@ module.exports.createClientEmojisList = (client, guild) => {
     emojisList.types = types;
 
     return emojisList;
-}
+};
 
 module.exports.getItemBaseName = itemName => {
     if (itemName.match(/T[0-9]$/) || itemName.endsWith("UT")) {
@@ -316,7 +316,7 @@ module.exports.getItemBaseName = itemName => {
     } else {
         return itemName;
     }
-}
+};
 
 module.exports.getStarColor = rank => {
     const starRequirements = [80, 64, 48, 32, 16, 0];
@@ -334,7 +334,7 @@ module.exports.getStarColor = rank => {
     } else {
         return "light blue";
     }
-}
+};
 
 module.exports.getUserIgn = async (id, db) => {
     return db.collection("users").doc(id).get().then(snapshot => {
@@ -349,7 +349,7 @@ module.exports.getUserIgn = async (id, db) => {
 
         return userData.ign;
     }).catch(console.error);
-}
+};
 
 module.exports.getGuildConfig = async (id, db, msg) => {
     const doc = db.collection("guilds").doc(id);
@@ -358,40 +358,40 @@ module.exports.getGuildConfig = async (id, db, msg) => {
             if (msg) {
                 msg.channel.send("Server data not found!");
             } else {
-                console.error("Server data not found!")
+                console.error("Server data not found!");
             }
             return undefined;
         }
         return snapshot.data();
     }).catch(console.error);
-}
+};
 
 module.exports.getGuildName = async (id, db) => {
     return this.getGuildConfig(id, db).then(guildConfig => {
         return guildConfig.realmGuildName;
     });
-}
+};
 
 module.exports.isAdmin = (guildMember, guildConfig, msg) => {
     const admin = guildMember.hasPermission("admin");
 
     if (!admin) {
         const permissions = guildConfig.permissions;
-        for (role of permissions) {
+        for (let role of permissions) {
             if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
                 return true;
             }
         }
         if (msg) {
             const embed = tools.getStandardEmbed(client)
-                .setTitle("You do not have the required permissions to do that.")
+                .setTitle("You do not have the required permissions to do that.");
             msg.channel.send(embed);
         }
         return false;
     } else {
         return true;
     }
-}
+};
 
 module.exports.getRealmEyeInfo = async ign => {
     const options = {
@@ -399,7 +399,7 @@ module.exports.getRealmEyeInfo = async ign => {
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
-    }
+    };
 
     let accountInfo = {
         name: ign,
@@ -534,7 +534,7 @@ module.exports.getRealmEyeInfo = async ign => {
         return accountInfo;
 
     }).catch(console.error);
-}
+};
 
 module.exports.getGuildUrlForm = guildName => {
     const split = guildName.split(" ");
@@ -548,7 +548,7 @@ module.exports.getGuildUrlForm = guildName => {
     }
 
     return url;
-}
+};
 
 module.exports.getTopCharacters = async guildName => {
     const url = this.getGuildUrlForm(guildName);
@@ -557,7 +557,7 @@ module.exports.getTopCharacters = async guildName => {
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
-    }
+    };
 
     return axios(options).then(response => {
         const html = response.data;
@@ -599,7 +599,7 @@ module.exports.getTopCharacters = async guildName => {
         return characterList;
         
     }).catch(console.error);
-}
+};
 
 module.exports.getRealmEyeGuildInfo = async guildName => {
     const url = this.getGuildUrlForm(guildName);
@@ -608,7 +608,7 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
-    }
+    };
 
     let guildInfo = {
         name: guildName,
@@ -707,14 +707,14 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
         });
 
     }).catch(console.error);
-}
+};
 
 module.exports.getStandardEmbed = client => {
     return new Discord.MessageEmbed()
     .setColor("#7542d4")
     .setFooter("Iris Bot", client.user.avatarURL())
     .setTimestamp();
-}
+};
 
 module.exports.getHighestFame = characters => {
     let highestFame = 0;
@@ -722,7 +722,7 @@ module.exports.getHighestFame = characters => {
         highestFame = char.fame > highestFame ? char.fame : highestFame;
     }
     return highestFame;
-}
+};
 
 module.exports.raidTemplateExists = (templateName, guildConfig) => {
     const templateNames = guildConfig.raidTemplateNames;
@@ -732,14 +732,14 @@ module.exports.raidTemplateExists = (templateName, guildConfig) => {
         }
     }
     return false;
-}
+};
 
 module.exports.getRaidTemplate = async (templateName, guildConfig, db, client, msg) => {
     let actualName = null;
     const templateNames = guildConfig.raidTemplateNames;
     for (let i=0; i<templateNames.length; i++) {
         if (templateNames[i].toLowerCase() === templateName.toLowerCase()) {
-            actualName = templateNames[i]
+            actualName = templateNames[i];
         }
     }
     return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("raidTemplates").doc(`${actualName}`).get().then(snapshot => {
@@ -747,11 +747,11 @@ module.exports.getRaidTemplate = async (templateName, guildConfig, db, client, m
             if (msg) {
                 const embed = this.getStandardEmbed(client)
                     .setTitle("No Raid Template Found")
-                    .setDescription(`There is no existing raid template with the name ${templateName} for this server.`)
+                    .setDescription(`There is no existing raid template with the name ${templateName} for this server.`);
                 msg.channel.send(embed);
             }
-            return undefined
+            return undefined;
         }
         return snapshot.data();
     }).catch(console.error);
-}
+};

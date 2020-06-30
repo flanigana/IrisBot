@@ -8,19 +8,20 @@ const getShorthand = (actualName, guildConfig, db) => {
         }
 
         return snapshot.data();
-    })
-}
+    });
+};
 
 const shorthandDoesNotExist = (client, msg, name) => {
     const embed = tools.getStandardEmbed(client)
             .setTitle(`${name} is Not a Valid Shorthand Name`)
-            .setDescription(`Failed to find a shorthand with the name **${name}** in this server.`)
+            .setDescription(`Failed to find a shorthand with the name **${name}** in this server.`);
     msg.channel.send(embed);
 
-}
+};
+
 const getShorthandName = (p, name, guildConfig) => {
     const shortName = name;
-    let actualName = undefined;
+    let actualName;
     for (name of guildConfig.shorthandNames) {
         if (shortName.toLowerCase() === name.toLowerCase()) {
             actualName = name;
@@ -28,7 +29,7 @@ const getShorthandName = (p, name, guildConfig) => {
     }
 
     return actualName;
-}
+};
 
 /**
  * msg format: !r <templateName> <shortName> <location>
@@ -51,7 +52,7 @@ module.exports.startShorthand = async (client, p, msg, guildConfig, db) => {
     const raidCommand = `!raid start "${templateName}" ${idleName} ${destName} ${alertName} ${args[2]}`;
     msg.content = raidCommand;
     raid.startRaid(client, p, msg, guildConfig, db);
-}
+};
 
 const shorthandList = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 3);
@@ -60,10 +61,10 @@ const shorthandList = (client, p, msg, guildConfig, db) => {
         let embed = tools.getStandardEmbed(client)
             .setTitle("Existing Raid Shorthands")
             .setDescription(`To view details of a specific shorthand, use:
-\`${p}raid shorthand list <shorthandName>\`.`)
+\`${p}raid shorthand list <shorthandName>\`.`);
         const shortNames = guildConfig.shorthandNames;
         let nameList = ``;
-        for (name of shortNames) {
+        for (let name of shortNames) {
             nameList += nameList === "" ? `${name}` : ` | ${name}`;
         }
         embed = embed.addField("Existing Shorthand Names", `${nameList}`);
@@ -71,7 +72,7 @@ const shorthandList = (client, p, msg, guildConfig, db) => {
 
     } else {
         let shortName = args[0];
-        for (name of guildConfig.shorthandNames) {
+        for (let name of guildConfig.shorthandNames) {
             if (shortName.toLowerCase() === name.toLowerCase()) {
                 shortName = name;
             }
@@ -94,7 +95,7 @@ const shorthandList = (client, p, msg, guildConfig, db) => {
             return true;
         });
     }
-}
+};
 
 const shorthandDelete = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 3);
@@ -116,7 +117,7 @@ const shorthandDelete = (client, p, msg, guildConfig, db) => {
     promises.push(guildDoc.collection("shorthands").doc(`${shortName}`).delete());
 
     let newNames = [];
-    for (name of guildConfig.shorthandNames) {
+    for (let name of guildConfig.shorthandNames) {
         if (name.toLowerCase() != shortName.toLowerCase()) {
             newNames.push(name);
         }
@@ -131,7 +132,7 @@ const shorthandDelete = (client, p, msg, guildConfig, db) => {
         msg.channel.send(embed);
         return true;
     });
-}
+};
 
 const saveShorthand = (shorthand, guildConfig, db) => {
     const guildDoc = db.collection("guilds").doc(guildConfig.guildId);
@@ -150,7 +151,7 @@ const saveShorthand = (shorthand, guildConfig, db) => {
     }));
 
     return Promise.all(promises);
-}
+};
 
 const shorthandCreate = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 3);
@@ -212,7 +213,7 @@ After creating a shorthand, you can use it using:
         idleVc: idleVc.id,
         destVc: destVc.id,
         alert: alert.id,
-    }
+    };
 
     return saveShorthand(shorthand, guildConfig, db).then(() => {
         const embed = tools.getStandardEmbed(client)
@@ -221,8 +222,8 @@ After creating a shorthand, you can use it using:
 \`\`\`${p}r <templateName> ${shorthand.name} <location>\`\`\``);
         msg.channel.send(embed);
         return true;
-    })
-}
+    });
+};
 
 const shorthandHelp = (client, p, msg) => {
     const embed = tools.getStandardEmbed(client)
@@ -236,7 +237,7 @@ Use the following commands to manage your server's raid shorthands.`)
         );
     msg.channel.send(embed);
     return true;
-}
+};
 
 module.exports.shorthand = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 2);
@@ -251,16 +252,16 @@ module.exports.shorthand = (client, p, msg, guildConfig, db) => {
     } else if ((args.length > 1) && (args[0] === "create") && (getShorthandName(p, args[1], guildConfig))){
         const embed = tools.getStandardEmbed(client)
             .setTitle("Shorthand Name Already Exists")
-            .setDescription(`There is already a shorthand named **${args[1]}** in this server. Please enter a unique shorthand name.`)
+            .setDescription(`There is already a shorthand named **${args[1]}** in this server. Please enter a unique shorthand name.`);
         msg.channel.send(embed);
         return false;
     }
     
     if (args[0] === "list") {
-        return shorthandList(client, p, msg, guildConfig, db)
+        return shorthandList(client, p, msg, guildConfig, db);
     } else if (args[0] === "create") {
         return shorthandCreate(client, p, msg, guildConfig, db);
     } else if (args[0] === "delete") {
         shorthandDelete(client, p, msg, guildConfig, db);
     }
-}
+};

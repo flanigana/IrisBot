@@ -9,13 +9,13 @@ const addClientEmojisToEmbed = (clientEmojisList, embed) => {
             typeSplit = typeName.split("_");
             typeName = typeSplit[0];
             if (parseInt(typeSplit[1]) > 0) {
-                typeName += " Continued"
+                typeName += " Continued";
             }
         }
         embed = embed.addField(typeName, `${clientEmojisList[`${types[i]}`]}`);
     }
     return embed;
-}
+};
 
 const leftUndefined = raidTemplate => {
     if (!raidTemplate.name) {
@@ -27,13 +27,13 @@ const leftUndefined = raidTemplate => {
     if (!raidTemplate.primaryEmoji) {
         return true;
     }
-}
+};
 
 const displayCancelledPage = (client, msg) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle(`Raid Template Was Cancelled`);
     msg.edit(embed);
-}
+};
 
 const displayStartPage = (client, raidTemplate, type, msg, pageInfo, first=false) => {
     const embed = tools.getStandardEmbed(client)
@@ -51,11 +51,11 @@ To cancel this command at any time, react with ❌.
         return embed;
     }
     msg.edit(embed);
-}
+};
 
 const displayNamePage = (client, p, raidTemplate, guildConfig, msg, alreadyExists=false, attemptedRes, pageInfo) => {
     let existingNames = ``;
-    for (name of guildConfig.raidTemplateNames) {
+    for (let name of guildConfig.raidTemplateNames) {
         if (existingNames === "") {
             existingNames += `${name}`;
         } else {
@@ -63,7 +63,7 @@ const displayNamePage = (client, p, raidTemplate, guildConfig, msg, alreadyExist
         }
     }
     if (existingNames === "") {
-        existingNames = "No existing raid template names."
+        existingNames = "No existing raid template names.";
     }
 
     let embed = tools.getStandardEmbed(client)
@@ -79,17 +79,17 @@ If you would like to edit an existing raid, use the \`${p}raid edit <templateNam
             );
 
     if (alreadyExists) {
-        embed = embed.setDescription(`${attemptedRes} already exists as a raid name! Please respond with a new name that does not already exist or use the raid editing command to update it.`)
+        embed = embed.setDescription(`${attemptedRes} already exists as a raid name! Please respond with a new name that does not already exist or use the raid editing command to update it.`);
 
     } else {
-        embed = embed.setDescription("Respond with the desired name for this raid template. It should not be the same as an existing one.")
+        embed = embed.setDescription("Respond with the desired name for this raid template. It should not be the same as an existing one.");
     }
     embed = embed.setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const displayDescriptionPage = (client, raidTemplate, clientEmojisList, msg, pageInfo) => {
-    let description =  undefined;
+    let description;
     if (raidTemplate.description) {
         description = raidTools.formatRaidDescription(client, raidTemplate.description, msg.guild.id);
     }
@@ -116,7 +116,7 @@ We would like to get at least 5 <warriorclass>, <knightclass>, and <paladinclass
     )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const displayPrimaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
     let primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate, msg.guild.id);
@@ -138,7 +138,7 @@ const displayPrimaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, p
     )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const displaySecondarySetupPage = (client, raidTemplate, msg, pageInfo) => {
     let embed = tools.getStandardEmbed(client)
@@ -157,10 +157,10 @@ For a cult, you don't need a vial, so you may only wish to have a single seconda
         )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const displaySecondaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
-    let secondaryEmoji = undefined;
+    let secondaryEmoji;
     const emoji = raidTemplate.secondaryEmojis[pageInfo.currentSecondaryPos-1];
     if (emoji) {
         const guildEmoji = tools.getEmoji(client, emoji, msg.guild.id);
@@ -185,7 +185,7 @@ const displaySecondaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg,
     )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const displayReactsPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
     const selectedList = raidTools.formatReactsListString(client, raidTemplate, msg.guild.id);
@@ -206,12 +206,12 @@ These won't be used by the system, but you can use them to check the responses v
     )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const displayEndPage = (client, p, raidTemplate, msg, finished=false, pageInfo) => {
     const nameSplit = raidTemplate.name.split(" ");
     const commandDisplayName = nameSplit.length > 1 ? `"${raidTemplate.name}"` : `${raidTemplate.name}`;
-    let templateDescription =  undefined;
+    let templateDescription;
     if (raidTemplate.description) {
         templateDescription = raidTools.formatRaidDescription(client, raidTemplate.description, msg.guild.id);
     }
@@ -221,12 +221,12 @@ const displayEndPage = (client, p, raidTemplate, msg, finished=false, pageInfo) 
 
     let embed = tools.getStandardEmbed(client);
     if (!finished) {
-        let descriptionPiece = undefined;
+        let descriptionPiece;
         let completable = !leftUndefined(raidTemplate);
         if (completable) {
             descriptionPiece = `If these are correct, react with ➡ to finalize this raid template.`;
         } else {
-            descriptionPiece = `\n**One or more fields are still undefined! You cannot finish this setup until you have filled in all fields (except reacts).**`
+            descriptionPiece = `\n**One or more fields are still undefined! You cannot finish this setup until you have filled in all fields (except reacts).**`;
         }
         embed = embed.setTitle(`${raidTemplate.name} Template ${completable ? `Completed` : `Unfinished`}`)
             .setDescription(`Your raid template settings are listed below.
@@ -266,7 +266,7 @@ ${descriptionPiece}
         )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
-}
+};
 
 const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo, clientEmojisList, msg, res) => {
     switch (pageInfo.pageName) {
@@ -364,7 +364,7 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
             if (res) {
                 const split = res.split(" ");
                 let emojis = [];
-                for (emoji of split) {
+                for (let emoji of split) {
                     const partTrim = emoji.trim();
                     if (tools.getEmoji(client, partTrim, msg.guild.id)) {
                         if (partTrim.startsWith("<") && partTrim.endsWith(">")) {
@@ -388,7 +388,7 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
     }
 
     return raidTemplate;
-}
+};
 
 const updateTemplateDatabase = async (raidTemplate, guildConfig, newTemplate, msg, db) => {
     const guildDoc = db.collection("guilds").doc(msg.guild.id);
@@ -416,7 +416,7 @@ const updateTemplateDatabase = async (raidTemplate, guildConfig, newTemplate, ms
     }
 
     return Promise.all(promises);
-}
+};
 
 const updatePagesList = (newTemplate, secondaryNum) => {
     let pages = ["start"];
@@ -432,7 +432,7 @@ const updatePagesList = (newTemplate, secondaryNum) => {
     pages.push("reacts");
     pages.push("end");
     return pages;
-}
+};
 
 const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => {
     let raidTemplate = null;
@@ -449,10 +449,10 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
             secondaryEmojis: [],
             secondaryLimits: [],
             reacts: [],
-        }
+        };
     }
     return raidTemplate;
-}
+};
 
 const processCollection = (client, p, msg, collector, reaction, type, newTemplate, raidTemplate, guildConfig, pageInfo, clientEmojisList, m, db) => {
     pageInfo.pages = updatePagesList(newTemplate, raidTemplate.secondaryNum);
@@ -507,7 +507,7 @@ const processCollection = (client, p, msg, collector, reaction, type, newTemplat
             }
         }
     }
-}
+};
 
 module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTemplate = false) => {
     let raidTemplate = await getTemplateData(client, p, msg, guildConfig, db, newTemplate);
@@ -523,7 +523,7 @@ module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTem
         pagePosition: 1,
         pagesLength: pages.length,
         pageName: pages[0],
-    }
+    };
 
     const embed = displayStartPage(client, raidTemplate, type, msg, pageInfo, true);
 
@@ -553,10 +553,10 @@ module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTem
         });
 
         // add initial reactions
-        for (reaction of reactionsList) {
+        for (let reaction of reactionsList) {
             m.react(reaction);
         }
 
     }).catch(console.error);
 
-}
+};

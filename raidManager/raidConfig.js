@@ -11,7 +11,7 @@ const configDefaultRunTime = async (client, msg, p, args, guildConfig, doc) => {
                 {name: "Current Configuration", value: `${runTime}`},
                 {name: "Note", value: `The minimum default run time is 60 seconds. If you try and set it below that, it will be set to 60.
 The maximum default run time is 1200 seconds. If you try and set it above that, it will be set to 1200.`}
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -38,18 +38,18 @@ The maximum default run time is 1200 seconds. If you try and set it above that, 
                     {name: "Success!", value: "Raid run time name was successfully changed!"},
                     {name: "New Raid Run Time", value: `${runTime}`},
                     
-                )
+                );
             msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
-}
+};
 
 const configRaidLeaderRoles = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const roles = guildConfig.raidLeaderRoles;
         let rolesList = ``;
-        for (roleId of roles) {
+        for (let roleId of roles) {
             const role = tools.getRoleById(msg.guild, roleId);
             if (rolesList === "") {
                 rolesList += `${role}`;
@@ -67,14 +67,14 @@ const configRaidLeaderRoles = async (client, msg, p, args, guildConfig, doc) => 
             .addFields(
                 {name: "Instructions", value: `Change the raid leader roles by using:\`\`\`${p}raid config raidLeaderRoles <role> <role2> ... <roleN>\`\`\``},
                 {name: "Raid Leader Roles", value: `${rolesList}`},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
     } else {
         let rolesList = ``;
         let newRoles = [];
-        for (arg of args) {
+        for (let arg of args) {
             const role = tools.getRole(msg.guild, arg, msg);
             if (!role) {continue;}
             newRoles.push(role.id);
@@ -97,12 +97,12 @@ const configRaidLeaderRoles = async (client, msg, p, args, guildConfig, doc) => 
                 .addFields(
                     {name: "Success!", value: "Raid leader roles were successfully changed!"},
                     {name: "New Raid Leader Roles", value: `${rolesList}`},
-                )
+                );
             msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
-}
+};
 
 const configConfirmationChannel = async (client, msg, p, args, guildConfig, doc) => {
     let sendConfirmations = guildConfig.sendConfirmations;
@@ -122,7 +122,7 @@ To turn on/off confirmation message sending:
                 {name: "Send Confirmations?", value: `${sendConfirmations}`, inline: true},
                 {name: "Confirmation Channel", value: `${confirmationChannel}`, inline: true},
                 {name: "Important Note", value: "Upon setting the channel value, confirmation sending will automatically be turned on."},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -155,11 +155,11 @@ To turn on/off confirmation message sending:
                     {name: "Success!", value: "Confirmation channel was successfully changed!"},
                     {name: "Send Confirmations?", value: `${sendConfirmations}`, inline: true},
                     {name: "Confirmation Channel", value: `${confirmationChannel}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
     }).catch(console.error);
-}
+};
 
 const configNitro = async (client, msg, p, args, guildConfig, doc) => {
     let allowBooster = guildConfig.allowBooster;
@@ -179,7 +179,7 @@ To turn on/off allowing nitro boosters to react with booster role to get early l
                 {name: "Allow Boosters?", value: `${allowBooster}`, inline: true},
                 {name: "Booster Role", value: `${boosterRole}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role value, allowing it will automatically be turned on."},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -212,16 +212,16 @@ To turn on/off allowing nitro boosters to react with booster role to get early l
                     {name: "Success!", value: "Nitro booster role was successfully changed!"},
                     {name: "Allow Boosters?", value: `${allowBooster}`, inline: true},
                     {name: "Booster Role", value: `${boosterRole}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
     }).catch(console.error);
-}
+};
 
 const listRaidConfig = (client, msg, guildConfig) => {
     const roles = guildConfig.raidLeaderRoles;
     let rolesList = ``;
-    for (roleId of roles) {
+    for (let roleId of roles) {
         const role = tools.getRoleById(msg.guild, roleId);
         rolesList += rolesList === "" ? `${role}` : ` | ${role}`;
     }
@@ -243,7 +243,7 @@ const listRaidConfig = (client, msg, guildConfig) => {
             {name: "Nitro Booster Role", value: `${guildConfig.boosterRole ? tools.getRoleById(msg.guild, guildConfig.boosterRole) : undefined}`, inline: true},
         );
     msg.channel.send(embed);
-}
+};
 
 module.exports.configRaid = async (client, p, msg, guildConfig, db) => {
     let args = tools.getArgs(msg.content, p, 2);
@@ -279,8 +279,8 @@ module.exports.configRaid = async (client, p, msg, guildConfig, db) => {
             return configRaidLeaderRoles(client, msg, p, args, guildConfig, doc);
         case "confirmationchannel":
             return configConfirmationChannel(client, msg, p, args, guildConfig, doc);
-        case "nitrobooster":
+        case "boosterRole":
             return configNitro(client, msg, p, args, guildConfig, doc);
 
     }
-}
+};

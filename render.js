@@ -42,7 +42,7 @@ const getDefinitions = async definitionsUrl => {
 
         return definitions;
     }).catch(console.error);
-}
+};
 
 module.exports.getDefaultClassSkinUrl = className => {
     const classSkins = ["https://www.realmeye.com/s/a/img/wiki/Rogue.PNG", "https://www.realmeye.com/s/a/img/wiki/Archer_0.PNG", "https://www.realmeye.com/s/a/img/wiki/Wizard_0.PNG",
@@ -53,7 +53,7 @@ module.exports.getDefaultClassSkinUrl = className => {
             "https://i.imgur.com/SyW1gzN.png"];
     let skinUrl = classSkins[tools.classEnumerator(className)];
     return skinUrl;
-}
+};
 
 module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     let promises = [];
@@ -63,7 +63,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     promises.push(getDefinitions(definitionsUrl).then(definitions => {
         return Jimp.read(rendersUrl).then(allRenders => {
             
-            for (definition of definitions) {
+            for (let definition of definitions) {
                 const name = definition.name;
                 promises.push(allRenders.clone().crop(definition.startX+6, definition.startY+6, 34, 34).getBufferAsync("image/png").then(buffer => {
                     const render = new Image();
@@ -118,7 +118,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
         console.log("All images loaded.");
         return renders;
     });
-}
+};
 
 const characterListVisualization = (characters, renders, guildCharacters=false) => {
     const highestFame = tools.getHighestFame(characters);
@@ -192,7 +192,7 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
 
         // character equipment
         const equipment = char.equipment;
-        for (equip of equipment) {
+        for (let equip of equipment) {
             let renderImage = renders[`"${equip.toLowerCase()}"`];
             if (!renderImage) {
                 renderImage = renders[`"empty slot"`];
@@ -218,7 +218,7 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
     }
 
     return canvas.toBuffer("image/png");
-}
+};
 
 const characterListEmbed = (client, realmEyeData, renders) => {
     let starColor = tools.getStarColor(realmEyeData.rank);
@@ -249,7 +249,7 @@ const characterListEmbed = (client, realmEyeData, renders) => {
             {name: "Rank", value: `${rankText}`, inline: true},
             {name: "Alive Fame", value: `${!realmEyeData.hiddenCharacters ? fameText : "Hidden"}`, inline: true},
             {name: "Guild Rank", value: `${realmEyeData.guildRank != "" ? guildRankText : "-----"}`, inline: true},
-        )
+        );
 
     if (!realmEyeData.hiddenCharacters && (realmEyeData.charactersCount > 0)) {
         embed = embed.attachFiles(attachment)
@@ -257,7 +257,7 @@ const characterListEmbed = (client, realmEyeData, renders) => {
     }
 
     return embed;
-}
+};
 
 module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, renders) => {
     if (ign === "") {
@@ -284,7 +284,7 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
         channel.send(embed);
         return true;
     }).catch(console.error);
-}
+};
 
 const guildEmbed = (client, realmEyeGuildData, renders) => {
     let attachment = null;
@@ -295,7 +295,7 @@ const guildEmbed = (client, realmEyeGuildData, renders) => {
 
     const members = realmEyeGuildData.members;
     let membersList = ``;
-    for (member of members) {
+    for (let member of members) {
         if (membersList === "") {
             membersList += `${member.name}`;
         } else {
@@ -321,7 +321,7 @@ const guildEmbed = (client, realmEyeGuildData, renders) => {
             {name: "Fame Rank", value: `${realmEyeGuildData.fameRank}`, inline: true},
             {name: "Server Rank", value: `${realmEyeGuildData.serverRank}`, inline: true},
             {name: `Members: ${realmEyeGuildData.membersCount}`, value: `${membersList}`},
-        )
+        );
 
     if (!realmEyeGuildData.hiddenCharacters && (realmEyeGuildData.topCharacters.length > 0)) {
         embed = embed.attachFiles(attachment)
@@ -329,7 +329,7 @@ const guildEmbed = (client, realmEyeGuildData, renders) => {
     }
 
     return embed;
-}
+};
 
 module.exports.guildDisplay = async (client, p, guildName, guildId, channel, db, renders) => {
     if (guildName === "") {
@@ -358,4 +358,4 @@ Setting this server's guild will automatically display it when using \`${p}guild
         channel.send(embed);
         return true;
     }).catch(console.error);
-}
+};

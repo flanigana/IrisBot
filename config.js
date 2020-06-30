@@ -8,7 +8,7 @@ const configPrefix = async (client, msg, p, args, doc) => {
             .addFields(
                 {name: "Instructions", value: `Change the command prefix for Iris Bot by using:\`\`\`${p}config prefix <prefix>\`\`\``},
                 {name: "Current Configuration", value: `${p}`},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -22,12 +22,12 @@ const configPrefix = async (client, msg, p, args, doc) => {
                 .addFields(
                     {name: "Success!", value: "The command prefix was successfully changed!"},
                     {name: "New Prefix", value: `${args[0]}`},
-                )
+                );
             msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
-}
+};
 
 const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
@@ -40,7 +40,7 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const permissions = guildConfig.permissions;
         let permissionsList = ``;
-        for (roleId of permissions) {
+        for (let roleId of permissions) {
             const role = tools.getRoleById(msg.guild, roleId);
             if (permissionsList === "") {
                 permissionsList += `${role}`;
@@ -59,14 +59,14 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
                 {name: "Instructions", value: `Change the configuration permissions by using:\`\`\`${p}config permissions <role> <role2> ... <roleN>\`\`\``},
                 {name: "Permissions", value: `${permissionsList}`},
                 {name: "Important Note", value: "All server admins have configuration permissions."}
-            )
+            );
         msg.channel.send(embed);
         return true;
 
     } else {
         let permissionsList = ``;
         let newPermissions = [];
-        for (arg of args) {
+        for (let arg of args) {
             const role = tools.getRole(msg.guild, arg, msg);
             if (!role) {continue;}
             newPermissions.push(role.id);
@@ -90,12 +90,12 @@ const configPermissions = async (client, msg, p, args, guildConfig, doc) => {
                     {name: "Success!", value: "Configuration permissions were successfully changed!"},
                     {name: "New Permissions", value: `${permissionsList}`},
                     {name: "Important Note", value: "All server admins have configuration permissions."}
-                )
+                );
             msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
-}
+};
 
 const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
@@ -106,7 +106,7 @@ const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
             .addFields(
                 {name: "Instructions", value: `Change the guild name by using:\`\`\`${p}config guildName <name>\`\`\``},
                 {name: "Current Configuration", value: `${guildName}`},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -121,12 +121,12 @@ const configGuildName = async (client, msg, p, args, guildConfig, doc) => {
                     {name: "Success!", value: "Guild name was successfully changed!"},
                     {name: "New Guild Name", value: `${args[0]}`},
                     
-                )
+                );
             msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
-}
+};
 
 const configReqs = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
@@ -143,7 +143,7 @@ ${p}config reqs <fame> <stars>\n${p}config reqs <fame> <stars> <6/8s> <8/8s>\n${
                 {name: "Rank", value: `${guildConfig.rankReq}`, inline: true},
                 {name: "6/8 Melees", value: `${guildConfig.sixEightMeleeReq}`, inline: true},
                 {name: "8/8 Melees", value: `${guildConfig.eightEightMeleeReq}`, inline: true},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -175,12 +175,12 @@ ${p}config reqs <fame> <stars>\n${p}config reqs <fame> <stars> <6/8s> <8/8s>\n${
                     {name: "Rank", value: `${rank}`, inline: true},
                     {name: "6/8 Melees", value: `${sixEightMelee}`, inline: true},
                     {name: "8/8 Melees", value: `${eightEightMelee}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
         }).catch(console.error);
     }
-}
+};
 
 const configRoles = async (client, msg, p, args, guildConfig, doc) => {
     let assignRoles = guildConfig.assignRoles;
@@ -208,7 +208,7 @@ To turn on/off automatic role assignment:
                 {name: "Member Role", value: `${member}`, inline: true},
                 {name: "Initiate Role", value: `${initiate}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role values, assignment for it will automatically be turned on."},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -259,11 +259,11 @@ To turn on/off automatic role assignment:
                     {name: "Officer Role", value: `${officer}`, inline: true},
                     {name: "Member Role", value: `${member}`, inline: true},
                     {name: "Initiate", value: `${initiate}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
     }).catch(console.error);
-}
+};
 
 const configAllMemberRole = async (client, msg, p, args, guildConfig, doc) => {
     let assignAllMember = guildConfig.assignAllMember;
@@ -283,7 +283,7 @@ To turn on/off all-member role assignment:
                 {name: "Auto-Assign?", value: `${assignAllMember}`, inline: true},
                 {name: "All Member Role", value: `${allMemberRole}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role value, assignment for it will automatically be turned on."},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -316,11 +316,11 @@ To turn on/off all-member role assignment:
                     {name: "Success!", value: "All-member role was successfully changed!"},
                     {name: "Auto-Assign?", value: `${assignAllMember}`, inline: true},
                     {name: "All Member Role", value: `${allMemberRole}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
     }).catch(console.error);
-}
+};
 
 const configNonMemberRole = async (client, msg, p, args, guildConfig, doc) => {
     let assignNonMember = guildConfig.assignNonMember;
@@ -340,7 +340,7 @@ To turn on/off non-member role assignment:
                 {name: "Auto-Assign?", value: `${assignNonMember}`, inline: true},
                 {name: "Non Member Role", value: `${nonMemberRole}`, inline: true},
                 {name: "Important Note", value: "Upon setting the role value, assignment for it will automatically be turned on."},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -374,11 +374,11 @@ To turn on/off non-member role assignment:
                     {name: "Success!", value: "Non-member role was successfully changed!"},
                     {name: "Auto-Assign?", value: `${assignNonMember}`, inline: true},
                     {name: "All Member Role", value: `${nonMemberRole}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
     }).catch(console.error);
-}
+};
 
 const configVerificationChannel = async (client, msg, p, args, guildConfig, doc) => {
     let globalVerification = guildConfig.globalVerification;
@@ -399,7 +399,7 @@ To turn on/off global verification (ability to begin verification from any chann
                 {name: "Allow Global Verification?", value: `${globalVerification}`, inline: true},
                 {name: "Verification Channel", value: `${verificationChannel}`, inline: true},
                 {name: "Verification Log Channel", value: `${verificationLogChannel}`, inline: true},
-            )
+            );
         msg.channel.send(embed);
         return true;
 
@@ -438,16 +438,16 @@ To turn on/off global verification (ability to begin verification from any chann
                     {name: "Allow Global Verification?", value: `${globalVerification}`, inline: true},
                     {name: "Verification Channel", value: `${verificationChannel}`, inline: true},
                     {name: "Verification Log Channel", value: `${verificationLogChannel}`, inline: true},
-                )
+                );
             msg.channel.send(embed);
             return true;
     }).catch(console.error);
-}
+};
 
 const configList = (client, msg, guildConfig) => {
     const permissions = guildConfig.permissions;
     let permissionsList = ``;
-    for (roleId of permissions) {
+    for (let roleId of permissions) {
         const role = tools.getRoleById(msg.guild, roleId);
         permissionsList += permissionsList === "" ? `${role}` : ` | ${role}`;
     }
@@ -490,10 +490,10 @@ Initiate: ${guildConfig.initiateRole ? tools.getRoleById(msg.guild, guildConfig.
             {name: "Allow Global Verification?", value: `${guildConfig.globalVerification}`, inline: true},
             {name: "Verification Channel", value: `${guildConfig.verificationChannel ? tools.getChannelById(msg.guild, guildConfig.verificationChannel) : undefined}`, inline: true},
             {name: "Verification Log Channel", value: `${guildConfig.verificationLogChannel ? tools.getChannelById(msg.guild, guildConfig.verificationLogChannel) : undefined}`, inline: true},
-        )
+        );
     msg.channel.send(embed);
     return true;
-}
+};
 
 module.exports.configGuild = async (client, p, msg, guildConfig, db) => {
     const doc = db.collection("guilds").doc(msg.guild.id);
@@ -531,4 +531,4 @@ module.exports.configGuild = async (client, p, msg, guildConfig, db) => {
             msg.reply(`"${fullCommand}" is not a valid command!`);
             return false;
     }
-}
+};

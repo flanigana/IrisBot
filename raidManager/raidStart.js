@@ -5,7 +5,7 @@ const raidStatusUpdated = (client, status, raidMsg, raidStarter, raidName, desti
     let embed = tools.getStandardEmbed(client);
     switch (status) {
         case "started":
-            embed = tools.getStandardEmbed(client)
+            embed = embed.setColor("#00FF00")
                 .setAuthor(`${raidName} successfully started by ${raidStarter.displayName} in ${destinationVc.name}.`, raidStarter.user.avatarURL())
                 .setDescription(`The raid has started with ${raidLeaderCount} raid leaders and ${reactsCount} raiders.`);
             if (stoppedBy) {
@@ -13,20 +13,21 @@ const raidStatusUpdated = (client, status, raidMsg, raidStarter, raidName, desti
             }
             break;
         case "failed":
-            embed = embed.setAuthor(`${raidName} started by ${raidStarter.displayName} has failed.`, raidStarter.user.avatarURL())
+            embed = embed.setColor("#FF0000")
+                .setAuthor(`${raidName} started by ${raidStarter.displayName} has failed.`, raidStarter.user.avatarURL())
                 .setDescription(`Raid required ${min} ${emoji} reacts, but only got ${reactsCount}.`);
             if (stoppedBy) {
                 embed = embed.setFooter(`Raid check stopped early by ${stoppedBy.displayName}`);
             }
             break;
         case "cancelled":
-            embed = tools.getStandardEmbed(client)
+            embed = embed.setColor("#F05E23")
                 .setAuthor(`${raidName} started by ${raidStarter.displayName} has been cancelled.`, raidStarter.user.avatarURL())
                 .setFooter(`Raid check cancelled by ${stoppedBy.displayName}`);
             break;
     }
     return raidMsg.edit(embed);
-}
+};
 
 const endRaidStartReactionCollector = async (client, collected, cancelled, raidMsg, raidStarter, raidName, primaryEmoji, primaryMin, destinationVc, guildMembers, raiderCount, raidLeaderCount) => {
     let primaryReactsCount = 0;
@@ -74,15 +75,15 @@ const endRaidStartReactionCollector = async (client, collected, cancelled, raidM
         raidStatusUpdated(client, "started", raidMsg, raidStarter, raidName, destinationVc, null, raiderCount, null, raidLeaderCount, stoppedBy);
         return true;
     }
-}
+};
 
 const moveAfk = async (raiders, destinationVc) => {
     destinationVc.members.map(guildMember => {
         if (!raiders.has(guildMember)) {
             guildMember.voice.kick("Failed to react to raid check.");
         }
-    })
-}
+    });
+};
 
 const raidStartMessage = (client, raidStarter, raidName, raidDescription, destinationVc, remainingTime, raiderCount, raidLeaderCount) => {
     const minutes = Math.floor(remainingTime / (60*1000));
@@ -93,7 +94,7 @@ const raidStartMessage = (client, raidStarter, raidName, raidDescription, destin
 \nThe raid currently has ${raidLeaderCount} raid leaders and ${raiderCount} raiders.`)
         .setFooter(`Time Remaining ${minutes} minutes ${seconds} seconds`);
     return embed;
-}
+};
 
 const validVoiceChannels = (idleVc, destVc) => {
     if (!idleVc || !destVc) {
@@ -106,7 +107,7 @@ const validVoiceChannels = (idleVc, destVc) => {
         return false;
     }
     return true;
-}
+};
 
 const checkRaidStartOptions = async (client, p, msg) => {
     const args = tools.getArgs(msg.content, p, 3);
@@ -116,7 +117,7 @@ const checkRaidStartOptions = async (client, p, msg) => {
         destVc: undefined,
         alertChannel: msg.channel,
         runTime: (120*1000),
-    }
+    };
 
     if (args.length < 2) {
         const embed = tools.getStandardEmbed(client)
@@ -158,7 +159,7 @@ As a result, the raid check has been cancelled.`);
         msg.channel.send(embed);
     }
     return argCheck;
-}
+};
 
 const isNitroBooster = (guildMember, guildConfig) => {
     const boosterRoleId = guildConfig.boosterRole;
@@ -166,10 +167,10 @@ const isNitroBooster = (guildMember, guildConfig) => {
         return true;
     }
     return false;
-}
+};
 
 const confirmReaction = async (reaction, user) => {
-    let confirmed = undefined;
+    let confirmed;
     return user.send(`You reacted with ${reaction.emoji} for the raid. Please confirm by reacting with ✅ or react with ❌ to cancel.`).then(reactConfirm => {
         const reactionFilter = (reaction, user) => {
             if (!user.bot) {
@@ -179,7 +180,7 @@ const confirmReaction = async (reaction, user) => {
                     return false;
                 }
             }
-        }
+        };
 
         reactConfirm.react("✅");
         reactConfirm.react("❌");
@@ -192,10 +193,10 @@ const confirmReaction = async (reaction, user) => {
                 }
             });
             return confirmed;
-        })
+        });
     });
     
-}
+};
 
 const createConfirmationEmbed = (client, destVc, location, secondaryEmojis, secondaryConfirms) => {
     let confirms = tools.getStandardEmbed(client)
@@ -210,16 +211,16 @@ const createConfirmationEmbed = (client, destVc, location, secondaryEmojis, seco
 
     for (let i=0; i<secondaryEmojis.length; i++) {
         let confirmedUsers = ``;
-        for (user of secondaryConfirms[i]) {
+        for (let user of secondaryConfirms[i]) {
             confirmedUsers += confirmedUsers === "" ? `${user}` : ` | ${user}`;
         }
         if (confirmedUsers === "") {
-            confirmedUsers = "Waiting for confirmations..."
+            confirmedUsers = "Waiting for confirmations...";
         }
         confirms = confirms.addField(`${secondaryEmojis[i]}'s Confirmed`, `${confirmedUsers}`);
     }
     return confirms;
-}
+};
 
 /**
  * msg format: !raid start <templateName> <idleVc> <destVc> <alertChannel> <location>
@@ -265,10 +266,10 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
 
     let emojiList = [];
     emojiList.push(primaryEmoji);
-    for (emoji of secondaryEmojis) {
+    for (let emoji of secondaryEmojis) {
         emojiList.push(emoji);
     }
-    for (listEmoji of raidTemplate.reacts) {
+    for (let listEmoji of raidTemplate.reacts) {
         const emoji = tools.getEmoji(client, listEmoji, msg.guild.id);
         emojiList.push(emoji);
     }
@@ -286,7 +287,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
     let raiderCount = 0;
     let raidLeaderCount = 0;
 
-    let notifMessageContents = `@here \`${raidName}\` started by ${raidStarter.displayName} in ${destinationVc.name}! Join \`${idleVc.name}\` and react to join.`
+    let notifMessageContents = `@here \`${raidName}\` started by ${raidStarter.displayName} in ${destinationVc.name}! Join \`${idleVc.name}\` and react to join.`;
     let notifMessage = null;
     raidOptions.alertChannel.send(notifMessageContents).then(m => {
         notifMessage = m;
@@ -317,9 +318,11 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
     raidOptions.alertChannel.send(embed).then(m => {
         let confirmations = createConfirmationEmbed(client, destinationVc, location, secondaryEmojis, secondaryConfirms);
         let confirmedMessage = null;
-        confirmationChannel.send(confirmations).then(confirmed => {
-            confirmedMessage = confirmed;
-        });
+        if (guildConfig.sendConfirmations) {
+            confirmationChannel.send(confirmations).then(confirmed => {
+                confirmedMessage = confirmed;
+            });
+        }
 
         raidMsg = m;
         let cancelled = false;
@@ -338,7 +341,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                     if (raidTools.isRaidLeader(guildMember, guildConfig)) {
                         raidLeaders.add(guildMember);
                     }
-                    if (voice.channel === idleVc) {
+                    if (voice.channel === idleVc || voice.channel === destinationVc) {
                         raiders.add(guildMember);
                         voice.setChannel(destinationVc);
                     }
@@ -385,7 +388,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
             notifMessage.delete();
         });
 
-        for (emoji of emojiList) {
+        for (let emoji of emojiList) {
             raidMsg.react(emoji);
         }
 
@@ -396,4 +399,4 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
             raidMsg.edit(embed);
         }, 5000);
     }).catch(console.error);
-}
+};
