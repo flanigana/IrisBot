@@ -100,7 +100,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
 
     // load default skin images
     const classes = ["rogue", "archer", "wizard", "priest", "warrior", "knight", "paladin", "assassin", "necromancer", "huntress", "mystic", 
-    "trickster", "sorcerer", "ninja", "samurai"];
+    "trickster", "sorcerer", "ninja", "samurai", "bard"];
     for (let i=0; i < classes.length; i++) {
         const skinUrl = this.getDefaultClassSkinUrl(classes[i]);
         promises.push(Jimp.read(skinUrl).then(image => {

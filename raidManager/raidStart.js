@@ -200,7 +200,7 @@ const confirmReaction = async (reaction, user) => {
 
 const createConfirmationEmbed = (client, destVc, location, secondaryEmojis, secondaryConfirms) => {
     let confirms = tools.getStandardEmbed(client)
-        .setDescription("The following people have been confirmed for each seconary react.");
+        .setDescription("The following people have been confirmed for each secondary react.");
     
     if (location) {
         confirms = confirms.setTitle(`Raid Confirmations for "${destVc.name}" at ${location}`);
