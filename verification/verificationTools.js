@@ -133,7 +133,7 @@ module.exports.sendGuildVerificationSuccess = async (client, template, guildMemb
     const embed = tools.getStandardEmbed(client)
         .setTitle(`${guildMember.displayName} Has Been ${manual ? `Manually ` : ""}Verified!`)
         .setURL(`https://www.realmeye.com/player/${realmEyeData.name}`)
-        .setDescription(`**${guildMember}** has just been  ${manual ? `manually ` : ""}verified in ${template.verificationChannel} as ${realmEyeData.name}${verifier ? ` by ${verifier}` : ""}!`)
+        .setDescription(`**${guildMember}** has just been  ${manual ? `manually ` : ""}verified in ${template.verificationChannel} as ${realmEyeData.name}${manual ? ` by ${verifier}` : ""}!`)
         .addFields(
             {name: "Server Name", value: `${guildMember.displayName}`, inline: true},
             {name: "Discord Tag", value: `${guildMember.user.tag}`, inline: true},

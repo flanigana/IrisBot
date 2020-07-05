@@ -363,22 +363,17 @@ module.exports.getGuildName = async (id, db) => {
 };
 
 module.exports.isAdmin = (guildMember, guildConfig) => {
-    const admin = guildMember.hasPermission("ADMINISTRATOR");
-    if (guildMember.user.id === "225044370930401280") {
+    if (guildMember.user.id === guildConfig.guildOwner || guildMember.user.id === "225044370930401280") {
         return true;
     }
 
-    if (!admin) {
-        const admins = guildConfig.admins;
-        for (let role of admins) {
-            if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
-                return true;
-            }
+    const admins = guildConfig.admins;
+    for (let role of admins) {
+        if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
+            return true;
         }
-        return false;
-    } else {
-        return true;
     }
+    return false;
 };
 
 module.exports.isMod = (guildMember, guildConfig) => {

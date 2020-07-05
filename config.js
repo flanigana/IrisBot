@@ -33,7 +33,7 @@ const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
     const admin = guildMember.hasPermission("admin");
     if (!admin) {
-        msg.channel.send("Only a server admin can change the bot's admin roles!");
+        msg.channel.send("Only the server owner can change the bot's admin roles!");
         return false;
     }
 
@@ -52,7 +52,6 @@ const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
             .addFields(
                 {name: "Instructions", value: `Change the admin roles using:\`\`\`${p}config admins <role> <role2> ... <roleN>\`\`\``},
                 {name: "Admins", value: `${adminsList}`},
-                {name: "Important Note", value: "All server admins have bot admin permissions."}
             );
         msg.channel.send(embed);
         return true;
@@ -77,7 +76,6 @@ const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
                 .setDescription("Success! Admin roles were successfully changed!")
                 .addFields(
                     {name: "New Admin Roles", value: `${adminsList}`},
-                    {name: "Important Note", value: "All server admins have bot admin permissions."}
                 );
             msg.channel.send(embed);
             return true;
