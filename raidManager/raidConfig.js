@@ -161,7 +161,7 @@ To turn on/off confirmation message sending:
     }).catch(console.error);
 };
 
-const configNitro = async (client, msg, p, args, guildConfig, doc) => {
+const configBooster = async (client, msg, p, args, guildConfig, doc) => {
     let allowBooster = guildConfig.allowBooster;
     let boosterRole = guildConfig.boosterRole ? tools.getRoleById(msg.guild, guildConfig.boosterRole) : undefined;
 
@@ -280,7 +280,7 @@ module.exports.configRaid = async (client, p, msg, guildConfig, db) => {
         case "confirmationchannel":
             return configConfirmationChannel(client, msg, p, args, guildConfig, doc);
         case "boosterRole":
-            return configNitro(client, msg, p, args, guildConfig, doc);
+            return configBooster(client, msg, p, args, guildConfig, doc);
 
     }
 };

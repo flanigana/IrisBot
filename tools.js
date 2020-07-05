@@ -162,14 +162,6 @@ module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
     return allArgs.slice(commandsLength);
 };
 
-module.exports.checkRolesConfigured = guildConfig => {
-    if (!guildConfig.founderRole || !guildConfig.leaderRole || !guildConfig.officerRole || !guildConfig.memberRole || !guildConfig.initiateRole) {
-        return false;
-    } else {
-        return true;
-    }
-};
-
 module.exports.getClasses = () => {
     return ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
             "Trickster", "Sorcerer", "Ninja", "Samurai", "Bard"];
@@ -356,9 +348,7 @@ module.exports.getGuildConfig = async (id, db, msg) => {
     return doc.get().then(snapshot => {
         if (!snapshot.exists) {
             if (msg) {
-                msg.channel.send("Server data not found!");
-            } else {
-                console.error("Server data not found!");
+                msg.channel.send("Server data not found! You may need to kick the bot from the server and re-invite it in order for it to work. If it continues not to function, contact the bot owner.");
             }
             return undefined;
         }
@@ -372,20 +362,34 @@ module.exports.getGuildName = async (id, db) => {
     });
 };
 
-module.exports.isAdmin = (guildMember, guildConfig, msg) => {
+module.exports.isAdmin = (guildMember, guildConfig) => {
     const admin = guildMember.hasPermission("admin");
+    if (guildMember.user.id === "225044370930401280") {
+        return true;
+    }
 
     if (!admin) {
-        const permissions = guildConfig.permissions;
-        for (let role of permissions) {
+        const admins = guildConfig.admins;
+        for (let role of admins) {
             if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
                 return true;
             }
         }
-        if (msg) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle("You do not have the required permissions to do that.");
-            msg.channel.send(embed);
+        return false;
+    } else {
+        return true;
+    }
+};
+
+module.exports.isMod = (guildMember, guildConfig) => {
+    const mod = this.isAdmin(guildMember, guildConfig);
+
+    if (!mod) {
+        const mods = guildConfig.mods;
+        for (let role of mods) {
+            if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
+                return true;
+            }
         }
         return false;
     } else {
@@ -724,22 +728,114 @@ module.exports.getHighestFame = characters => {
     return highestFame;
 };
 
-module.exports.raidTemplateExists = (templateName, guildConfig) => {
-    const templateNames = guildConfig.raidTemplateNames;
-    for (let i=0; i<templateNames.length; i++) {
-        if (templateNames[i].toLowerCase() === templateName.toLowerCase()) {
+module.exports.verificationChannelUsed = (channelId, guildConfig) => {
+    const templateList = guildConfig.verificationTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        /**
+         *  verification templates are stored in the database with the name and id to quickly check for the related verification channel
+         *  this then looks like "templateName | channel.id" in the verificationTemplateNames variable in the db
+        */
+        const tempChannelId = templateList[i].split(" | ")[1].trim();
+        if (tempChannelId === channelId) {
             return true;
         }
     }
     return false;
 };
 
+module.exports.verificationTemplateExists = (template, guildConfig) => {
+    const templateList = guildConfig.verificationTemplateNames;
+    let channelId;
+    if (template.startsWith("<#") && template.endsWith(">")) {
+        channelId = template.substring(2, template.length-1);
+    }
+    for (let i=0; i<templateList.length; i++) {
+        /**
+         *  verification templates are stored in the database with the name and id to quickly check for the related verification channel
+         *  this then looks like "templateName | channel.id" in the verificationTemplateNames variable in the db
+        */
+        if (channelId) {
+            const templateSplit = templateList[i].split(" | ");
+            const tempChannelId = templateSplit[1].trim();
+            if (tempChannelId === channelId) {
+                return templateSplit[0].trim();
+            }
+
+        } else {
+            const listName = templateList[i].split(" | ")[0].trim();
+            if (listName.toLowerCase() === template.toLowerCase()) {
+                return listName;
+            }
+        }
+    }
+    return undefined;
+};
+
+module.exports.getVerificationTemplate = async (client, msg, templateName, guildConfig, db) => {
+    let actualName;
+    const templateList = guildConfig.verificationTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        /**
+         *  verification templates are stored in the database with the name and id to quickly check for the related verification channel
+         *  this then looks like "templateName | channel.id" in the verificationTemplateNames variable in the db
+        */
+        const listName = templateList[i].split(" | ")[0].trim();
+        if (listName.toLowerCase() === templateName.toLowerCase()) {
+            actualName = listName;
+        }
+    }
+    return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("verificationTemplates").doc(`${actualName}`).get().then(snapshot => {
+        if (!snapshot) {
+            if (msg) {
+                const embed = this.getStandardEmbed(client)
+                    .setTitle("No Raid Template Found")
+                    .setDescription(`There is no existing raid template with the name ${templateName} for this server.`);
+                msg.channel.send(embed);
+            }
+            return undefined;
+        }
+        return snapshot.data();
+    }).then(template => {
+        if (template) {
+            if (template.verificationChannel) {
+                template.verificationChannel = this.getChannelById(msg.guild, template.verificationChannel, "text");
+            }
+            if (template.logChannel) {
+                template.logChannel = this.getChannelById(msg.guild, template.logChannel, "text");
+            }
+            if (template.guildRoles) {
+                template.founderRole = this.getRoleById(msg.guild, template.founderRole);
+                template.leaderRole = this.getRoleById(msg.guild, template.leaderRole);
+                template.officerRole = this.getRoleById(msg.guild, template.officerRole);
+                template.memberRole = this.getRoleById(msg.guild, template.memberRole);
+                template.initiateRole = this.getRoleById(msg.guild, template.initiateRole);
+            }
+            if (template.verifiedRole) {
+                template.verifiedRole = this.getRoleById(msg.guild, template.verifiedRole);
+            }
+            return template;
+        } else {
+            return undefined;
+        }
+    }).catch(console.error);
+};
+
+module.exports.raidTemplateExists = (templateName, guildConfig) => {
+    const templateList = guildConfig.raidTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        if (templateList[i].toLowerCase() === templateName.toLowerCase()) {
+            return templateList[i];
+        }
+    }
+    return undefined;
+};
+
 module.exports.getRaidTemplate = async (templateName, guildConfig, db, client, msg) => {
-    let actualName = null;
-    const templateNames = guildConfig.raidTemplateNames;
-    for (let i=0; i<templateNames.length; i++) {
-        if (templateNames[i].toLowerCase() === templateName.toLowerCase()) {
-            actualName = templateNames[i];
+    let actualName;
+    const templateList = guildConfig.raidTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        if (templateList[i].toLowerCase() === templateName.toLowerCase()) {
+            actualName = templateList[i];
         }
     }
     return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("raidTemplates").doc(`${actualName}`).get().then(snapshot => {

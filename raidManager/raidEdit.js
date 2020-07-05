@@ -27,6 +27,7 @@ const leftUndefined = raidTemplate => {
     if (!raidTemplate.primaryEmoji) {
         return true;
     }
+    return false;
 };
 
 const displayCancelledPage = (client, msg) => {
@@ -35,15 +36,15 @@ const displayCancelledPage = (client, msg) => {
     msg.edit(embed);
 };
 
-const displayStartPage = (client, raidTemplate, type, msg, pageInfo, first=false) => {
+const displayStartPage = (client, type, msg, pageInfo, first=false) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle(`${type} a Raid Template`)
         .setDescription(`In order to ${type.toLowerCase()} raid template, you will need to respond to each parameter.
-To do this, simply type a response in this channel whenever asked.
+To do this, simply type a response in this channel whenever promtped.
 \nWhenever typing a custom emoji enter it as **<emojiname>** otherwise, you can just type an emoji like :100:.
 \nTo switch setup pages, use the ⬅ and ➡ reactions.
 To cancel this command at any time, react with ❌.
-**Doing this will discard all progress and changes.**
+**Doing this will discard all progress and/or changes.**
 \nTo begin, react with ➡.`)
         .addField("Note", `This setup will time out after remaining on the same page for 5 minutes.`)
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
@@ -54,23 +55,17 @@ To cancel this command at any time, react with ❌.
 };
 
 const displayNamePage = (client, p, raidTemplate, guildConfig, msg, alreadyExists=false, attemptedRes, pageInfo) => {
-    let existingNames = ``;
+    let existingNames = "";
     for (let name of guildConfig.raidTemplateNames) {
-        if (existingNames === "") {
-            existingNames += `${name}`;
-        } else {
-            existingNames += ` | ${name}`;
-        }
+        existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
-    if (existingNames === "") {
-        existingNames = "No existing raid template names.";
-    }
+    existingNames = existingNames != "" ? existingNames : "No existing raid template names.";
 
     let embed = tools.getStandardEmbed(client)
         .setTitle("Raid Template Name")
         .setDescription(`Respond with the name you would like to use for this raid template. It cannot be the same name as an existing template.
-If you would like to edit an existing raid, use the \`${p}raid edit <templateName>\` command.
-\n**Note:** Raid names should not include spaces. If you want to seperate words use a hyphen (-) or underscore (_).`)
+If you would like to edit an existing template, use the \`${p}raid edit <templateName>\` command.
+\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!`)
         .addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
@@ -79,10 +74,10 @@ If you would like to edit an existing raid, use the \`${p}raid edit <templateNam
             );
 
     if (alreadyExists) {
-        embed = embed.setDescription(`${attemptedRes} already exists as a raid name! Please respond with a new name that does not already exist or use the raid editing command to update it.`);
+        embed = embed.addField("Invalid Input", `${attemptedRes} already exists as a raid name! Please respond with a new name that does not already exist or use the raid editing command to update it.`);
 
     } else {
-        embed = embed.setDescription("Respond with the desired name for this raid template. It should not be the same as an existing one.");
+        embed = embed.addField("Instructions", "Respond with the desired name for this raid template. It should not be the same as an existing one.");
     }
     embed = embed.setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
@@ -271,7 +266,7 @@ ${descriptionPiece}
 const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo, clientEmojisList, msg, res) => {
     switch (pageInfo.pageName) {
         case "start":
-            displayStartPage(client, raidTemplate, type, msg, pageInfo);
+            displayStartPage(client, type, msg, pageInfo);
             break;
 
         case "name":
@@ -310,7 +305,7 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
                     }
                 }
             }
-            displayPrimaryEmojiPage(client, raidTemplate, clientEmojisList,  msg, pageInfo);
+            displayPrimaryEmojiPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
             break;
 
         case "secondarySetup":
@@ -411,6 +406,7 @@ const updateTemplateDatabase = async (raidTemplate, guildConfig, newTemplate, ms
         newRaidNames.push(raidTemplate.name);
     
         promises.push(guildDoc.update({
+            "guildName": msg.guild.name,
             "raidTemplateNames": newRaidNames,
         }));
     }
@@ -435,7 +431,7 @@ const updatePagesList = (newTemplate, secondaryNum) => {
 };
 
 const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => {
-    let raidTemplate = null;
+    let raidTemplate;
     const templateName = tools.getArgs(msg.content, p, 2)[0];
     if (!newTemplate) {
         raidTemplate = await tools.getRaidTemplate(templateName, guildConfig, db, client, msg);
@@ -501,8 +497,9 @@ const processCollection = (client, p, msg, collector, reaction, type, newTemplat
         } else {
             // finish
             if (!leftUndefined(raidTemplate)) {
-                updateTemplateDatabase(raidTemplate, guildConfig, newTemplate, msg, db);
-                displayEndPage(client, p, raidTemplate, m, true, pageInfo);
+                updateTemplateDatabase(raidTemplate, guildConfig, newTemplate, msg, db).then(() => {
+                    displayEndPage(client, p, raidTemplate, m, true, pageInfo);
+                });
                 collector.stop();
             }
         }
@@ -525,7 +522,7 @@ module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTem
         pageName: pages[0],
     };
 
-    const embed = displayStartPage(client, raidTemplate, type, msg, pageInfo, true);
+    const embed = displayStartPage(client, type, msg, pageInfo, true);
 
     const reactionsList = ["⬅", "➡", "❌"];
     const reactionFilter = (reaction, user) => ((user.id === msg.author.id) && (reactionsList.includes(reaction.emoji.name)));

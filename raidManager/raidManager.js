@@ -17,6 +17,7 @@ const deleteTemplate = (templateName, guildConfig, db) => {
         }
     }
     promises.push(guildDoc.update({
+        "guildName": msg.guild.name,
         "raidTemplateNames": updatedNames,
     }));
 
@@ -31,27 +32,28 @@ const confirmTemplateDeleted = (client, templateName, msg) => {
 
 const cancelDeleteTemplate = (client, msg) => {
     const embed = tools.getStandardEmbed(client)
-        .setTitle("Template Delete Cancelled");
+        .setTitle("Raid Template Delete Cancelled");
     msg.edit(embed);
 };
 
 const templateNotFound = (client, templateName, msg) => {
     const embed = tools.getStandardEmbed(client)
-        .setTitle(`${templateName} Not Found`);
+        .setTitle(`${templateName} Not Found`)
+        .setDescription(`A raid template with the name ${templateName} could not be found in this server.`);
     msg.channel.send(embed);
 };
 
-module.exports.deleteRaidTemplate = async (client, p, msg, guildConfig, db) => {
+const deleteRaidTemplate = async (client, p, msg, guildConfig, db) => {
     const templateName = tools.getArgs(msg.content, p, 2)[0];
-    const templateExists = tools.raidTemplateExists(templateName, guildConfig);
-    if (!templateExists) {
+    const actualName = tools.raidTemplateExists(templateName, guildConfig);
+    if (!actualName) {
         templateNotFound(client, templateName, msg);
         return false;
     }
 
     const embed = tools.getStandardEmbed(client)
         .setTitle("Template Delete Confirmation")
-        .setDescription(`Are you sure you would like to delete the ${templateName} template?
+        .setDescription(`Are you sure you would like to delete the ${actualName} raid template?
 Reply with **yes** or **no**.`);
     return msg.channel.send(embed).then(m => {
         const messageListener =  res => {
@@ -61,8 +63,8 @@ Reply with **yes** or **no**.`);
                 switch (res.content) {
                     case "y":
                     case "yes":
-                        return deleteTemplate(templateName, guildConfig, db).then(() => {
-                            return confirmTemplateDeleted(client, templateName, m);
+                        return deleteTemplate(actualName, guildConfig, db).then(() => {
+                            return confirmTemplateDeleted(client, actualName, m);
                         }).catch(console.error);
                 }
                 return cancelDeleteTemplate(client, m);
@@ -205,62 +207,85 @@ const raidStartHelp = (client, p, msg, guildConfig) => {
 
 module.exports.raid = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 1);
-    if (args[0] != "start") {
+    const command = args[0].toLowerCase();
+
+    switch (command) {
+        case "config":
+        case "list":
+        case "create":
+        case "edit":
+        case "delete":
+        case "start":
+        case "shorthand":
+            break;
+        default:
+            const fullCommand = `${p}raid ${args[0]}`;
+            msg.reply(`"${fullCommand}" is not a valid command!`);
+            return false;
+    }
+
+    if (command != "start") {
         const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
         if (!tools.isAdmin(guildMember, guildConfig)) {
             const embed = tools.getStandardEmbed(client)
-                .setTitle("Must be Server Admin to Access This Command");
+                .setTitle("Must be a Bot Admin to Access This Command!");
             msg.channel.send(embed);
             return false;
         }
     }
 
-    if ((args.length > 1) && ((args[0] != "create") && (args[0] != "shorthand") && (args[0] != "config")) && (!tools.raidTemplateExists(args[1], guildConfig))) {
-        const embed = tools.getStandardEmbed(client)
-            .setTitle("Raid Template Does Not Exist")
-            .setDescription(`There is no raid template named **${args[1]}** in this server.`);
-        msg.channel.send(embed);
-        return false;
-    } else if ((args.length > 1) && (args[0] === "create") && (tools.raidTemplateExists(args[1], guildConfig))){
-        const embed = tools.getStandardEmbed(client)
-            .setTitle("Raid Template Already Exists")
-            .setDescription(`There is already a raid template named **${args[1]}** in this server. If you would like to edit it, use:
+    if (args.length > 1) {
+        if ((command === "create") && (tools.raidTemplateExists(args[1], guildConfig))) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("Raid Template Already Exists")
+                .setDescription(`There is already a raid template named **${args[1]}** in this server. If you would like to edit it, use:
 \`\`\`${p}raid edit ${args[1]}\`\`\`
 Otherwise, please enter a unique raid template name.`);
-        msg.channel.send(embed);
-        return false;
+            msg.channel.send(embed);
+            return false;
+
+        } else if (((command != "create") && (command != "shorthand") && (command != "config")) && (!tools.raidTemplateExists(args[1], guildConfig))) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("Raid Template Does Not Exist")
+                .setDescription(`There is no raid template named **${args[1]}** in this server.`);
+            msg.channel.send(embed);
+            return false;
+        }
     }
 
-    switch (args[0]) {
+    switch (command) {
         case "config":
-            return raidConfig.configRaid(client, p, msg, guildConfig, db);
+            raidConfig.configRaid(client, p, msg, guildConfig, db);
+            break;
         case "list":
-            return listRaidTemplates(client, p, msg, guildConfig, db);
+            listRaidTemplates(client, p, msg, guildConfig, db);
+            break;
         case "create":
-            return raidEdit.editRaidTemplate(client, p, msg, guildConfig, db, true);
+            raidEdit.editRaidTemplate(client, p, msg, guildConfig, db, true);
+            break;
         case "edit":
             if (args.length < 2) {
-                return raidEditHelp(client, p, msg, guildConfig);
+                raidEditHelp(client, p, msg, guildConfig);
             } else {
-                return raidEdit.editRaidTemplate(client, p, msg, guildConfig, db);
+                raidEdit.editRaidTemplate(client, p, msg, guildConfig, db);
             }
+            break;
         case "delete":
             if (args.length < 2) {
-                return raidDeleteHelp(client, p, msg, guildConfig);
+                raidDeleteHelp(client, p, msg, guildConfig);
             } else {
-                return this.deleteRaidTemplate(client, p, msg, guildConfig, db);
+                deleteRaidTemplate(client, p, msg, guildConfig, db);
             }
+            break;
         case "start":
             if (args.length < 2) {
-                return raidStartHelp(client, p, msg, guildConfig);
+                raidStartHelp(client, p, msg, guildConfig);
             } else {
-                return raidStart.startRaid(client, p, msg, guildConfig, db);
+                raidStart.startRaid(client, p, msg, guildConfig, db);
             }
+            break;
         case "shorthand":
-            return raidShorthand.shorthand(client, p, msg, guildConfig, db);
-        default:
-            const fullCommand = `${p}raid ${args[0]}`;
-            msg.reply(`"${fullCommand}" is not a valid command!`);
-            return false;
+            raidShorthand.shorthand(client, p, msg, guildConfig, db);
+            break;
     }
 };

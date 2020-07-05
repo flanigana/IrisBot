@@ -5,7 +5,7 @@ const admin = require("firebase-admin");
 
 const tools = require("./tools");
 const config = require("./config");
-const verification = require("./verification");
+const verification = require("./verification/verification");
 const render = require("./render");
 const raidManager = require("./raidManager/raidManager");
 const raidShorthand = require("./raidManager/raidShorthand");
@@ -24,13 +24,34 @@ const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
 const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
 let renders = null;
 
+const setUpGuild = async guild => {
+    return db.collection("guilds").doc(guild.id).set({
+        admins: [],
+        allowBooster: false,
+        bannedUsers: [],
+        boosterRole: null,
+        confirmationChannel: null,
+        defaultRunTimeSec: 120,
+        guildId: guild.id,
+        guildName: guild.name,
+        guildOwner: guild.owner.id,
+        mods: [],
+        prefix: "!",
+        raidLeaderRoles: [],
+        raidTemplateNames: [],
+        sendConfirmations: false,
+        shorthandNames: [],
+        verificationTemplateNames: [],
+    });
+};
+
 const generalHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
             .setTitle("Iris Bot Commands")
             .addFields(
                 {name: "Server Configuration", value: `\`\`\`${p}config\`\`\``},
                 {name: "Raid Manager", value: `\`\`\`${p}raid\`\`\``},
-                {name: "User Verification", value: `\`\`\`${p}verify\`\`\``},
+                {name: "User Verification", value: `\`\`\`${p}verification\`\`\``},
                 {name: "Realm-Related", value: `\`\`\`${p}realmEye\n${p}ppe\`\`\``},
             );
     msg.channel.send(embed);
@@ -39,75 +60,56 @@ const generalHelp = (p, msg) => {
 const configHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Configuration Commands")
-        .setDescription("Commands to set up your server for user verification.")
+        .setDescription("Commands to configure bot permissions and general settings for your server.")
         .addFields(
+            {name: "Server Setup", value: `\`\`\`${p}config prefix\n${p}config admins\n${p}config mods\`\`\``},
             {name: "View Current Configuration", value: `\`\`\`${p}config list\`\`\``},
-            {name: "Server Setup", value: `\`\`\`${p}config prefix\n${p}config permissions\n${p}config guildName\n${p}config verificationChannel\`\`\``},
-            {name: "Verification Requirements", value: `\`\`\`${p}config reqs\`\`\``},
-            {name: "Role Assignment", value: `\`\`\`${p}config roles\n${p}config allMemberRole\n${p}config nonMemberRole\`\`\``},
         );
+    msg.channel.send(embed);
+};
+
+const verifyHelp = (p, msg) => {
+    const embed = tools.getStandardEmbed(client)
+        .setTitle("Iris Bot Verification Commands")
+        .setDescription("Commands to set up and use verification in your server.")
+        .addFields(
+            {name: "Verification Configuration", value: `\`\`\`${p}verification\`\`\``},
+            {name: "List Existing Verification Templates", value: `\`\`\`${p}verification list\`\`\``},
+            {name: "Verification Template Management", value: `\`\`\`${p}verification create\n${p}verification edit\n${p}verification delete\`\`\``},
+            {name: "Verifying", value: `\`\`\`${p}verify\n${p}unverify\n${p}manualVerify\`\`\``},
+        );
+    msg.channel.send(embed);
+};
+
+const unverifyHelp = (p, msg) => {
+    const embed = tools.getStandardEmbed(client)
+        .setTitle("Iris Bot Unverify")
+        .setDescription(`Unverify a user that is verified in one of your server's verification templates using the following command:
+\`\`\`${p}unerify <@userOruserId> <templateNameOR#verificationChannel>\`\`\``)
+        .addField("View Verification Template Names", `To view this server's verification templates, use the \`${p}verification list\` command.`);
+    msg.channel.send(embed);
+};
+
+const manualVerifyHelp = (p, msg) => {
+    const embed = tools.getStandardEmbed(client)
+        .setTitle("Iris Bot Manual Verification")
+        .setDescription(`Manually verify a user that is not in your guild or does not meet requirements using the following command:
+\`\`\`${p}manualVerify <@userOruserId> <templateNameOR#verificationChannel>\`\`\``)
+        .addField("View Verification Template Names", `To view this server's verification templates, use the \`${p}verification list\` command.`);
     msg.channel.send(embed);
 };
 
 const raidHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
-    .setTitle("Iris Bot Raid Commands")
-    .setDescription("Commands to run raids in your server.")
-    .addFields(
-        {name: "Raid Configuration", value: `\`\`\`${p}raid config\n${p}raid shorthand\`\`\``},
-        {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
-        {name: "Raid Template Management", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
-        {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
-    );
+        .setTitle("Iris Bot Raid Commands")
+        .setDescription("Commands to run raids in your server.")
+        .addFields(
+            {name: "Raid Configuration", value: `\`\`\`${p}raid config\n${p}raid shorthand\`\`\``},
+            {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
+            {name: "Raid Template Management", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
+            {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
+        );
     msg.channel.send(embed);
-};
-
-const helpCommand = (p, msg) => {
-    if (msg.content.toLowerCase() === `${p}help`) {
-        generalHelp(p, msg);
-    } else if (msg.content.toLowerCase() === `${p}help config`) {
-        configHelp(p, msg);
-    }
-};
-
-const setUpGuild = async guild => {
-    const defaultChannelId = guild.channels.cache.find(channel => channel.type === "text").id;
-
-    return db.collection("guilds").doc(guild.id).set({
-        guildId: guild.id,
-        guildOwner: guild.owner.id,
-        guildName: guild.name,
-        prefix: "!",
-        realmGuildName: null,
-        permissions: [],
-        fameReq: 0,
-        rankReq: 0,
-        sixEightReq: 0,
-        eightEightReq: 0,
-        sixEightMeleeReq: 0,
-        eightEightMeleeReq: 0,
-        verifiedUsers: [],
-        bannedUsers: [],
-        assignRoles: false,
-        assignAllMember: false,
-        assignNonMember: false,
-        founderRole: null,
-        leaderRole: null,
-        officerRole: null,
-        memberRole: null,
-        initiateRole: null,
-        allMemberRole: null,
-        nonMemberRole: null,
-        globalVerification: true,
-        verificationChannel: defaultChannelId,
-        verificationLogChannel: defaultChannelId,
-        raidLeaderRoles: [],
-        raidTemplateNames: [],
-        defaultRunTimeSec: 120,
-        sendConfirmations: false,
-        allowBooster: false,
-        shorthandNames: [],
-    });
 };
 
 const configGuild = async (p, msg, guildConfig) => {
@@ -116,6 +118,26 @@ const configGuild = async (p, msg, guildConfig) => {
         return configHelp(p, msg);
     } else {
         return config.configGuild(client, p, msg, guildConfig, db);
+    }
+};
+
+const verify = async (p, msg, guildConfig) => {
+    const args = tools.getArgs(msg.content, p, 0);
+    if (args[0].toLowerCase() === "verification" && args.length === 1) {
+        return verifyHelp(p, msg);
+    } else if (args[0].toLowerCase() === "unverify" && args.length === 1) {
+        return unverifyHelp(p, msg);
+    } else {
+        return verification.verification(client, p, msg, guildConfig, db);
+    }
+};
+
+const manualVerify = async (p, msg, guildConfig) => {
+    const args = tools.getArgs(msg.content, p, 1);
+    if (args.length < 2) {
+        return manualVerifyHelp(p, msg);
+    } else {
+        return verification.manualVerify(client, p, msg, guildConfig, db);
     }
 };
 
@@ -164,7 +186,7 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
 const ppe = msg => {
     let emojiList = [];
     for (char of tools.getClasses()) {
-        emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`));
+        emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`, msg.guild.id));
     }
     emojiList.push("✅");
     emojiList.push("❌");
@@ -213,23 +235,38 @@ client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
         
         if (msg.guild) {
-            const guildConfig = await tools.getGuildConfig(msg.guild.id, db);
+            const guildConfig = await tools.getGuildConfig(msg.guild.id, db, msg);
+            if (!guildConfig) {
+                return false;
+            }
             const p = guildConfig.prefix;
+            const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
+            
             if (!msg.content.toLowerCase().startsWith(p)) {
                 return false;
             }
             const args = tools.getArgs(msg.content, p, 0);
 
-            switch (args[0]) {
+            switch (args[0].toLowerCase()) {
                 case "help":
-                    helpCommand(p, msg);
+                    generalHelp(p, msg);
                     break;
                 case "config":
                     configGuild(p, msg, guildConfig);
                     break;
                 case "verify":
-                    verification.beginVerification(client, msg, db);
+                case "unverify":
+                case "verification":
+                    verify(p, msg, guildConfig);
+                    break;
+                case "updateign":
                     msg.delete();
+                    verification.beginIgnVerification(client, msg, db);
+                    break;
+                case "manualverify":
+                    if (tools.isMod(guildMember, guildConfig)) {
+                        manualVerify(p, msg, guildConfig);
+                    }
                     break;
                 case "realmeye":
                     const ign = args[1] ? args[1] : "";
@@ -252,8 +289,25 @@ client.on("message", async msg => {
             }
         }
 
-        if ((msg.content.toLowerCase().startsWith("!verify")) && (msg.channel.type === "dm")) {
-            verification.checkForVerification(msg, client, db);
+        const args = tools.getArgs(msg.content, "!");
+        if (msg.channel.type === "dm") {
+
+            switch (args[0].toLowerCase()) {
+                case "verify":
+                    if (args.length > 1) {
+                        verification.checkForIgnVerification(client, msg, db);
+                    } else {
+                        const embed = tools.getStandardEmbed(client)
+                            .setTitle("Invalid Command")
+                            .setDescription(`In order to verify your IGN, you need include your IGN in the command, such as \`!verify <ign>\`.
+\nIf you'd like to change the IGN the bot has on record for your account, use the command \`!updateIGN\` and follow the steps.`);
+                        msg.channel.send(embed);
+                    }
+                    break;
+                case "updateign":
+                    verification.beginIgnVerification(client, msg, db);
+                    break;
+            }
         }
     }
 });

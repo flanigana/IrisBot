@@ -123,6 +123,7 @@ const shorthandDelete = (client, p, msg, guildConfig, db) => {
         }
     }
     promises.push(guildDoc.update({
+        "guildName": msg.guild.name,
         "shorthandNames": newNames,
     }));
 
@@ -147,6 +148,7 @@ const saveShorthand = (shorthand, guildConfig, db) => {
     let newNames = guildConfig.shorthandNames;
     newNames.push(shorthand.name);
     promises.push(guildDoc.update({
+        "guildName": msg.guild.name,
         "shorthandNames": newNames,
     }));
 
