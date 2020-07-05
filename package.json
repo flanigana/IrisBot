@@ -15,8 +15,8 @@
     "cheerio": "^1.0.0-rc.3",
     "discord.js": "^12.2.0",
     "dotenv": "^8.2.0",
-    "firebase-admin": "^8.12.1",
+    "firebase-admin": "^8.13.0",
     "jimp": "^0.10.3",
-    "puppeteer": "^3.0.2"
+    "puppeteer": "^3.3.0"
   }
 }
