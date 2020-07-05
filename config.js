@@ -31,7 +31,7 @@ const configPrefix = async (client, msg, p, args, doc) => {
 
 const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
-    const admin = guildMember.hasPermission("admin");
+    const admin = tools.isAdmin(guildMember, guildConfig);
     if (!admin) {
         msg.channel.send("Only the server owner can change the bot's admin roles!");
         return false;
