@@ -143,13 +143,14 @@ module.exports.sendGuildVerificationSuccess = async (client, template, guildMemb
     template.logChannel.send(embed);
 };
 
-module.exports.sendGuildVerificationReqFailure = async (client, p, template, guildMember, realmEyeData) => {
+module.exports.sendGuildVerificationReqFailure = async (client, p, template, guildMember, realmEyeData, reqCheck) => {
     const roles = [];
     guildMember.roles.cache.map(role => roles.push(role));
     const embed = tools.getStandardEmbed(client)
         .setTitle(`${guildMember.displayName} Failed to Meet Verification Requirements!`)
         .setURL(`https://www.realmeye.com/player/${realmEyeData.name}`)
-        .setDescription(`**${guildMember}** failed to meet requirements for **${template.name}** in ${template.verificationChannel}.
+        .setDescription(`**${guildMember}** failed to meet requirements for **${template.name}** in ${template.verificationChannel} for the following reasons:
+**${reqCheck.reasons}**${reqCheck.dungeonsFailed != "" ? `\n\nUser Dungeon Counts:\n${reqCheck.dungeonsFailed}\n\nRequired Dungeon Counts:\n${reqCheck.dungeonsRequired}` : ""}
 \nIf you would like to manually verify them, you can do so using the following command: \`\`\`${p}manualVerify ${guildMember.id} ${template.name}\`\`\``)
         .addFields(
             {name: "Server Name", value: `${guildMember.displayName}`, inline: true},
@@ -182,21 +183,51 @@ module.exports.sendGuildVerificationGuildFailure = async (client, p, template, g
 //**                  Requirement Checking                         */
 /////////////////////////////////////////////////////////////////////
 
-isMelee = className => {
+const isMelee = className => {
     if (className.toLowerCase() === "knight") {return true;}
     if (className.toLowerCase() === "warrior") {return true;}
     if (className.toLowerCase() === "paladin") {return true;}
     return false;
 };
 
-module.exports.meetsReqs = (client, template, realmEyeData, msg) => {
-    let pass = true;
+const checkDungeonCounts = (template, realmEyeData) => {
+    let dungeonCounts = {
+        pass: true,
+        failedCounts: "",
+        requiredCounts: "",
+    };
+
+    const requiredDungeons = tools.getArgs(template.dungeons);
+
+    for (let i=0; i < requiredDungeons.length; i+=3) {
+        const dungeonName = requiredDungeons[i];
+        const requiredCount = parseInt(requiredDungeons[i+1]);
+        const userCount = realmEyeData.dungeons[dungeonName];
+
+        if (userCount < requiredCount) {
+            dungeonCounts.pass = false;
+            dungeonCounts.failedCounts += dungeonCounts.failedCounts === "" ? `"${dungeonName}" ${userCount}` : ` | "${dungeonName}" ${userCount}`;
+            dungeonCounts.requiredCounts += dungeonCounts.requiredCounts === "" ? `"${dungeonName}" ${requiredCount}` : ` | "${dungeonName}" ${requiredCount}`;
+        }
+    }
+
+    return dungeonCounts;
+};
+
+module.exports.meetsReqs = (client, msg, template, realmEyeData, notInGuild) => {
+    let results = {
+        pass: true,
+        reasons: [],
+        dungeonsFailed: "",
+        dungeonsRequired: "",
+    };
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${realmEyeData.name} Does Not Meet Verification Requirements`)
         .setDescription(`Below are the reasons you do not meet the requirements for
 **${msg.guild}**:${msg.channel}.`);
     if (realmEyeData.fame < template.fame) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("fame");
         embed = embed.addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
@@ -205,7 +236,8 @@ module.exports.meetsReqs = (client, template, realmEyeData, msg) => {
         );
     }
     if (realmEyeData.rank < template.rank) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("rank");
         embed = embed.addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
@@ -242,24 +274,28 @@ module.exports.meetsReqs = (client, template, realmEyeData, msg) => {
      * If a server requires 2 6/8s AND 2 8/8s and a user has 4 8/8s, they will pass because 2 8/8s will be counted and 2 "6/8s" will be "left over"
      *  */
     if (eightEights < template.eightEight) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("8/8s");
         characterPass = false;
     }
     sixEights -= template.eightEight;
     sixEights = sixEights < 0 ? 0 : sixEights;
     if (sixEights < template.sixEight) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("6/8s");
         characterPass = false;
     }
 
     if (eightEightMelees < template.eightEightMelee) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("8/8 melees");
         meleePass = false;
     }
     sixEightMelees -= template.eightEightMelee;
     sixEightMelees = sixEightMelees < 0 ? 0 : sixEightMelees;
     if (sixEightMelees < template.sixEightMelee) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("6/8 melees");
         meleePass = false;
     }
 
@@ -290,17 +326,33 @@ module.exports.meetsReqs = (client, template, realmEyeData, msg) => {
     }
 
     if (template.hidden && (realmEyeData.lastSeen != "hidden")) {
-        pass = false;
+        results.pass = false;
+        results.reasons.push("location");
         embed = embed.addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
             {name: "Your Location", value: realmEyeData.lastSeen, inline: true},
             {name: "Hidden Location Required", value: `You must set your "Who can see my last known location?" setting to private on RealmEye.`, inline: true},
         );
-        msg.author.send(embed);
     }
 
-    if (!pass) {
+    if (template.dungeons) {
+        const dungeonCounts = checkDungeonCounts(template, realmEyeData);
+        if (!dungeonCounts.pass) {
+            results.pass = false;
+            results.reasons.push("dungeons");
+            results.dungeonsFailed = dungeonCounts.failedCounts;
+            results.dungeonsRequired = dungeonCounts.requiredCounts;
+            embed = embed.addFields(
+                {name: "--------------------------------------------------------------------------------------------------",
+                    value: `-----------------------------------------------------------------------------------------------`},
+                {name: "Your Dungeon Counts", value: dungeonCounts.failedCounts},
+                {name: "Required Dungeon Counts", value: dungeonCounts.requiredCounts},
+            );
+        }
+    }
+
+    if (!results.pass && !notInGuild) {
         embed = embed.addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
@@ -309,14 +361,8 @@ module.exports.meetsReqs = (client, template, realmEyeData, msg) => {
         );
         msg.author.send(embed);
     }
-
-
-    // SIMPLE VERSION THAT MOSTLY WORKS REQUIRES SPECIFIC SERVER SETTINGS TO OPERATE PROPERLY
-    // if (sixEights < template.sixEight) {return false;}
-    // if (eightEights < template.eightEight) {return false;}
-    // if (sixEightMelees < template.sixEightMelee) {return false;}
-    // if (eightEightMelees < template.eightEightMelee) {return false;}
-    return pass;
+    
+    return results;
 };
 
 

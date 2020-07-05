@@ -71,15 +71,19 @@ const verifyUser = (client, msg, guildMember, template, realmEyeData, db, manual
     // update user's and server's verification list
     promises.push(verificationTools.updateServerVerification(msg, guildMember.user, template, db));
 
+    const verifyUser = manual ? guildMember.user : msg.author;
+
     // send user success message
     if (manual) {
-        verificationTools.sendUserVerificationSuccess(client, msg, guildMember.user, template, manual);
+        verificationTools.sendUserVerificationSuccess(client, msg, verifyUser, template, manual);
     } else {
-        verificationTools.sendUserVerificationSuccess(client, msg, msg.author, template, manual);
+        verificationTools.sendUserVerificationSuccess(client, msg, verifyUser, template, manual);
     }
 
     Promise.all(promises).then(() => {
         // send new verified user message to server
+        // updates guildMember to include new roles
+        guildMember = msg.guild.members.cache.find(user => user.id === verifyUser.id);
         return verificationTools.sendGuildVerificationSuccess(client, template, guildMember, realmEyeData, manual, msg.author);
     }).catch(console.error);
 };
@@ -140,7 +144,7 @@ They need to do this first by attempting to verify in any verification channel a
 
         // set server nickname to realm ign
         if (guildMember.manageable) {
-            promises.push(guildMember.setNickname(ign));
+            guildMember.setNickname(ign);
         }
 
         if (userData[`${msg.guild.id} | ${templateName}`]) {
@@ -201,13 +205,16 @@ If **${ign}** is no longer your ign, update it by responding with \`!updateIGN\`
             }
 
             return tools.getVerificationTemplate(client, msg, templateName, guildConfig, db).then(template => {
+                let notInGuild = false;
 
                 // check if template is a guild type and if the verifying user is in the guild
                 if (template.guildType && (realmEyeData.guild.toLowerCase() != template.guildName.toLowerCase())) {
+                    notInGuild = true;
                     verificationTools.sendUserNotInGuild(client, msg, template, realmEyeData);
                 }
 
-                if (verificationTools.meetsReqs(client, template, realmEyeData, msg)) {
+                const reqCheck = verificationTools.meetsReqs(client, msg, template, realmEyeData, notInGuild);
+                if (reqCheck.pass) {
 
                     // sends message to guild to notify that user meets reqs but is not in guild
                     if (template.guildType && (realmEyeData.guild.toLowerCase() != template.guildName.toLowerCase())) {
@@ -217,8 +224,8 @@ If **${ign}** is no longer your ign, update it by responding with \`!updateIGN\`
 
                     verifyUser(client, msg, guildMember, template, realmEyeData, db, false);
 
-                } else {
-                    verificationTools.sendGuildVerificationReqFailure(client, guildConfig.prefix, template, guildMember, realmEyeData);
+                } else if (!notInGuild) {
+                    verificationTools.sendGuildVerificationReqFailure(client, guildConfig.prefix, template, guildMember, realmEyeData, reqCheck);
                     return false;
                 }
             }).catch(console.error);

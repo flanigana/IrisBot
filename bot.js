@@ -235,6 +235,7 @@ client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
         
         if (msg.guild) {
+
             const guildConfig = await tools.getGuildConfig(msg.guild.id, db, msg);
             if (!guildConfig) {
                 return false;
@@ -252,7 +253,9 @@ client.on("message", async msg => {
                     generalHelp(p, msg);
                     break;
                 case "config":
-                    configGuild(p, msg, guildConfig);
+                    if (tools.isAdmin(guildMember, guildConfig)) {
+                        configGuild(p, msg, guildConfig);
+                    }
                     break;
                 case "verify":
                 case "unverify":
@@ -281,10 +284,14 @@ client.on("message", async msg => {
                     ppe(msg);
                     break;
                 case "raid":
-                    raid(p, msg, guildConfig);
+                    if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
+                        raid(p, msg, guildConfig);
+                    }
                     break;
                 case "r":
-                    raidShorthand.startShorthand(client, p, msg, guildConfig, db);
+                    if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
+                        raidShorthand.startShorthand(client, p, msg, guildConfig, db);
+                    }
                     break;
             }
         }

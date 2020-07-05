@@ -30,6 +30,15 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 * Raid tracking used to log various raid parameters
 
 ### Change List -
+#### July 5, 2020
+* Verification
+  * Added dungeon completions to verification templates and checks
+  * Added reasons that user failed verification in message to guild
+  * Now sends a message with verification instructions to the verification channel after template creation/update
+* Adjustments / Bug Fixes
+  * Fixed a bug that happened during raid shorthand creation/update
+  * Fixed some minor message clarity issues such as in the message sent to guild verification log upon a user's successful verification
+
 #### July 4, 2020
 * Completely Reworked Verification
   * Verify IGN with bot and only type !verify in a verification channel to verify from then on.

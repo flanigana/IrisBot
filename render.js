@@ -265,7 +265,8 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
         if (!ign) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("User Not Found")
-                .setDescription(`You need to first verify with a server or supply an ign using \`${p}realmEye <ign>\``);
+                .setDescription(`You need to first verify with the bot or supply an ign using \`${p}realmEye <ign>\`
+\nIf you would like to verify with the bot, either type \`${p}updateIGN\` in any channel or DM the bot with \`!updateIGN\` to begin verification.`);
             channel.send(embed);
             return false;
         }
@@ -337,8 +338,7 @@ module.exports.guildDisplay = async (client, p, guildName, guildId, channel, db,
         if (!guildName) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("Guild Display")
-                .setDescription(`To list a guild's RealmEye information, use \`${p}guild <guildName>\`.
-Setting this server's guild will automatically display it when using \`${p}guild\`.`);
+                .setDescription(`To list a guild's RealmEye information, use \`${p}guild <guildName>\`.`);
             channel.send(embed);
             return false;
         }

@@ -57,16 +57,6 @@ module.exports.formatReactsListString = (client, raidTemplate, guildId) => {
     return reactsList != "" ? reactsList : "No reactions selected.";
 };
 
-module.exports.isRaidLeader = (guildMember, guildConfig) => {
-    const raidLeaderRoles = guildConfig.raidLeaderRoles;
-    for (let roleId of raidLeaderRoles) {
-        if (guildMember.roles.cache.find(memberRole => memberRole.id === roleId)) {
-            return true;
-        }
-    }
-    return false;
-};
-
 module.exports.isNitroBooster = (guildMember, guildConfig) => {
     if (guildMember.roles.cache.find(memberRole => memberRole.id === guildConfig.boosterRole)) {
         return true;

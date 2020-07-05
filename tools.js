@@ -144,11 +144,11 @@ module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
                     opener = ``;
                     allArgs.push(curr.substring(1, curr.length-1));
                 }
-            } else if (curr === "true") {
+            } else if (curr.toLowerCase() === "true") {
                 // converts true string to boolean
                 allArgs.push(true);
                 // convers false string to boolean
-            } else if (curr === "false") {
+            } else if (curr.toLowerCase() === "false") {
                 allArgs.push(false);
             } else {
                 allArgs.push(curr);
@@ -230,7 +230,7 @@ module.exports.classEnumerator = classValue => {
 };
 
 module.exports.getGuildEmoji = (client, guildId, emojiName, trimEnds=false, frontTrim=0, backTrim=0) => {
-    let emojiGuildIds = ["708761992705474680", "711504382394630194", "711491483588493313"];
+    let emojiGuildIds = ["710578568211464192", "708761992705474680", "711504382394630194", "711491483588493313"];
     if (guildId) {
         emojiGuildIds.push(guildId);
     }
@@ -392,8 +392,19 @@ module.exports.isMod = (guildMember, guildConfig) => {
     }
 };
 
+module.exports.isRaidLeader = (guildMember, guildConfig) => {
+    const raidLeaderRoles = guildConfig.raidLeaderRoles;
+    for (let roleId of raidLeaderRoles) {
+        if (guildMember.roles.cache.find(memberRole => memberRole.id === roleId)) {
+            return true;
+        }
+    }
+    return false;
+};
+
 module.exports.getRealmEyeInfo = async ign => {
-    const options = {
+    let promises = [];
+    let options = {
         url: `https://www.realmeye.com/player/${ign}`,
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
@@ -414,7 +425,7 @@ module.exports.getRealmEyeInfo = async ign => {
         characters: [],
     };
 
-    return axios(options).then(response => {
+    promises.push(axios(options).then(response => {
         const html = response.data;
         const $ = cheerio.load(html);
 
@@ -532,6 +543,62 @@ module.exports.getRealmEyeInfo = async ign => {
 
         return accountInfo;
 
+    }));
+
+    options.url = `https://www.realmeye.com/graveyard-summary-of-player/${ign}`;
+    promises.push(axios(options).then(response => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+
+        const playerNameBox = $(".col-md-12")[0].children[0];
+        const header = playerNameBox.children[0];
+        if (header.data && header.data.startsWith("Sorry")) {
+            return accountInfo;
+        }
+
+        let dungeons = {};
+        const tbody = $(".table-responsive > .table > tbody > tr");
+        for (let i=0; i < tbody.length; i++) {
+            const rowTitle = tbody[i].children[1].children[0].data;
+            if (!rowTitle.toLowerCase().endsWith("completed")) {
+                continue;
+            }
+            const shortTitle = rowTitle.toLowerCase().substring(0, rowTitle.length-10);
+
+            // switch (shortTitle) {
+            //     case "lost halls":
+            //         dungeons.halls = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            //     case "voids":
+            //         dungeons.voids = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            //     case "cultist hideouts":
+            //         dungeons.cults = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            //     case "nests":
+            //         dungeons.nests = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            //     case "shatters":
+            //         dungeons.shatters = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            //     case "tombs":
+            //         dungeons.tombs = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            //     case "ocean trenches":
+            //         dungeons.ots = parseInt(tbody[i].children[2].children[0].data);
+            //         break;
+            // }
+
+            if (!shortTitle.toLowerCase().includes("quests")) {
+                dungeons[shortTitle] = parseInt(tbody[i].children[2].children[0].data);
+            }
+        }
+        accountInfo.dungeons = dungeons;
+        return accountInfo;
+    }));
+
+    return Promise.all(promises).then(() => {
+        return accountInfo;
     }).catch(console.error);
 };
 
@@ -706,6 +773,42 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
         });
 
     }).catch(console.error);
+};
+
+module.exports.getRealmEyeDungeonsList = async () => {
+    // uses IAlec's (my) realmeye page to grab dungeon list (I could hard code a list, but it wouldn't stay updated automatically)
+    let options = {
+        url: `https://www.realmeye.com/graveyard-summary-of-player/IAlec`,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
+        }
+    };
+
+    return axios(options).then(response => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+
+        const playerNameBox = $(".col-md-12")[0].children[0];
+        const header = playerNameBox.children[0];
+        if (header.data && header.data.startsWith("Sorry")) {
+            return accountInfo;
+        }
+
+        let dungeons = [];
+        const tbody = $(".table-responsive > .table > tbody > tr");
+        for (let i=0; i < tbody.length; i++) {
+            const rowTitle = tbody[i].children[1].children[0].data;
+            if (!rowTitle.toLowerCase().endsWith("completed")) {
+                continue;
+            }
+            const shortTitle = rowTitle.toLowerCase().substring(0, rowTitle.length-10);
+
+            if (!shortTitle.toLowerCase().includes("quests")) {
+                dungeons.push(shortTitle);
+            }
+        }
+        return dungeons;
+    });
 };
 
 module.exports.getStandardEmbed = client => {

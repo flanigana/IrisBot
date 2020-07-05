@@ -79,7 +79,7 @@ const endRaidStartReactionCollector = async (client, collected, cancelled, raidM
 
 const moveAfk = async (raiders, destinationVc, guildConfig) => {
     destinationVc.members.map(guildMember => {
-        if (!raiders.has(guildMember) && !raidTools.isRaidLeader(guildMember, guildConfig)) {
+        if (!raiders.has(guildMember) && !tools.isRaidLeader(guildMember, guildConfig)) {
             guildMember.voice.kick("Failed to react to raid check.");
         }
     });
@@ -228,7 +228,7 @@ const createConfirmationEmbed = (client, destVc, location, secondaryEmojis, seco
 module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
     const guildMembers = msg.guild.members.cache;
     const raidStarter = guildMembers.find(mem => mem.id === msg.author.id);
-    if (!raidTools.isRaidLeader(raidStarter, guildConfig)) {
+    if (!tools.isRaidLeader(raidStarter, guildConfig)) {
         return false;
     }
 
@@ -297,7 +297,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
 
     const raidStartReactionFilter = (reaction, user) => {
         const guildMember = guildMembers.find(mem => mem.id === user.id);
-        if ((reaction.emoji.name === "✅" || reaction.emoji.name === "❌") && raidTools.isRaidLeader(guildMember, guildConfig)) {
+        if ((reaction.emoji.name === "✅" || reaction.emoji.name === "❌") && tools.isRaidLeader(guildMember, guildConfig)) {
             return true;
         } else if ((reaction.emoji === primaryEmoji) || (secondaryEmojis.includes(reaction.emoji))) {
             return true;
@@ -338,7 +338,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                 if (!user.bot) {
                     const guildMember = guildMembers.find(mem => mem.id === user.id);
                     const voice = guildMember.voice;
-                    if (raidTools.isRaidLeader(guildMember, guildConfig)) {
+                    if (tools.isRaidLeader(guildMember, guildConfig)) {
                         raidLeaders.add(guildMember);
                     }
                     if (voice.channel === idleVc || voice.channel === destinationVc) {

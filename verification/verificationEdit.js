@@ -53,8 +53,8 @@ If you would like to edit an existing template, use the \`${p}verification edit 
         .addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
-            {name: "Name", value: `**${template.name}**`, inline: true},
-            {name: "Existing Names", value: `${existingNames}`, inline: true}
+            {name: "Name", value: template.name, inline: true},
+            {name: "Existing Names", value: existingNames, inline: true}
             );
 
     if (alreadyExists) {
@@ -63,6 +63,19 @@ If you would like to edit an existing template, use the \`${p}verification edit 
 
     embed = embed.setFooter(`Iris Bot | Page ${pageInfo.currentPage+1} of ${pageInfo.pages.length}`, client.user.avatarURL());
     msg.edit(embed);
+};
+
+const processName = (client, p, template, guildConfig, pageInfo, msg, res) => {
+    let exists = false;
+    if (res) {
+        const arg = tools.getArgs(res)[0];
+        exists = tools.verificationTemplateExists(arg, guildConfig);
+        if (!exists) {
+            template.name = arg;
+        }
+    }
+
+    displayNamePage(client, p, template, guildConfig, msg, res, pageInfo, exists);
 };
 
 const displayChannelsPage = (client, p, template, guildConfig, msg, attemptedRes, pageInfo, status) => {
@@ -83,9 +96,9 @@ The log channel will be the channel that will be notified when new users verify 
         .addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
-            {name: "Verification Channel", value: `**${template.verificationChannel}**`, inline: true},
-            {name: "Log Channel", value: `**${template.logChannel}**`, inline: true},
-            {name: "Used Channels", value: `${usedChannels}`}
+            {name: "Verification Channel", value: template.verificationChannel, inline: true},
+            {name: "Log Channel", value: template.logChannel, inline: true},
+            {name: "Used Channels", value: usedChannels}
             );
 
     if (status === "used") {
@@ -97,13 +110,57 @@ The log channel will be the channel that will be notified when new users verify 
     msg.edit(embed);
 };
 
+const processChannels = (client, p, template, guildConfig, pageInfo, msg, res) => {
+    let status = "valid";
+    if (res) {
+        const args = tools.getArgs(res);
+        if (args.length > 0) {
+            const verificationChannel = tools.getChannel(msg.guild, args[0], "text");
+            if (verificationChannel) {
+                if (!tools.verificationChannelUsed(verificationChannel.id, guildConfig)) {
+                    template.verificationChannel = verificationChannel;
+                    template.logChannel = verificationChannel;
+                    if (args.length > 1) {
+                        const logChannel = tools.getChannel(msg.guild, args[1], "text");
+                        if (logChannel) {
+                            template.logChannel = logChannel;
+                        }
+                    }
+                } else {
+                    status = "used";
+                }
+            } else {
+                status = "invalid";
+            }
+            
+        }
+        displayChannelsPage(client, p, template, guildConfig, msg, args[0], pageInfo, status);
+
+    } else {
+        displayChannelsPage(client, p, template, guildConfig, msg, res, pageInfo, status);
+    }
+};
+
 const displayTypePage = (client, template, msg, pageInfo) => {
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${template.name} Type`)
         .setDescription(`Will this verification template be used to verify members of a guild? If so, respond with \`true\` otherwise respond with \`false\`.`)
-        .addField("Guild Type?", `${template.guildType}`)
+        .addField("Guild Type?", template.guildType)
         .setFooter(`Iris Bot | Page ${pageInfo.currentPage+1} of ${pageInfo.pages.length}`, client.user.avatarURL());
     msg.edit(embed);
+};
+
+const processType = (client, template, pageInfo, msg, res) => {
+    if (res) {
+        const args = tools.getArgs(res);
+        if (args.length > 0) {
+            if (typeof args[0] === "boolean") {
+                template.guildType = args[0];
+            }
+        }
+    }
+
+    displayTypePage(client, template, msg, pageInfo);
 };
 
 const displayGuildNamePage = (client, template, msg, pageInfo, valid, attemptedRes) => {
@@ -113,7 +170,7 @@ const displayGuildNamePage = (client, template, msg, pageInfo, valid, attemptedR
         .addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
-            {name: "Guild Name", value: `${template.guildName}`},
+            {name: "Guild Name", value: template.guildName},
             );
 
     if (!valid) {
@@ -122,6 +179,20 @@ const displayGuildNamePage = (client, template, msg, pageInfo, valid, attemptedR
 
     embed = embed.setFooter(`Iris Bot | Page ${pageInfo.currentPage+1} of ${pageInfo.pages.length}`, client.user.avatarURL());
     msg.edit(embed);
+};
+
+const processGuildName = async (client, template, pageInfo, msg, res) => {
+    let valid = true;
+    if (res) {
+        const guildRealmEye = await tools.getRealmEyeGuildInfo(res);
+        if (guildRealmEye.exists) {
+            template.guildName = guildRealmEye.name;
+        } else {
+            valid = false;
+        }
+    }
+    
+    displayGuildNamePage(client, template, msg, pageInfo, valid, res);
 };
 
 const displayGuildRolesPage = (client, template, msg, pageInfo, error) => {
@@ -133,12 +204,12 @@ If you do not want to assign roles based on guild ranks, just make sure that the
         .addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
-            {name: "Assign Guild Roles?", value: `${template.guildRoles}`, inline: true},
-            {name: "Founder Role", value: `${template.founderRole}`, inline: true},
-            {name: "Leader Role", value: `${template.leaderRole}`, inline: true},
-            {name: "Officer Role", value: `${template.officerRole}`, inline: true},
-            {name: "Member Role", value: `${template.memberRole}`, inline: true},
-            {name: "Initiate Role", value: `${template.initiateRole}`, inline: true},
+            {name: "Assign Guild Roles?", value: template.guildRoles, inline: true},
+            {name: "Founder Role", value: template.founderRole, inline: true},
+            {name: "Leader Role", value: template.leaderRole, inline: true},
+            {name: "Officer Role", value: template.officerRole, inline: true},
+            {name: "Member Role", value: template.memberRole, inline: true},
+            {name: "Initiate Role", value: template.initiateRole, inline: true},
             );
 
     if (error) {
@@ -150,6 +221,43 @@ If you do not want to assign roles based on guild ranks, just make sure that the
     msg.edit(embed);
 };
 
+const processGuildRoles = (client, template, pageInfo, msg, res) => {
+    let error = false;
+    if (res) {
+        const args = tools.getArgs(res);
+        if (args.length >= 5) {
+            const founder = tools.getRole(msg.guild, args[0]);
+            const leader = tools.getRole(msg.guild, args[1]);
+            const officer = tools.getRole(msg.guild, args[2]);
+            const member = tools.getRole(msg.guild, args[3]);
+            const initiate = tools.getRole(msg.guild, args[4]);
+
+            if (founder && leader && officer && member && initiate) {
+                template.guildRoles = true;
+                template.founderRole = founder;
+                template.leaderRole = leader;
+                template.officerRole = officer;
+                template.memberRole = member;
+                template.initiateRole = initiate;
+            } else {
+                error = true;
+            }
+
+        } else if (args.length === 1 && typeof args[0] === "boolean" && !args[0]) {
+            template.guildRoles = false;
+            template.founderRole = undefined;
+            template.leaderRole = undefined;
+            template.officerRole = undefined;
+            template.memberRole = undefined;
+            template.initiateRole = undefined;
+        } else {
+            error = true;
+        }
+    }
+    
+    displayGuildRolesPage(client, template, msg, pageInfo, error);
+};
+
 const displayVerifiedRolePage = (client, template, msg, pageInfo, error) => {
     const giveRoles = template.verifiedRole ? true : false;
     let embed = tools.getStandardEmbed(client)
@@ -159,8 +267,8 @@ If you do not want to assign a role upon verification, just make sure that the A
         .addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
-            {name: "Assign Verified Role?", value: `${giveRoles}`, inline: true},
-            {name: "Verified Role", value: `${template.verifiedRole}`, inline: true},
+            {name: "Assign Verified Role?", value: giveRoles, inline: true},
+            {name: "Verified Role", value: template.verifiedRole, inline: true},
             );
 
     if (error) {
@@ -172,23 +280,45 @@ If you do not want to assign a role upon verification, just make sure that the A
     msg.edit(embed);
 };
 
+const processVerifiedRole = (client, template, pageInfo, msg, res) => {
+    let err = false;
+    if (res) {
+        const args = tools.getArgs(res);
+        if (typeof args[0] === "boolean") {
+            if (!args[0]) {
+                template.verifiedRole = undefined;
+            }
+        } else {
+            const verifiedRole = tools.getRole(msg.guild, args[0]);
+            if (verifiedRole) {
+                template.verifiedRole = verifiedRole;
+            } else {
+                err = true;
+            }
+        }
+    }
+    
+    displayVerifiedRolePage(client, template, msg, pageInfo, err);
+};
+
 const displayRequirementsPage = (client, template, msg, pageInfo, error) => {
     let embed = tools.getStandardEmbed(client)
     .setTitle(`${template.name} Requirements`)
-    .setDescription(`Please respond with the requirements you would like to set for the verification template with the following format:\`\`\`<fame> <rank> <numOf6/8s> <numOf8/8s> <numOf6/8Melees> <numOf8/8Melees>\`\`\`
+    .setDescription(`Please respond with the requirements you would like to set for the verification template with the following format:
+\`\`\`<fame> <rank> <numOf6/8s> <numOf8/8s> <numOf6/8Melees> <numOf8/8Melees>\`\`\`
 \n**Note:** Rank must be a number between 0 and 80.
 \n**Note2:** An 8/8 character will also count as a 6/8 character if you only wish to check for 6/8s. If you would like 2 6/8s and 2 8/8s, a user will pass if they have 4 8/8s or 2 6/8s and 2 8/8s or anything in between.
 \n**Note3:** There can only be a max of 16 6/8s+8/8s and a max of 3 6/8melees+8/8melees. If you set the total above that, the bot will fix the number to a valid value while prioritizing 8/8 requirements`)
     .addFields(
         {name: "--------------------------------------------------------------------------------------------------",
             value: `-----------------------------------------------------------------------------------------------`},
-        {name: "Fame", value: `${template.fame}`, inline: true},
-        {name: "6/8s", value: `${template.sixEight}`, inline: true},
-        {name: "6/8 Melees", value: `${template.sixEightMelee}`, inline: true},
-        {name: "Rank", value: `${template.rank}`, inline: true},
-        {name: "8/8s", value: `${template.eightEight}`, inline: true},
-        {name: "8/8 Melees", value: `${template.eightEightMelee}`, inline: true},
-        );
+        {name: "Fame", value: template.fame, inline: true},
+        {name: "6/8s", value: template.sixEight, inline: true},
+        {name: "6/8 Melees", value: template.sixEightMelee, inline: true},
+        {name: "Rank", value: template.rank, inline: true},
+        {name: "8/8s", value: template.eightEight, inline: true},
+        {name: "8/8 Melees", value: template.eightEightMelee, inline: true},
+    );
 
     if (error) {
         embed = embed.addField("Invalid Input", `All requirements must be set at the same time. Please try again.`);
@@ -198,18 +328,150 @@ const displayRequirementsPage = (client, template, msg, pageInfo, error) => {
     msg.edit(embed);
 };
 
+const processRequirements = (client, template, pageInfo, msg, res) => {
+    const maxRank = 80;
+    const maxChars = 16;
+    const maxMelees = 3;
+    let notAll = false;
+    if (res) {
+        let args = tools.getArgs(res);
+        for (let i=0; i<args.length; i++) {
+            args[i] = parseInt(args[i]);
+            if (Number.isNaN(args[i]) || args[i] < 0) {
+                args[i] = 0;
+            }
+        }
+
+        if (args.length >= 6) {
+            template.fame = args[0];
+            // checks rank upper bound
+            template.rank = args[1] < maxRank ? args[1] : maxRank;
+
+            // check character bounds
+            if ((args[2] + args[3]) <= maxChars) {
+                template.sixEight = args[2];
+                template.eightEight = args[3];
+                
+            } else {
+                let eight = args[3] <= maxChars ? args[3] : maxChars;
+                let six = maxChars - eight;
+                six = six > 0 ? six : 0;
+
+                template.sixEight = six;
+                template.eightEight = eight;
+            }
+
+            // check melee bounds
+            if ((args[4] + args[5]) <= maxMelees) {
+                template.sixEightMelee = args[4];
+                template.eightEightMelee = args[5];
+
+            } else {
+                let eight = args[5] <= maxMelees ? args[5] : maxMelees;
+                let six = maxMelees - eight;
+                six = six > 0 ? six : 0;
+                
+                template.sixEightMelee = six;
+                template.eightEightMelee = eight;
+            }
+
+        } else {
+            notAll = true;
+        }
+    }
+    
+    displayRequirementsPage(client, template, msg, pageInfo, notAll);
+};
+
+const displayDungeonsPage = (client, template, dungeons, msg, pageInfo, error) => {
+    const requireDungeons = template.dungeons != "" ? true : false;
+    const selectedDungeons = requireDungeons ? template.dungeons : "No dungeon requirements";
+    let embed = tools.getStandardEmbed(client)
+    .setTitle(`${template.name} Dungeon Requirements`)
+    .setDescription(`Please respond with the dungeon requirements you would like to set for the verification template with the following format:
+\`\`\`"dungeon name 1" count1 "dungeon name 2" count2 ...\`\`\`
+Example:
+\`\`\`voids 25 "cultist hideouts" 50 "ocean trenches" 20\`\`\`
+Every first argument must be a valid dungeon name from the list below and every second argument must be number greater than 0
+\nIf you would like to disable this feature, simply reply \`false\`.
+\nThe list of available dungeons can be seen below. You must type them exactly as shown and surrounded by "".`)
+    .addFields(
+        {name: "Available Dungeons List", value: dungeons},
+        {name: "--------------------------------------------------------------------------------------------------",
+            value: `-----------------------------------------------------------------------------------------------`},
+        {name: "Enforce Dungeon Requirements?", value: requireDungeons},
+        {name: "Dungeon Requirements", value: selectedDungeons},
+    );
+
+    if (error) {
+        embed = embed.addField("Invalid Input", `Invalid entry format. Response must either be \`false\` or be in the exact format detailed above.`);
+    }
+
+    embed = embed.setFooter(`Iris Bot | Page ${pageInfo.currentPage+1} of ${pageInfo.pages.length}`, client.user.avatarURL());
+    msg.edit(embed);
+};
+
+const processDungeons = (client, template, dungeons, pageInfo, msg, res) => {
+    let reset = false;
+    if (res) {
+        const args = tools.getArgs(res);
+        if (typeof args[0] === "boolean") {
+            if (!args[0]) {
+                template.dungeons = "";
+                reset = true;
+            }
+
+        } else {
+            for (let i=0; i<args.length; i+=2) {
+                const dungeon = args[i].toLowerCase();
+                const num = parseInt(args[i+1]);
+
+                // if every first argument is a valid dungeon name and every second argument is a number
+                if (dungeons.includes(dungeon) && !Number.isNaN(num) && num > 0) {
+                    // if a valid dungeon list has been entered (at least one valid pair), first reset the string to empty
+                    if (!reset) {
+                        template.dungeons = "";
+                        reset = true;
+                    }
+                    template.dungeons += template.dungeons === "" ? `"${dungeon}" ${num}` : ` | "${dungeon}" ${num}`;
+                }
+            }
+        }
+
+    } else {
+        reset = true;
+    }
+
+    displayDungeonsPage(client, template, dungeons, msg, pageInfo, !reset);
+};
+
 const displayLastSeenPage = (client, template, msg, pageInfo) => {
     let embed = tools.getStandardEmbed(client)
-        .setTitle(`${template.name} Type`)
+        .setTitle(`${template.name} Hidden Requirement`)
         .setDescription(`Do you want users to have their location set to hidden in order to verify? If so, respond with \`true\` otherwise respond with \`false\`.`)
-        .addField("Require Hidden Location?", `${template.hidden}`)
+        .addField("Require Hidden Location?", template.hidden)
         .setFooter(`Iris Bot | Page ${pageInfo.currentPage+1} of ${pageInfo.pages.length}`, client.user.avatarURL());
     msg.edit(embed);
+};
+
+const processLastSeen = (client, template, pageInfo, msg, res) => {
+    if (res) {
+        const args = tools.getArgs(res);
+        if (args.length > 0) {
+            if (typeof args[0] === "boolean") {
+                template.hidden = args[0];
+            }
+        }
+    }
+
+    displayLastSeenPage(client, template, msg, pageInfo);
 };
 
 const displayEndPage = (client, p, template, msg, pageInfo, finished=false) => {
     const nameSplit = template.name.split(" ");
     const commandDisplayName = nameSplit.length > 1 ? `"${template.name}"` : `${template.name}`;
+    const requireDungeons = template.dungeons != "" ? true : false;
+    const selectedDungeons = requireDungeons ? template.dungeons : "No dungeon requirements";
 
     let embed = tools.getStandardEmbed(client);
     if (!finished) {
@@ -235,244 +497,81 @@ To delete this template, use \`${p}verification delete ${commandDisplayName}\``)
     embed = embed.addFields(
         {name: "--------------------------------------------------------------------------------------------------",
             value: `-----------------------------------------------------------------------------------------------`},
-        {name: "Name", value: `${template.name}`},
-        {name: "--------------------------------------------------------------------------------------------------",
-            value: `-----------------------------------------------------------------------------------------------`},
-        {name: "Verification Channel", value: `${template.verificationChannel}`, inline: true},
-        {name: "Verification Log Channel", value: `${template.logChannel}`, inline: true},
+        {name: "Template Name", value: template.name},
+        {name: "Verification Channel", value: template.verificationChannel, inline: true},
+        {name: "Verification Log Channel", value: template.logChannel, inline: true},
         );
     if (template.guildType) {
         embed = embed.addFields(
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
-            {name: "Assign Guild Roles?", value: `${template.guildRoles}`, inline: true},
-            {name: "Founder Role", value: `${template.founderRole}`, inline: true},
-            {name: "Leader Role", value: `${template.leaderRole}`, inline: true},
-            {name: "Officer Role", value: `${template.officerRole}`, inline: true},
-            {name: "Member Role", value: `${template.memberRole}`, inline: true},
-            {name: "Initiate Role", value: `${template.initiateRole}`, inline: true},
+            {name: "Guild Name", value: template.guildName},
+            {name: "Assign Guild Roles?", value: template.guildRoles, inline: true},
+            {name: "Founder Role", value: template.founderRole, inline: true},
+            {name: "Leader Role", value: template.leaderRole, inline: true},
+            {name: "Officer Role", value: template.officerRole, inline: true},
+            {name: "Member Role", value: template.memberRole, inline: true},
+            {name: "Initiate Role", value: template.initiateRole, inline: true},
         );
     }
     embed = embed.addFields(
-        {name: "--------------------------------------------------------------------------------------------------",
-            value: `-----------------------------------------------------------------------------------------------`},
         {name: "Assign Verified Role?", value: `${template.verifiedRole ? true : false}`, inline: true},
-        {name: "Verified Role", value: `${template.verifiedRole}`, inline: true},
+        {name: "Verified Role", value: template.verifiedRole, inline: true},
         {name: "--------------------------------------------------------------------------------------------------",
             value: `-----------------------------------------------------------------------------------------------`},
-        {name: "Fame", value: `${template.fame}`, inline: true},
-        {name: "6/8s", value: `${template.sixEight}`, inline: true},
-        {name: "6/8 Melees", value: `${template.sixEightMelee}`, inline: true},
-        {name: "Rank", value: `${template.rank}`, inline: true},
-        {name: "8/8s", value: `${template.eightEight}`, inline: true},
-        {name: "8/8 Melees", value: `${template.eightEightMelee}`, inline: true},
-        {name: "--------------------------------------------------------------------------------------------------",
-            value: `-----------------------------------------------------------------------------------------------`},
-        {name: "Require Hidden Location?", value: `${template.hidden}`},
+        {name: "Fame", value: template.fame, inline: true},
+        {name: "6/8s", value: template.sixEight, inline: true},
+        {name: "6/8 Melees", value: template.sixEightMelee, inline: true},
+        {name: "Rank", value: template.rank, inline: true},
+        {name: "8/8s", value: template.eightEight, inline: true},
+        {name: "8/8 Melees", value: template.eightEightMelee, inline: true},
+        {name: "Require Hidden Location?", value: template.hidden},
+        {name: "Required Dungeons", value: selectedDungeons},
     );
     embed = embed.setFooter(`Iris Bot | Page ${pageInfo.currentPage+1} of ${pageInfo.pages.length}`, client.user.avatarURL());
     msg.edit(embed);
 };
 
-const updateCurrentPage = async (client, p, template, guildConfig, pageInfo, msg, res) => {
+const updateCurrentPage = async (client, p, template, dungeons, guildConfig, pageInfo, msg, res) => {
     switch (pageInfo.pageName) {
         case "start":
             displayStartPage(client, msg, pageInfo);
             break;
 
         case "name":
-            let exists = false;
-            if (res) {
-                const arg = tools.getArgs(res)[0];
-                exists = tools.verificationTemplateExists(arg, guildConfig);
-                if (!exists) {
-                    template.name = arg;
-                }
-            }
-
-            displayNamePage(client, p, template, guildConfig, msg, res, pageInfo, exists);
+            processName(client, p, template, guildConfig, pageInfo, msg, res);
             break;
 
         case "channels":
-            let status = "valid";
-            if (res) {
-                const args = tools.getArgs(res);
-                if (args.length > 0) {
-                    const verificationChannel = tools.getChannel(msg.guild, args[0], "text");
-                    if (verificationChannel) {
-                        if (!tools.verificationChannelUsed(verificationChannel.id, guildConfig)) {
-                            template.verificationChannel = verificationChannel;
-                            template.logChannel = verificationChannel;
-                            if (args.length > 1) {
-                                const logChannel = tools.getChannel(msg.guild, args[1], "text");
-                                if (logChannel) {
-                                    template.logChannel = logChannel;
-                                }
-                            }
-                        } else {
-                            status = "used";
-                        }
-                    } else {
-                        status = "invalid";
-                    }
-                    
-                }
-                displayChannelsPage(client, p, template, guildConfig, msg, args[0], pageInfo, status);
-
-            } else {
-                displayChannelsPage(client, p, template, guildConfig, msg, res, pageInfo, status);
-            }
+            processChannels(client, p, template, guildConfig, pageInfo, msg, res);
             break;
 
         case "type":
-            if (res) {
-                const args = tools.getArgs(res);
-                if (args.length > 0) {
-                    if (typeof args[0] === "boolean") {
-                        template.guildType = args[0];
-                    }
-                }
-            }
-
-            displayTypePage(client, template, msg, pageInfo);
+            processType(client, template, pageInfo, msg, res);
             break;
         
         case "guildName":
-            let valid = true;
-            if (res) {
-                const guildRealmEye = await tools.getRealmEyeGuildInfo(res);
-                if (guildRealmEye.exists) {
-                    template.guildName = guildRealmEye.name;
-                } else {
-                    valid = false;
-                }
-            }
-            
-            displayGuildNamePage(client, template, msg, pageInfo, valid, res);
+            processGuildName(client, template, pageInfo, msg, res);
             break;
 
         case "guildRoles":
-            let error = false;
-            if (res) {
-                const args = tools.getArgs(res);
-                if (args.length >= 5) {
-                    const founder = tools.getRole(msg.guild, args[0]);
-                    const leader = tools.getRole(msg.guild, args[1]);
-                    const officer = tools.getRole(msg.guild, args[2]);
-                    const member = tools.getRole(msg.guild, args[3]);
-                    const initiate = tools.getRole(msg.guild, args[4]);
-
-                    if (founder && leader && officer && member && initiate) {
-                        template.guildRoles = true;
-                        template.founderRole = founder;
-                        template.leaderRole = leader;
-                        template.officerRole = officer;
-                        template.memberRole = member;
-                        template.initiateRole = initiate;
-                    } else {
-                        error = true;
-                    }
-
-                } else if (args.length === 1 && typeof args[0] === "boolean" && !args[0]) {
-                    template.guildRoles = false;
-                    template.founderRole = undefined;
-                    template.leaderRole = undefined;
-                    template.officerRole = undefined;
-                    template.memberRole = undefined;
-                    template.initiateRole = undefined;
-                } else {
-                    error = true;
-                }
-            }
-            
-            displayGuildRolesPage(client, template, msg, pageInfo, error);
+            processGuildRoles(client, template, pageInfo, msg, res);
             break;
 
         case "verifiedRole":
-            let err = false;
-            if (res) {
-                const args = tools.getArgs(res);
-                if (typeof args[0] === "boolean" && !args[0]) {
-                    template.verifiedRole = undefined;
-                } else {
-                    const verifiedRole = tools.getRole(msg.guild, args[0]);
-                    if (verifiedRole) {
-                        template.verifiedRole = verifiedRole;
-                    } else {
-                        err = true;
-                    }
-                }
-            }
-            
-            displayVerifiedRolePage(client, template, msg, pageInfo, err);
+            processVerifiedRole(client, template, pageInfo, msg, res);
             break;
 
         case "requirements":
-            const maxRank = 80;
-            const maxChars = 16;
-            const maxMelees = 3;
-            let notAll = false;
-            if (res) {
-                let args = tools.getArgs(res);
-                for (let i=0; i<args.length; i++) {
-                    args[i] = parseInt(args[i]);
-                    if (Number.isNaN(args[i]) || args[i] < 0) {
-                        args[i] = 0;
-                    }
-                }
+            processRequirements(client, template, pageInfo, msg, res);
+            break;
 
-                if (args.length >= 6) {
-                    template.fame = args[0];
-                    // checks rank upper bound
-                    template.rank = args[1] < maxRank ? args[1] : maxRank;
-
-                    // check character bounds
-                    if ((args[2] + args[3]) <= maxChars) {
-                        template.sixEight = args[2];
-                        template.eightEight = args[3];
-                        
-                    } else {
-                        let eight = args[3] <= maxChars ? args[3] : maxChars;
-                        let six = maxChars - eight;
-                        six = six > 0 ? six : 0;
-
-                        template.sixEight = six;
-                        template.eightEight = eight;
-                    }
-
-                    // check melee bounds
-                    if ((args[4] + args[5]) <= maxMelees) {
-                        template.sixEightMelee = args[4];
-                        template.eightEightMelee = args[5];
-
-                    } else {
-                        let eight = args[5] <= maxMelees ? args[5] : maxMelees;
-                        let six = maxMelees - eight;
-                        six = six > 0 ? six : 0;
-                        
-                        template.sixEightMelee = six;
-                        template.eightEightMelee = eight;
-                    }
-
-                } else {
-                    notAll = true;
-                }
-            }
-            
-            displayRequirementsPage(client, template, msg, pageInfo, notAll);
+        case "dungeonRequirements":
+            processDungeons(client, template, dungeons, pageInfo, msg, res);
             break;
 
         case "hidden":
-            if (res) {
-                const args = tools.getArgs(res);
-                if (args.length > 0) {
-                    if (typeof args[0] === "boolean") {
-                        template.hidden = args[0];
-                    }
-                }
-            }
-
-            displayLastSeenPage(client, template, msg, pageInfo);
+            processLastSeen(client, template, pageInfo, msg, res);
             break;
 
         case "end":
@@ -481,6 +580,54 @@ const updateCurrentPage = async (client, p, template, guildConfig, pageInfo, msg
     }
 
     return template;
+};
+
+const sendVerificationInstructions = (client, p, template) => {
+    const requireDungeons = template.dungeons != "" ? true : false;
+    const selectedDungeons = requireDungeons ? template.dungeons : "No dungeon requirements";
+
+    let embed = tools.getStandardEmbed(client);
+    embed = embed.setTitle(`Instructions to Verify in this Channel`)
+        .setDescription(`In order to begin verification in this channel type \`${p}verify\`.
+\nIf you have not yet verified with Iris Bot, you will first be sent instructions in your DMs to verify your realm IGN through RealmEye.
+If you have already verified your IGN, your account stats from RealmEye will be checked to see if they meet the requirements listed below.`);
+
+    if (template.guildType) {
+        embed = embed.addFields(
+            {name: "--------------------------------------------------------------------------------------------------",
+                value: `-----------------------------------------------------------------------------------------------`},
+            {name: "Required Guild Membership", value: `Must be a member of **${template.guildName}**`}
+        );
+    }
+
+    embed = embed.addFields(
+            {name: "--------------------------------------------------------------------------------------------------",
+                value: `-----------------------------------------------------------------------------------------------`},
+            {name: "Fame", value: template.fame, inline: true},
+            {name: "6/8s", value: template.sixEight, inline: true},
+            {name: "6/8 Melees", value: template.sixEightMelee, inline: true},
+            {name: "Rank", value: template.rank, inline: true},
+            {name: "8/8s", value: template.eightEight, inline: true},
+            {name: "8/8 Melees", value: template.eightEightMelee, inline: true},
+    );
+
+    if (template.hidden) {
+        embed = embed.addFields(
+            {name: "--------------------------------------------------------------------------------------------------",
+                value: `-----------------------------------------------------------------------------------------------`},
+            {name: "Hidden Location Required", value: `You must set your "Who can see my last known location?" setting to private on RealmEye.`},
+        );
+    }
+
+    if (requireDungeons) {
+        embed = embed.addFields(
+            {name: "--------------------------------------------------------------------------------------------------",
+                value: `-----------------------------------------------------------------------------------------------`},
+            {name: "Required Dungeons", value: selectedDungeons},
+        );
+    }
+
+    template.verificationChannel.send(embed);
 };
 
 const updateTemplateDatabase = async (template, guildConfig, newTemplate, msg, db) => {
@@ -522,6 +669,7 @@ const updateTemplateDatabase = async (template, guildConfig, newTemplate, msg, d
         "eightEight": template.eightEight,
         "sixEightMelee": template.sixEightMelee,
         "eightEightMelee": template.eightEightMelee,
+        "dungeons": template.dungeons,
         "hidden": template.hidden,
         "verified": template.verified,
     }));
@@ -569,12 +717,13 @@ const updatePagesList = (template, newTemplate) => {
     }
     pages.push("verifiedRole");
     pages.push("requirements");
+    pages.push("dungeonRequirements");
     pages.push("hidden");
     pages.push("end");
     return pages;
 };
 
-const processCollection = (client, p, msg, collector, reaction, newTemplate, template, guildConfig, pageInfo, m, db) => {
+const processCollection = (client, p, msg, collector, reaction, newTemplate, template, dungeons, guildConfig, pageInfo, m, db) => {
     pageInfo.pages = updatePagesList(template, newTemplate);
     if (reaction.emoji.name === "❌") {
         // cancel
@@ -587,19 +736,20 @@ const processCollection = (client, p, msg, collector, reaction, newTemplate, tem
             pageInfo.currentPage = pageInfo.currentPage - 1;
             pageInfo.pageName = pageInfo.pages[pageInfo.currentPage];
         }
-        updateCurrentPage(client, p, template, guildConfig, pageInfo, m);
+        updateCurrentPage(client, p, template, dungeons, guildConfig, pageInfo, m);
     } else if (reaction.emoji.name === "➡") {
         collector.resetTimer();
         // go forward page
         if (pageInfo.currentPage < pageInfo.pages.length-1) {
             pageInfo.currentPage = pageInfo.currentPage + 1;
             pageInfo.pageName = pageInfo.pages[pageInfo.currentPage];
-            updateCurrentPage(client, p, template, guildConfig, pageInfo, m);
+            updateCurrentPage(client, p, template, dungeons, guildConfig, pageInfo, m);
         } else {
             // finish
             if (!leftUndefined(template)) {
                 updateTemplateDatabase(template, guildConfig, newTemplate, msg, db).then(() => {
                     displayEndPage(client, p, template, m, pageInfo, true);
+                    sendVerificationInstructions(client, p, template);
                 });
                 collector.stop();
             }
@@ -632,6 +782,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
             eightEight: 0,
             sixEightMelee: 0,
             eightEightMelee: 0,
+            dungeons: "",
             hidden: false,
             verified: [],
         };
@@ -641,6 +792,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
 
 module.exports.editVerificationTemplate = async (client, p, msg, guildConfig, db, newTemplate=false) => {
     let template = await getTemplateData(client, p, msg, guildConfig, db, newTemplate);
+    let dungeons = await tools.getRealmEyeDungeonsList();
 
     let pages = updatePagesList(template, newTemplate);
     let pageInfo = {
@@ -659,7 +811,7 @@ module.exports.editVerificationTemplate = async (client, p, msg, guildConfig, db
         const messageListener =  async res => {
             if (((res.channel === msg.channel) && (res.author.id === msg.author.id))) {
                 // update info
-                template = await updateCurrentPage(client, p, template, guildConfig, pageInfo, m, res.content);
+                template = await updateCurrentPage(client, p, template, dungeons, guildConfig, pageInfo, m, res.content);
                 res.delete();
             }
         };
@@ -667,7 +819,7 @@ module.exports.editVerificationTemplate = async (client, p, msg, guildConfig, db
 
         const collector = m.createReactionCollector(reactionFilter, {time: 300000});
         collector.on("collect", reaction => {
-            processCollection(client, p, msg, collector, reaction, newTemplate, template, guildConfig, pageInfo, m, db);
+            processCollection(client, p, msg, collector, reaction, newTemplate, template, dungeons, guildConfig, pageInfo, m, db);
         });
 
         collector.on("end", collected => {
