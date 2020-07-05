@@ -363,7 +363,7 @@ module.exports.getGuildName = async (id, db) => {
 };
 
 module.exports.isAdmin = (guildMember, guildConfig) => {
-    const admin = guildMember.hasPermission("admin");
+    const admin = guildMember.hasPermission("ADMINISTRATOR");
     if (guildMember.user.id === "225044370930401280") {
         return true;
     }
