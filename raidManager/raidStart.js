@@ -318,7 +318,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
     raidOptions.alertChannel.send(embed).then(m => {
         let confirmations = createConfirmationEmbed(client, destinationVc, location, secondaryEmojis, secondaryConfirms);
         let confirmedMessage = null;
-        if (guildConfig.sendConfirmations) {
+        if (guildConfig.sendConfirmations && confirmationChannel) {
             confirmationChannel.send(confirmations).then(confirmed => {
                 confirmedMessage = confirmed;
             });
@@ -361,7 +361,9 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                             } else {
                                 user.send(`You are now confirmed with ${reaction.emoji} for the raid. Please go to location announced with your ${reaction.emoji}.`);
                             }
-                            confirmedMessage.edit(createConfirmationEmbed(client, destinationVc, location, secondaryEmojis, secondaryConfirms));
+                            if (confirmedMessage) {
+                                confirmedMessage.edit(createConfirmationEmbed(client, destinationVc, location, secondaryEmojis, secondaryConfirms));
+                            }
                         } else if (confirmed) {
                             user.send(`The raid has already reached the limit for ${reaction.emoji}'s. You can still join the raid, but will no longer be given early location.`);
                         } else {

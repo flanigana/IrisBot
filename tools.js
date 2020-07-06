@@ -563,34 +563,14 @@ module.exports.getRealmEyeInfo = async ign => {
             if (!rowTitle.toLowerCase().endsWith("completed")) {
                 continue;
             }
+
             const shortTitle = rowTitle.toLowerCase().substring(0, rowTitle.length-10);
-
-            // switch (shortTitle) {
-            //     case "lost halls":
-            //         dungeons.halls = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            //     case "voids":
-            //         dungeons.voids = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            //     case "cultist hideouts":
-            //         dungeons.cults = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            //     case "nests":
-            //         dungeons.nests = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            //     case "shatters":
-            //         dungeons.shatters = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            //     case "tombs":
-            //         dungeons.tombs = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            //     case "ocean trenches":
-            //         dungeons.ots = parseInt(tbody[i].children[2].children[0].data);
-            //         break;
-            // }
-
             if (!shortTitle.toLowerCase().includes("quests")) {
                 dungeons[shortTitle] = parseInt(tbody[i].children[2].children[0].data);
+                // check for last dungeon
+                if (shortTitle === "pirate caves") {
+                    break;
+                }
             }
         }
         accountInfo.dungeons = dungeons;
@@ -805,6 +785,10 @@ module.exports.getRealmEyeDungeonsList = async () => {
 
             if (!shortTitle.toLowerCase().includes("quests")) {
                 dungeons.push(shortTitle);
+                // check for last dungeon
+                if (shortTitle === "pirate caves") {
+                    break;
+                }
             }
         }
         return dungeons;
