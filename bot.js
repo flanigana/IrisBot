@@ -9,6 +9,7 @@ const verification = require("./verification/verification");
 const render = require("./render");
 const raidManager = require("./raidManager/raidManager");
 const raidShorthand = require("./raidManager/raidShorthand");
+const parser = require("./parser/parser");
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -246,6 +247,7 @@ client.on("message", async msg => {
             if (!msg.content.toLowerCase().startsWith(p)) {
                 return false;
             }
+
             const args = tools.getArgs(msg.content, p, 0);
 
             switch (args[0].toLowerCase()) {
@@ -291,6 +293,11 @@ client.on("message", async msg => {
                 case "r":
                     if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
                         raidShorthand.startShorthand(client, p, msg, guildConfig, db);
+                    }
+                    break;
+                case "parse":
+                    if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
+                        parser.parse(client, p, msg, db);
                     }
                     break;
             }

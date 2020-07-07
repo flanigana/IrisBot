@@ -17,6 +17,7 @@
     "dotenv": "^8.2.0",
     "firebase-admin": "^8.13.0",
     "jimp": "^0.10.3",
-    "puppeteer": "^3.3.0"
+    "puppeteer": "^3.3.0",
+    "tesseract.js": "^2.1.1"
   }
 }
