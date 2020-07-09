@@ -19,7 +19,7 @@ const removeRoles = async (msg, guildMember, template) => {
     } else if (!guildMember.manageable) {
         if (roleList.length > 0) {
             let outrankMsg = `${guildMember} outranks IrisBot so the following roles were not removed: `;
-            for (let role of roleList) {
+            for (const role of roleList) {
                 outrankMsg += `${role} `;
             }
             msg.channel.send(outrankMsg);
@@ -38,7 +38,7 @@ const unverifyInDocs = async (guildId, userId, template, db) => {
     }));
 
     let verifiedUsers = [];
-    for (let user of template.verified) {
+    for (const user of template.verified) {
         if (user != userId) {
             verifiedUsers.push(user);
         }

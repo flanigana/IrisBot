@@ -40,7 +40,7 @@ const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const admins = guildConfig.admins;
         let adminsList = ``;
-        for (let roleId of admins) {
+        for (const roleId of admins) {
             const role = tools.getRoleById(msg.guild, roleId);
             adminsList += adminsList === "" ? `${role}` : ` | ${role}`;
         }
@@ -59,7 +59,7 @@ const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
     } else {
         let adminsList = ``;
         let newAdmins = [];
-        for (let arg of args) {
+        for (const arg of args) {
             const role = tools.getRole(msg.guild, arg, msg);
             if (!role) {continue;}
             newAdmins.push(role.id);
@@ -88,7 +88,7 @@ const configMods = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
         const mods = guildConfig.mods;
         let modsList = ``;
-        for (let roleId of mods) {
+        for (const roleId of mods) {
             const role = tools.getRoleById(msg.guild, roleId);
             modsList += modsList === "" ? `${role}` : ` | ${role}`;
         }
@@ -107,7 +107,7 @@ const configMods = async (client, msg, p, args, guildConfig, doc) => {
     } else {
         let modsList = ``;
         let newMods = [];
-        for (let arg of args) {
+        for (const arg of args) {
             const role = tools.getRole(msg.guild, arg, msg);
             if (!role) {continue;}
             newMods.push(role.id);
@@ -134,7 +134,7 @@ const configMods = async (client, msg, p, args, guildConfig, doc) => {
 const configList = (client, msg, p, guildConfig) => {
     const admins = guildConfig.admins;
     let adminsList = ``;
-    for (let roleId of admins) {
+    for (const roleId of admins) {
         const role = tools.getRoleById(msg.guild, roleId);
         adminsList += adminsList === "" ? `${role}` : ` | ${role}`;
     }
@@ -142,7 +142,7 @@ const configList = (client, msg, p, guildConfig) => {
 
     const mods = guildConfig.mods;
     let modsList = ``;
-    for (let roleId of mods) {
+    for (const roleId of mods) {
         const role = tools.getRoleById(msg.guild, roleId);
         modsList += modsList === "" ? `${role}` : ` | ${role}`;
     }

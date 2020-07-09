@@ -368,7 +368,7 @@ module.exports.isAdmin = (guildMember, guildConfig) => {
     }
 
     const admins = guildConfig.admins;
-    for (let role of admins) {
+    for (const role of admins) {
         if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
             return true;
         }
@@ -381,7 +381,7 @@ module.exports.isMod = (guildMember, guildConfig) => {
 
     if (!mod) {
         const mods = guildConfig.mods;
-        for (let role of mods) {
+        for (const role of mods) {
             if (guildMember.roles.cache.find(memberRole => memberRole.id === role)) {
                 return true;
             }
@@ -394,7 +394,7 @@ module.exports.isMod = (guildMember, guildConfig) => {
 
 module.exports.isRaidLeader = (guildMember, guildConfig) => {
     const raidLeaderRoles = guildConfig.raidLeaderRoles;
-    for (let roleId of raidLeaderRoles) {
+    for (const roleId of raidLeaderRoles) {
         if (guildMember.roles.cache.find(memberRole => memberRole.id === roleId)) {
             return true;
         }

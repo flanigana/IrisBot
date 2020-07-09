@@ -49,7 +49,7 @@ const configRaidLeaderRoles = async (client, msg, p, args, guildConfig, doc) => 
     if (args.length === 0) {
         const roles = guildConfig.raidLeaderRoles;
         let rolesList = ``;
-        for (let roleId of roles) {
+        for (const roleId of roles) {
             const role = tools.getRoleById(msg.guild, roleId);
             if (rolesList === "") {
                 rolesList += `${role}`;
@@ -74,7 +74,7 @@ const configRaidLeaderRoles = async (client, msg, p, args, guildConfig, doc) => 
     } else {
         let rolesList = ``;
         let newRoles = [];
-        for (let arg of args) {
+        for (const arg of args) {
             const role = tools.getRole(msg.guild, arg, msg);
             if (!role) {continue;}
             newRoles.push(role.id);
@@ -221,7 +221,7 @@ To turn on/off allowing nitro boosters to react with booster role to get early l
 const listRaidConfig = (client, msg, guildConfig) => {
     const roles = guildConfig.raidLeaderRoles;
     let rolesList = ``;
-    for (let roleId of roles) {
+    for (const roleId of roles) {
         const role = tools.getRoleById(msg.guild, roleId);
         rolesList += rolesList === "" ? `${role}` : ` | ${role}`;
     }

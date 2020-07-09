@@ -64,7 +64,7 @@ const shorthandList = (client, p, msg, guildConfig, db) => {
 \`${p}raid shorthand list <shorthandName>\`.`);
         const shortNames = guildConfig.shorthandNames;
         let nameList = ``;
-        for (let name of shortNames) {
+        for (const name of shortNames) {
             nameList += nameList === "" ? `${name}` : ` | ${name}`;
         }
         embed = embed.addField("Existing Shorthand Names", `${nameList}`);
@@ -72,7 +72,7 @@ const shorthandList = (client, p, msg, guildConfig, db) => {
 
     } else {
         let shortName = args[0];
-        for (let name of guildConfig.shorthandNames) {
+        for (const name of guildConfig.shorthandNames) {
             if (shortName.toLowerCase() === name.toLowerCase()) {
                 shortName = name;
             }
@@ -117,7 +117,7 @@ const shorthandDelete = (client, p, msg, guildConfig, db) => {
     promises.push(guildDoc.collection("shorthands").doc(`${shortName}`).delete());
 
     let newNames = [];
-    for (let name of guildConfig.shorthandNames) {
+    for (const name of guildConfig.shorthandNames) {
         if (name.toLowerCase() != shortName.toLowerCase()) {
             newNames.push(name);
         }

@@ -11,7 +11,7 @@ const deleteTemplate = (templateName, guildConfig, db) => {
     promises.push(guildDoc.collection("raidTemplates").doc(`${templateName}`).delete());
 
     let updatedNames = [];
-    for (let raidName of guildConfig.raidTemplateNames) {
+    for (const raidName of guildConfig.raidTemplateNames) {
         if (raidName != templateName) {
             updatedNames.push(raidName);
         }
@@ -84,7 +84,7 @@ const listRaidTemplates = async (client, p, msg, guildConfig, db) => {
 \`${p}raid list <templateName>\`.`);
         const templateNames = guildConfig.raidTemplateNames;
         let nameList = ``;
-        for (let template of templateNames) {
+        for (const template of templateNames) {
             nameList += nameList === "" ? `${template}` : ` | ${template}`;
         }
         nameList = nameList === "" ? "No raid templates" : nameList;
@@ -93,7 +93,7 @@ const listRaidTemplates = async (client, p, msg, guildConfig, db) => {
 
     } else {
         let templateName = args[0];
-        for (let name of guildConfig.raidTemplateNames) {
+        for (const name of guildConfig.raidTemplateNames) {
             if (templateName.toLowerCase() === name.toLowerCase()) {
                 templateName = name;
             }
@@ -152,7 +152,7 @@ To delete this template, use: \`${p}raid delete ${raidTemplate.name}\``);
 
 const raidEditHelp = (client, p, msg, guildConfig) => {
     let existingNames = ``;
-    for (let name of guildConfig.raidTemplateNames) {
+    for (const name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
     const embed = tools.getStandardEmbed(client)
@@ -165,7 +165,7 @@ const raidEditHelp = (client, p, msg, guildConfig) => {
 
 const raidDeleteHelp = (client, p, msg, guildConfig) => {
     let existingNames = ``;
-    for (let name of guildConfig.raidTemplateNames) {
+    for (const name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
     const embed = tools.getStandardEmbed(client)
@@ -178,12 +178,12 @@ const raidDeleteHelp = (client, p, msg, guildConfig) => {
 
 const raidStartHelp = (client, p, msg, guildConfig) => {
     let existingNames = ``;
-    for (let name of guildConfig.raidTemplateNames) {
+    for (const name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
     existingNames = existingNames === "" ? "No existing raid templates." : existingNames;
     let raidLeaderRoles = ``;
-    for (let role of guildConfig.raidLeaderRoles) {
+    for (const role of guildConfig.raidLeaderRoles) {
         const actualRole = tools.getRoleById(msg.guild, role);
         raidLeaderRoles += raidLeaderRoles === "" ? `${actualRole}` : ` | ${actualRole}`;
     }

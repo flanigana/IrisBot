@@ -39,7 +39,7 @@ To cancel this command at any time, react with ❌.
 
 const displayNamePage = (client, p, template, guildConfig, msg, attemptedRes, pageInfo, alreadyExists) => {
     let existingNames = "";
-    for (let listing of guildConfig.verificationTemplateNames) {
+    for (const listing of guildConfig.verificationTemplateNames) {
         const name = listing.split(" | ")[0].trim();
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
@@ -80,7 +80,7 @@ const processName = (client, p, template, guildConfig, pageInfo, msg, res) => {
 
 const displayChannelsPage = (client, p, template, guildConfig, msg, attemptedRes, pageInfo, status) => {
     let usedChannels = "";
-    for (let listing of guildConfig.verificationTemplateNames) {
+    for (const listing of guildConfig.verificationTemplateNames) {
         const channelId = listing.split(" | ")[1].trim();
         const name = tools.getChannelById(msg.guild, channelId, "text");
         usedChannels += usedChannels === "" ? `${name}` : ` | ${name}`;
@@ -678,7 +678,7 @@ const updateTemplateDatabase = async (template, guildConfig, newTemplate, msg, d
     const existingTemplates = guildConfig.verificationTemplateNames;
     let newTemplates = [];
     if (!newTemplate) {
-        for (let temp of existingTemplates) {
+        for (const temp of existingTemplates) {
             const listName = temp.split(" | ")[0].trim();
             if (listName.toLowerCase() != template.name.toLowerCase()) {
                 newTemplates.push(temp);
@@ -828,7 +828,7 @@ module.exports.editVerificationTemplate = async (client, p, msg, guildConfig, db
         });
 
         // add initial reactions
-        for (let reaction of reactionsList) {
+        for (const reaction of reactionsList) {
             m.react(reaction);
         }
 

@@ -56,7 +56,7 @@ To cancel this command at any time, react with ❌.
 
 const displayNamePage = (client, p, raidTemplate, guildConfig, msg, alreadyExists=false, attemptedRes, pageInfo) => {
     let existingNames = "";
-    for (let name of guildConfig.raidTemplateNames) {
+    for (const name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
     existingNames = existingNames != "" ? existingNames : "No existing raid template names.";
@@ -359,7 +359,7 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
             if (res) {
                 const split = res.split(" ");
                 let emojis = [];
-                for (let emoji of split) {
+                for (const emoji of split) {
                     const partTrim = emoji.trim();
                     if (tools.getEmoji(client, partTrim, msg.guild.id)) {
                         if (partTrim.startsWith("<") && partTrim.endsWith(">")) {
@@ -550,7 +550,7 @@ module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTem
         });
 
         // add initial reactions
-        for (let reaction of reactionsList) {
+        for (const reaction of reactionsList) {
             m.react(reaction);
         }
 

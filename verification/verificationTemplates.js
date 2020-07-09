@@ -7,7 +7,7 @@ const deleteTemplate = (templateName, guildConfig, db) => {
     promises.push(guildDoc.collection("verificationTemplates").doc(`${templateName}`).delete());
 
     let updatedNames = [];
-    for (let temp of guildConfig.verificationTemplateNames) {
+    for (const temp of guildConfig.verificationTemplateNames) {
         const listName = temp.split(" | ")[0].trim();
         if (listName.toLowerCase() != templateName.toLowerCase()) {
             updatedNames.push(temp);
@@ -81,7 +81,7 @@ const listVerificationTemplates = (client, p, msg, guildConfig, db) => {
 \`${p}verification list <templateName>\`.`);
         const templateNames = guildConfig.verificationTemplateNames;
         let nameList = ``;
-        for (let template of templateNames) {
+        for (const template of templateNames) {
             const tempName = template.split(" | ")[0].trim();
             nameList += nameList === "" ? `${tempName}` : ` | ${tempName}`;
         }
@@ -153,7 +153,7 @@ To delete this template, use \`${p}verification delete ${commandDisplayName}\``)
 const verificationEditHelp = (client, p, msg, guildConfig) => {
     const templateNames = guildConfig.verificationTemplateNames;
     let nameList = ``;
-    for (let template of templateNames) {
+    for (const template of templateNames) {
         const tempName = template.split(" | ")[0].trim();
         nameList += nameList === "" ? `${tempName}` : ` | ${tempName}`;
     }
@@ -170,7 +170,7 @@ const verificationEditHelp = (client, p, msg, guildConfig) => {
 const verificationDeleteHelp = (client, p, msg, guildConfig) => {
     const templateNames = guildConfig.verificationTemplateNames;
     let nameList = ``;
-    for (let template of templateNames) {
+    for (const template of templateNames) {
         const tempName = template.split(" | ")[0].trim();
         nameList += nameList === "" ? `${tempName}` : ` | ${tempName}`;
     }

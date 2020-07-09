@@ -211,7 +211,7 @@ const createConfirmationEmbed = (client, destVc, location, secondaryEmojis, seco
 
     for (let i=0; i<secondaryEmojis.length; i++) {
         let confirmedUsers = ``;
-        for (let user of secondaryConfirms[i]) {
+        for (const user of secondaryConfirms[i]) {
             confirmedUsers += confirmedUsers === "" ? `${user}` : ` | ${user}`;
         }
         if (confirmedUsers === "") {
@@ -266,10 +266,10 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
 
     let emojiList = [];
     emojiList.push(primaryEmoji);
-    for (let emoji of secondaryEmojis) {
+    for (const emoji of secondaryEmojis) {
         emojiList.push(emoji);
     }
-    for (let listEmoji of raidTemplate.reacts) {
+    for (const listEmoji of raidTemplate.reacts) {
         const emoji = tools.getEmoji(client, listEmoji, msg.guild.id);
         emojiList.push(emoji);
     }
@@ -390,7 +390,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
             notifMessage.delete();
         });
 
-        for (let emoji of emojiList) {
+        for (const emoji of emojiList) {
             raidMsg.react(emoji);
         }
 

@@ -63,7 +63,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     promises.push(getDefinitions(definitionsUrl).then(definitions => {
         return Jimp.read(rendersUrl).then(allRenders => {
             
-            for (let definition of definitions) {
+            for (const definition of definitions) {
                 const name = definition.name;
                 promises.push(allRenders.clone().crop(definition.startX+6, definition.startY+6, 34, 34).getBufferAsync("image/png").then(buffer => {
                     const render = new Image();
@@ -192,7 +192,7 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
 
         // character equipment
         const equipment = char.equipment;
-        for (let equip of equipment) {
+        for (const equip of equipment) {
             let renderImage = renders[`"${equip.toLowerCase()}"`];
             if (!renderImage) {
                 renderImage = renders[`"empty slot"`];
@@ -296,7 +296,7 @@ const guildEmbed = (client, realmEyeGuildData, renders) => {
 
     const members = realmEyeGuildData.members;
     let membersList = ``;
-    for (let member of members) {
+    for (const member of members) {
         if (membersList === "") {
             membersList += `${member.name}`;
         } else {

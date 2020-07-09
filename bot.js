@@ -211,7 +211,7 @@ React with ❌ to cancel.`);
         });
 
         let promises = [];
-        for (let emoji of emojiList) {
+        for (const emoji of emojiList) {
             promises.push(m.react(emoji));
         }
 

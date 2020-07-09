@@ -3,6 +3,33 @@ const verificationTools = require("./verificationTools");
 const verificationTemplates = require("./verificationTemplates");
 const modifyUser = require("./modifyUser");
 
+const updateNameInServers = (client, userId, db) => {
+    db.collection("users").doc(userId).get().then(snapshot => {
+        if (!snapshot.exists) {
+            return false;
+        }
+        const userData = snapshot.data();
+        let servers = new Set();
+
+        Object.keys(userData).forEach(key => {
+            if (key != "ign" && key != "veriCode") {
+                const guildId = key.split(" | ")[0];
+                servers.add(guildId);
+            }
+        });
+
+        client.guilds.cache.forEach(guild => {
+            if (servers.has(guild.id)) {
+                const guildMember = guild.members.cache.find(user => user.id === userId);
+                if (guildMember.manageable) {
+                    guildMember.setNickname(realmEyeData.name);
+                }
+            }
+        });
+
+    }).catch(console.error);
+};
+
 module.exports.checkForIgnVerification = async (client, msg, db) => {
     if (msg.content.split(" ").length <= 1) {
         const embed = tools.getStandardEmbed(client)
@@ -39,6 +66,7 @@ module.exports.checkForIgnVerification = async (client, msg, db) => {
             if (realmEyeData.description.includes(veriCode)) {
                 verificationTools.updateIgnVerification(msg.author.id, realmEyeData.name, db);
                 verificationTools.sendIgnVerificationSuccessMessage(client, msg, realmEyeData.name);
+                updateNameInServers(client, msg.author.id, db);
                 return true;
 
             // can't verify ign

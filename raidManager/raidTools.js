@@ -4,7 +4,7 @@ module.exports.formatRaidDescription = (client, description, guildId) => {
     let list = description.split(/\s+/);
 
     let actualDescription = ``;
-    for (let part of list) {
+    for (const part of list) {
         if (part === "") {
             continue;
         }

@@ -249,7 +249,7 @@ module.exports.meetsReqs = (client, msg, template, realmEyeData, notInGuild) => 
     let eightEights = 0;
     let sixEightMelees = 0;
     let eightEightMelees = 0;
-    for (let character of realmEyeData.characters) {
+    for (const character of realmEyeData.characters) {
         if ((character.stats === "6/8") || (character.stats === "7/8") || (character.stats === "8/8")) {
             sixEights++;
             if (isMelee(character.class)) {
@@ -437,7 +437,7 @@ module.exports.assignRoles = async (template, guildMember, realmEyeData) => {
         let outrankMsg = `${guildMember} outranks IrisBot so their server nickname was not set to their Realm IGN, **${realmEyeData.name}**`;
         if (rolesNotSet.length > 0) {
             outrankMsg += `, and the following roles were not assigned: `;
-            for (let role of rolesNotSet) {
+            for (const role of rolesNotSet) {
                 outrankMsg += `${role} `;
             }
         }
