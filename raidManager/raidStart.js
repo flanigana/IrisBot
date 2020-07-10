@@ -353,7 +353,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                     const secondaryIndex = secondaryEmojis.indexOf(reaction.emoji);
                     const reactionLimit = secondaryLimits[secondaryIndex];
                     confirmReaction(reaction, user).then(confirmed => {
-                        if (confirmed && (secondaryConfirms[secondaryIndex].length < reactionLimit)) {
+                        if (confirmed && (reactionLimit === 0 || secondaryConfirms[secondaryIndex].length < reactionLimit)) {
                             const guildMember = guildMembers.find(mem => mem.id === user.id);
                             secondaryConfirms[secondaryIndex].push(guildMember);
                             if (location) {
@@ -365,7 +365,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
                                 confirmedMessage.edit(createConfirmationEmbed(client, destinationVc, location, secondaryEmojis, secondaryConfirms));
                             }
                         } else if (confirmed) {
-                            user.send(`The raid has already reached the limit for ${reaction.emoji}'s. You can still join the raid, but will no longer be given early location.`);
+                            user.send(`The raid has already reached the limit for ${reaction.emoji}'s. You can still join the raid, but will not receive early location.`);
                         } else {
                             user.send(`You have successfully cancelled your ${reaction.emoji} reaction for the raid.`);
                         }

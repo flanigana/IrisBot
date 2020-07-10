@@ -86,7 +86,7 @@ const unverifyHelp = (p, msg) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Unverify")
         .setDescription(`Unverify a user that is verified in one of your server's verification templates using the following command:
-\`\`\`${p}unerify <@userOruserId> <templateNameOR#verificationChannel>\`\`\``)
+\`\`\`${p}unverify <@userOruserId> <templateNameOR#verificationChannel>\`\`\``)
         .addField("View Verification Template Names", `To view this server's verification templates, use the \`${p}verification list\` command.`);
     msg.channel.send(embed);
 };
@@ -234,6 +234,8 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
+
+        await tools.getRealmEyeInfo("IAlec");
         
         if (msg.guild) {
 

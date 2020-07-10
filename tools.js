@@ -402,6 +402,62 @@ module.exports.isRaidLeader = (guildMember, guildConfig) => {
     return false;
 };
 
+module.exports.getClassInfo = async () => {
+    let options = {
+        url: `https://www.realmeye.com/wiki/classes`,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
+        }
+    };
+
+    let classes = {};
+
+    return axios(options).then(response => {
+        const html = response.data;
+        const $ = cheerio.load(html);
+
+        const tables = $(".table-responsive > .table-striped");
+        let statCapTable;
+
+        for (let i=0; i < tables.length; i++) {
+            if (tables[i].children[1].name === "caption") {
+                statCapTable = tables[i];
+                break;
+
+            } else {
+                const charactersRow = tables[i].children[3].children[1].children;
+                for (let j=1; j < charactersRow.length; j+=2) {
+                    const classInfo = {};
+                    classInfo.className = charactersRow[j].children[0].children[0].children[0].attribs.alt.trim();
+                    let imgSource = charactersRow[j].children[0].children[0].children[0].attribs.src.trim();
+                    if (imgSource.startsWith("/s/a/img")) {
+                        classInfo.defaultSkin = `https://www.realmeye.com${imgSource}`;
+                    } else {
+                        classInfo.defaultSkin = `https:${imgSource}`;
+                    }
+                    classes[classInfo.className] = classInfo;
+                }
+            }
+        }
+
+        const classRows = $(statCapTable).find("tbody > tr");
+        for (let i=0; i < classRows.length; i++) {
+            const className = classRows[i].children[1].children[0].children[0].children[0].data.trim();
+
+            classes[className].maxHP = classRows[i].children[3].children[0].children[0].data;
+            classes[className].maxMP = classRows[i].children[5].children[0].children[0].data;
+            classes[className].maxAtt = classRows[i].children[7].children[0].children[0].data;
+            classes[className].maxDef = classRows[i].children[9].children[0].children[0].data;
+            classes[className].maxSpd = classRows[i].children[11].children[0].children[0].data;
+            classes[className].maxDex = classRows[i].children[13].children[0].children[0].data;
+            classes[className].maxVit = classRows[i].children[15].children[0].children[0].data;
+            classes[className].maxWis = classRows[i].children[17].children[0].children[0].data;
+        }
+        return classes;
+
+    }).catch(console.error);
+};
+
 module.exports.getRealmEyeInfo = async ign => {
     let promises = [];
     let options = {
@@ -425,7 +481,7 @@ module.exports.getRealmEyeInfo = async ign => {
         characters: [],
     };
 
-    promises.push(axios(options).then(response => {
+    promises.push(axios(options).then(async response => {
         const html = response.data;
         const $ = cheerio.load(html);
 
@@ -509,6 +565,8 @@ module.exports.getRealmEyeInfo = async ign => {
                 }
             }
 
+            const classInfo = await this.getClassInfo();
+
             // get character table
             const characters = $(".table-responsive > .table > tbody > tr");
             let characterList = [];
@@ -535,6 +593,24 @@ module.exports.getRealmEyeInfo = async ign => {
                     // characterEquipment.push(item);
                 }
                 character.equipment = characterEquipment;
+
+                // get specific maxed stats
+                const dataStats = characters[i].children[statsPos].children[0].attribs["data-stats"];
+                const dataBonuses = characters[i].children[statsPos].children[0].attribs["data-bonuses"];
+                const statsSplit = dataStats.match(/-*\d+/g);
+                const bonusesSplit = dataBonuses.match(/-*\d+/g);
+                let adjustedStats = [];
+                for (let j=0; j < statsSplit.length; j++) {
+                    adjustedStats[j] = parseInt(statsSplit[j]) - parseInt(bonusesSplit[j]);
+                }
+                character.maxHP = (classInfo[character.class].maxHP - adjustedStats[0]) === 0 ? true : false;
+                character.maxMP = (classInfo[character.class].maxMP - adjustedStats[1]) === 0 ? true : false;
+                character.maxAtt = (classInfo[character.class].maxAtt - adjustedStats[2]) === 0 ? true : false;
+                character.maxDef = (classInfo[character.class].maxDef - adjustedStats[3]) === 0 ? true : false;
+                character.maxSpd = (classInfo[character.class].maxSpd - adjustedStats[4]) === 0 ? true : false;
+                character.maxVit = (classInfo[character.class].maxVit - adjustedStats[5]) === 0 ? true : false;
+                character.maxWis = (classInfo[character.class].maxWis - adjustedStats[6]) === 0 ? true : false;
+                character.maxDex = (classInfo[character.class].maxDex - adjustedStats[7]) === 0 ? true : false;
 
                 characterList.push(character);
             }
@@ -792,7 +868,7 @@ module.exports.getRealmEyeDungeonsList = async () => {
             }
         }
         return dungeons;
-    });
+    }).catch(console.error);
 };
 
 module.exports.getStandardEmbed = client => {

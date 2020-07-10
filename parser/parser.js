@@ -1,19 +1,22 @@
 const Tessaract = require("tesseract.js");
 const tools = require("../tools");
 
-const parseImage = async (worker, url) => {
+const parseImage = async (url) => {
+    const worker = Tessaract.createWorker();
     await worker.load();
     await worker.loadLanguage("eng");
     await worker.initialize("eng");
+    await worker.setParameters({
+        tessjs_create_hocr: "0",
+        tessjs_create_tsv: "0",
+    });
     const results = await worker.recognize(url);
     await worker.terminate();
     return results;
 }
 
 const createPlayerList = async (url) => {
-    const worker = Tessaract.createWorker();
-
-    const results = await parseImage(worker, url);
+    const results = await parseImage(url);
 
     let players = {
         playerCount: -1,
@@ -43,56 +46,6 @@ const createPlayerList = async (url) => {
     }
 
     return players;
-
-
-
-
-    // return Tessaract.recognize(`${url}`, "eng").then(res => {
-    //     let results = {
-    //         playerCount: 0,
-    //         players: []
-    //     };
-
-    //     for (const part of res.data.words) {
-    //         const word = part.text;
-    //         if (word.toLowerCase() === "players" || word.toLowerCase() === "online") {
-    //             continue;
-    //         }
-    //         console.log(word);
-    //         console.log(part.choices);
-
-    //         if (word.startsWith("(") && word.endsWith("):")) {
-    //             results.playerCount = parseInt(word.substring(1, word.length-2));
-
-    //         } else if (word.match(/([A-Za-z]+,+)/)) {
-    //             results.players.push(word.substring(0, word.length-1));
-
-    //         } else if (word.match(/([A-Za-z]+)/)) {
-    //             results.players.push(word);
-
-    //         }
-    //     }
-
-
-        // let start = false;
-        // for (const word of res.data.words) {
-
-        //     if (word.text.startsWith("(") && word.text.endsWith("):")) {
-        //         results.playerCount = parseInt(word.text.substring(1, word.text.length-2));
-        //         start = true;
-
-        //     } else if (start && word.text.match(/([A-Za-z]+,+)/)) {
-        //         results.players.push(word.text.substring(0, word.text.length-1));
-
-        //     } else if (start && word.text.match(/([A-Za-z]+)/)) {
-        //         results.players.push(word.text);
-        //         break;
-
-        //     }
-        // }
-
-    //     return results;
-    // });
 };
 
 const compareToVoiceChannel = (playerList, channel) => {

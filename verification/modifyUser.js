@@ -112,7 +112,13 @@ const unverifyUser = async (client, msg, guildMember, templateName, guildConfig,
 
 module.exports.modify = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 0);
-    if (args.length < 1) {
+    if (args.length < 2) {
+        return false;
+    } else if (args.length < 3) {
+        const embed = tools.getStandardEmbed(client)
+            .setTitle("No Verification Template")
+            .setDescription(`You must include the name of the verification template that you would like to unverify this user from.`);
+        msg.channel.send(embed);
         return false;
     }
     const command = args[0].toLowerCase();
