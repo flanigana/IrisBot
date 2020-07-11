@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const Discord = require("discord.js");
 const admin = require("firebase-admin");
+const vision = require("@google-cloud/vision");
 
 const tools = require("./tools");
 const config = require("./config");
@@ -20,10 +21,13 @@ admin.initializeApp({
     })
 });
 const db = admin.firestore();
+const visionClient = new vision.ImageAnnotatorClient();
 
+const parserServerWhitelist = ["710578568211464192", "708761992705474680", "726510098737922108"];
 const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
 const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
-let renders = null;
+let classInfo;
+let renders;
 
 const setUpGuild = async guild => {
     return db.collection("guilds").doc(guild.id).set({
@@ -162,19 +166,19 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
     // add selected classes to class list
     collected.map(reaction => {
         if (reaction.emoji.name != "✅") {
-            selectedCharacters.push(reaction.emoji.name);
+            let capitalized = reaction.emoji.name;
+            capitalized = capitalized.charAt(0).toUpperCase() + capitalized.substring(1, capitalized.length-5);
+            selectedCharacters.push(capitalized);
         }
     });
     // set list to all classes if none are selected
     if (selectedCharacters.length === 0) {
-        selectedCharacters = tools.getClasses();
+        selectedCharacters = Object.getOwnPropertyNames(classInfo);
     }
     // generate class based on selected classes
     const characterNum = Math.floor(Math.random() * selectedCharacters.length);
     let character = selectedCharacters[characterNum];
-    character = character.substring(0, character.length-5);
-    character = character.charAt(0).toUpperCase() + character.slice(1);
-    const characterImage = render.getDefaultClassSkinUrl(character);
+    const characterImage = classInfo[character].defaultSkin;
 
     // edit embed in message to class selection
     const embed = tools.getStandardEmbed(client)
@@ -184,9 +188,10 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
     msg.reactions.removeAll().catch(console.error);
 };
 
-const ppe = msg => {
+const ppe = (msg) => {
     let emojiList = [];
-    for (char of tools.getClasses()) {
+    const classList = Object.getOwnPropertyNames(classInfo);
+    for (char of classList) {
         emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`, msg.guild.id));
     }
     emojiList.push("✅");
@@ -222,10 +227,22 @@ React with ❌ to cancel.`);
 };
 
 client.on("ready", async () => {
-    render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl).then(results => {
-        renders = results;
-    });
     console.log(`Logged in as ${client.user.tag}`);
+    console.log("Loading...");
+    let promises = [];
+    promises.push(tools.getClassInfo().then(results => {
+        classInfo = results;
+        return results;
+    }).then(async classInfo => {
+        return render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl, classInfo).then(results => {
+            renders = results;
+            return true;
+        });
+    }));
+    
+    Promise.all(promises).then(() => {
+        console.log("Ready!");
+    })
 });
 
 client.on("guildCreate", async guild => {
@@ -234,8 +251,6 @@ client.on("guildCreate", async guild => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
-
-        await tools.getRealmEyeInfo("IAlec");
         
         if (msg.guild) {
 
@@ -298,8 +313,10 @@ client.on("message", async msg => {
                     }
                     break;
                 case "parse":
-                    if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
-                        parser.parse(client, p, msg, db);
+                    if (parserServerWhitelist.includes(msg.guild.id)) {
+                        if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
+                            parser.parse(client, p, msg, visionClient, guildConfig, db);
+                        }
                     }
                     break;
             }

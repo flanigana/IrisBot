@@ -162,73 +162,6 @@ module.exports.getArgs = (fullCommand, p, commandsLength=0) => {
     return allArgs.slice(commandsLength);
 };
 
-module.exports.getClasses = () => {
-    return ["Rogue", "Archer", "Wizard", "Priest", "Warrior", "Knight", "Paladin", "Assassin", "Necromancer", "Huntress", "Mystic", 
-            "Trickster", "Sorcerer", "Ninja", "Samurai", "Bard"];
-};
-
-module.exports.classEnumerator = classValue => {
-    let value = null;
-
-    if (typeof classValue === "string") {
-        switch (classValue.toLowerCase()) {
-            case "rogue":
-                value = 0;
-                break;
-            case "archer":
-                value = 1;
-                break;
-            case "wizard":
-                value = 2;
-                break;
-            case "priest":
-                value = 3;
-                break;
-            case "warrior":
-                value = 4;
-                break;
-            case "knight":
-                value = 5;
-                break;
-            case "paladin":
-                value = 6;
-                break;
-            case "assassin":
-                value = 7;
-                break;
-            case "necromancer":
-                value = 8;
-                break;
-            case "huntress":
-                value = 9;
-                break;
-            case "mystic":
-                value = 10;
-                break;
-            case "trickster":
-                value = 11;
-                break;
-            case "sorcerer":
-                value = 12;
-                break;
-            case "ninja":
-                value = 13;
-                break;
-            case "samurai":
-                value = 14;
-                break;
-            case "bard":
-                value = 15;
-                break;
-        }
-    } else if (typeof classValue === "number") {
-        const classes = this.getClasses();
-        value = classes[classValue];
-    }
-
-    return value;
-};
-
 module.exports.getGuildEmoji = (client, guildId, emojiName, trimEnds=false, frontTrim=0, backTrim=0) => {
     let emojiGuildIds = ["710578568211464192", "708761992705474680", "711504382394630194", "711491483588493313"];
     if (guildId) {
@@ -444,8 +377,8 @@ module.exports.getClassInfo = async () => {
         for (let i=0; i < classRows.length; i++) {
             const className = classRows[i].children[1].children[0].children[0].children[0].data.trim();
 
-            classes[className].maxHP = classRows[i].children[3].children[0].children[0].data;
-            classes[className].maxMP = classRows[i].children[5].children[0].children[0].data;
+            classes[className].maxHp = classRows[i].children[3].children[0].children[0].data;
+            classes[className].maxMp = classRows[i].children[5].children[0].children[0].data;
             classes[className].maxAtt = classRows[i].children[7].children[0].children[0].data;
             classes[className].maxDef = classRows[i].children[9].children[0].children[0].data;
             classes[className].maxSpd = classRows[i].children[11].children[0].children[0].data;

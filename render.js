@@ -34,7 +34,7 @@ const getDefinitions = async definitionsUrl => {
             }
 
             definitions.push({
-                name: name.toLowerCase(),
+                name: name,
                 startX: startX,
                 startY: startY,
             });
@@ -44,18 +44,7 @@ const getDefinitions = async definitionsUrl => {
     }).catch(console.error);
 };
 
-module.exports.getDefaultClassSkinUrl = className => {
-    const classSkins = ["https://www.realmeye.com/s/a/img/wiki/Rogue.PNG", "https://www.realmeye.com/s/a/img/wiki/Archer_0.PNG", "https://www.realmeye.com/s/a/img/wiki/Wizard_0.PNG",
-            "https://www.realmeye.com/s/a/img/wiki/Priest_1.PNG", "https://www.realmeye.com/s/a/img/wiki/Warrior_1.PNG", "https://www.realmeye.com/s/a/img/wiki/Knight_1.PNG",
-            "https://www.realmeye.com/s/a/img/wiki/Paladin.PNG", "https://www.realmeye.com/s/a/img/wiki/assassin_0.PNG", "https://www.realmeye.com/s/a/img/wiki/Necromancer.png",
-            "https://www.realmeye.com/s/a/img/wiki/Huntress.png", "https://www.realmeye.com/s/a/img/wiki/Mystic_0.png", "https://www.realmeye.com/s/a/img/wiki/Trickster_0.PNG",
-            "https://www.realmeye.com/s/a/img/wiki/Sorcerer_0.png", "https://www.realmeye.com/s/a/img/wiki/ninja_3.png", "https://i.imgur.com/fCSXHwv.png",
-            "https://i.imgur.com/SyW1gzN.png"];
-    let skinUrl = classSkins[tools.classEnumerator(className)];
-    return skinUrl;
-};
-
-module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
+module.exports.loadRenders = async (rendersUrl, definitionsUrl, classInfo) => {
     let promises = [];
     let renders = {};
 
@@ -68,7 +57,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
                 promises.push(allRenders.clone().crop(definition.startX+6, definition.startY+6, 34, 34).getBufferAsync("image/png").then(buffer => {
                     const render = new Image();
                     render.src = buffer;
-                    renders[`"${name}"`] = render;
+                    renders[name] = render;
                     return true;
                 }).catch(console.error));
             }
@@ -77,7 +66,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
 
     // load fame icon
     promises.push(Canvas.loadImage("./fame-icon.png").then(image => {
-        renders["fame icon"] = image;
+        renders["Fame Icon"] = image;
         return true;
     }));
 
@@ -85,13 +74,13 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     const starsUrl = "https://www.realmeye.com/s/e0/img/stars-transparent.png";
     Jimp.read(starsUrl).then(starRenders => {
 
-        const stars = ["light blue", "blue", "red", "orange", "yellow", "white"];
+        const stars = ["Light Blue", "Blue", "Red", "Orange", "Yellow", "White"];
         for (let i=0; i < stars.length; i++) {
             const starName = stars[i];
             promises.push(starRenders.clone().crop(0, 24*i, 24, 24).getBufferAsync("image/png").then(buffer => {
                 const render = new Image();
                 render.src = buffer;
-                renders[`"${starName} star icon"`] = render;
+                renders[`${starName} Star Icon`] = render;
                 return true;
             }).catch(console.error));
         }
@@ -99,23 +88,22 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl) => {
     }).catch(console.error);
 
     // load default skin images
-    const classes = ["rogue", "archer", "wizard", "priest", "warrior", "knight", "paladin", "assassin", "necromancer", "huntress", "mystic", 
-    "trickster", "sorcerer", "ninja", "samurai", "bard"];
-    for (let i=0; i < classes.length; i++) {
-        const skinUrl = this.getDefaultClassSkinUrl(classes[i]);
+    const classNames = Object.getOwnPropertyNames(classInfo);
+    for (let i=0; i < classNames.length; i++) {
+        const cl = classInfo[classNames[i]];
+        const skinUrl = cl.defaultSkin;
         promises.push(Jimp.read(skinUrl).then(image => {
             return image.getBufferAsync("image/png").then(buffer => {
                 const render = new Image();
                 render.src = buffer;
-                renders[`"${classes[i]} default skin"`] = render;
+                renders[`${cl.className} Default Skin`] = render;
                 return true;
 
         }).catch(console.error);
-        }).catch(console.error));
+        }));
     }
 
     return Promise.all(promises).then(() => {
-        console.log("All images loaded.");
         return renders;
     });
 };
@@ -187,15 +175,15 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
         xMod += statsWidth;
 
         // character skin (default for now)
-        ctx.drawImage(renders[`"${char.class.toLowerCase()} default skin"`], xMod, yMod, sizing, sizing);
+        ctx.drawImage(renders[`${char.class} Default Skin`], xMod, yMod, sizing, sizing);
         xMod += spacing;
 
         // character equipment
         const equipment = char.equipment;
         for (const equip of equipment) {
-            let renderImage = renders[`"${equip.toLowerCase()}"`];
+            let renderImage = renders[`${equip}`];
             if (!renderImage) {
-                renderImage = renders[`"empty slot"`];
+                renderImage = renders[`Empty slot`];
                 // renderImage = renders[`"marid pet skin"`];
             }
             ctx.drawImage(renderImage, xMod, yMod, sizing, sizing);
@@ -205,13 +193,13 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
         if (!guildCharacters) {
             // if character has no backpack, add empty slot
             if (equipment.length < 5) {
-                ctx.drawImage(renders[`"empty slot"`], xMod, yMod, sizing, sizing);
+                ctx.drawImage(renders[`Empty slot`], xMod, yMod, sizing, sizing);
                 xMod += spacing;
             }
         }
 
         // character fame
-        ctx.drawImage(renders["fame icon"], xMod, yMod, sizing, sizing);
+        ctx.drawImage(renders["Fame Icon"], xMod, yMod, sizing, sizing);
         xMod += spacing + 5;
         ctx.fillText(`${char.fame}`, xMod, textHeightAdjustment+yMod);
         yMod += spacing;

@@ -54,7 +54,7 @@ To cancel this command at any time, react with ❌.
     msg.edit(embed);
 };
 
-const displayNamePage = (client, p, raidTemplate, guildConfig, msg, alreadyExists=false, attemptedRes, pageInfo) => {
+const displayNamePage = (client, p, raidTemplate, guildConfig, msg, alreadyExists, attemptedRes, pageInfo) => {
     let existingNames = "";
     for (const name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
@@ -81,6 +81,18 @@ If you would like to edit an existing template, use the \`${p}raid edit <templat
     }
     embed = embed.setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
+};
+
+const processName = (client, p, raidTemplate, guildConfig, pageInfo, msg, res) => {
+    let exists = false;
+    if (res) {
+        const arg = tools.getArgs(res)[0];
+        exists = tools.raidTemplateExists(arg, guildConfig);
+        if (!exists) {
+            raidTemplate.name = arg;
+        }
+    }
+    displayNamePage(client, p, raidTemplate, guildConfig, msg, exists, res, pageInfo);
 };
 
 const displayDescriptionPage = (client, raidTemplate, clientEmojisList, msg, pageInfo) => {
@@ -113,6 +125,13 @@ We would like to get at least 5 <warriorclass>, <knightclass>, and <paladinclass
     msg.edit(embed);
 };
 
+const processDescription = (client, raidTemplate, pageInfo, clientEmojisList, msg, res) => {
+    if (res) {
+        raidTemplate.description = res;
+    }
+    displayDescriptionPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+};
+
 const displayPrimaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
     let primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate, msg.guild.id);
     let embed = tools.getStandardEmbed(client)
@@ -135,6 +154,26 @@ const displayPrimaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, p
     msg.edit(embed);
 };
 
+const processPrimaryEmoji = (client, raidTemplate, pageInfo, clientEmojisList, msg, res) => {
+    if (res) {
+        const split = res.split(" ");
+        if (tools.getEmoji(client, split[0], msg.guild.id)) {
+            raidTemplate.primaryEmoji = split[0];
+            if (split[1] && (split[1] != "")) {
+                const attemptedNum = parseInt(split[1].trim());
+                if (Number.isNaN(attemptedNum) || attemptedNum < 0) {
+                    raidTemplate.primaryMin = 0;
+                } else {
+                    raidTemplate.primaryMin = attemptedNum;
+                }
+            } else {
+                raidTemplate.primaryMin = 0;
+            }
+        }
+    }
+    displayPrimaryEmojiPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+};
+
 const displaySecondarySetupPage = (client, raidTemplate, msg, pageInfo) => {
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${raidTemplate.name} Secondary Reaction Count`)
@@ -154,7 +193,29 @@ For a cult, you don't need a vial, so you may only wish to have a single seconda
     msg.edit(embed);
 };
 
-const displaySecondaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
+const processSecondarySetup = (client, raidTemplate, pageInfo, msg, res) => {
+    if (res) {
+        const attemptedNum = parseInt(res.split(" ")[0].trim());
+        if (Number.isNaN(attemptedNum) || attemptedNum < 0){
+            raidTemplate.secondaryNum = 0;
+            if (attemptedNum < raidTemplate.secondaryNum) {
+                raidTemplate.secondaryEmojis = raidTemplate.secondaryEmojis.slice(0, attemptedNum);
+                raidTemplate.secondaryLimits = raidTemplate.secondaryLimits.slice(0, attemptedNum);
+            }
+        } else {
+            if (attemptedNum < raidTemplate.secondaryNum) {
+                raidTemplate.secondaryEmojis = raidTemplate.secondaryEmojis.slice(0, attemptedNum);
+                raidTemplate.secondaryLimits = raidTemplate.secondaryLimits.slice(0, attemptedNum);
+            }
+            raidTemplate.secondaryNum = attemptedNum;
+        }
+        pageInfo.secondaryNum = raidTemplate.secondaryNum;
+        pageInfo.pagesLength = pageInfo.pages.length + pageInfo.secondaryNum;
+    }
+    displaySecondarySetupPage(client, raidTemplate, msg, pageInfo);
+};
+
+const displaySecondaryEmojiPage = (client, raidTemplate, clientEmojisList, msg, pageInfo) => {
     let secondaryEmoji;
     const emoji = raidTemplate.secondaryEmojis[pageInfo.currentSecondaryPos-1];
     if (emoji) {
@@ -182,7 +243,32 @@ const displaySecondaryEmojiPage = (client, raidTemplate, clientEmojisList,  msg,
     msg.edit(embed);
 };
 
-const displayReactsPage = (client, raidTemplate, clientEmojisList,  msg, pageInfo) => {
+const processSecondaryEmoji = (client, raidTemplate, pageInfo, clientEmojisList, msg, res) => {
+    if (res) {
+        const split = res.split(" ");
+        // checks that it's a valid emoji
+        if (tools.getEmoji(client, split[0], msg.guild.id)) {
+            // check that the emoji doesn't exist in the list already and that it is not the primary emoji
+            if (raidTemplate.primaryEmoji != split[0]) {
+                raidTemplate.secondaryEmojis[pageInfo.currentSecondaryPos-1] = split[0];
+                if (split[1] && (split[1] != "")) {
+                    const attemptedNum = parseInt(split[1].trim());
+                    if (Number.isNaN(attemptedNum) || attemptedNum < 0) {
+                        raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = 0;
+                    } else {
+                        raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = attemptedNum;
+                    }
+                    
+                } else {
+                    raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = 0;
+                }
+            }
+        }
+    }
+    displaySecondaryEmojiPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+};
+
+const displayReactsPage = (client, raidTemplate, clientEmojisList, msg, pageInfo) => {
     const selectedList = raidTools.formatReactsListString(client, raidTemplate, msg.guild.id);
 
     let embed = tools.getStandardEmbed(client)
@@ -203,7 +289,121 @@ These won't be used by the system, but you can use them to check the responses v
     msg.edit(embed);
 };
 
-const displayEndPage = (client, p, raidTemplate, msg, finished=false, pageInfo) => {
+const processReacts = (client, raidTemplate, pageInfo, clientEmojisList, msg, res) => {
+    if (res) {
+        const split = res.split(" ");
+        let emojis = [];
+        for (const emoji of split) {
+            const partTrim = emoji.trim();
+            if (tools.getEmoji(client, partTrim, msg.guild.id)) {
+                if (partTrim.startsWith("<") && partTrim.endsWith(">")) {
+                    emojis.push(partTrim);
+                } else if (partTrim.startsWith("<") && (partTrim.charAt(partTrim.length-2) === ">")) {
+                    // handles punctuation after emoji ending
+                    emojis.push(partTrim.substring(0, partTrim.length-1));
+                } else {
+                    emojis.push(emoji);
+                }
+            }
+        }
+        raidTemplate.reacts = emojis;
+    }
+    displayReactsPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+};
+
+const displayReqsPage = (client, raidTemplate, pageInfo, msg) => {
+    let embed = tools.getStandardEmbed(client)
+        .setTitle(`${raidTemplate.name} Parsing Requirements`)
+        .setDescription(`Respond with the maxed stats you require during this raid. These will be used to check if a player's character meets these requirements when using the parsing function.
+Use these names for each stat: \`hp mp att def spd vit wis dex\`
+Example input: \`\`\`hp att def spd dex\`\`\`
+To disable stat requirements, simply respond with \`false\``)
+        .addField("Current Requirements", `${raidTemplate.reqs != "" ? raidTemplate.reqs : "No character stat requirements"}`)
+        .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
+    msg.edit(embed);
+};
+
+const processReqs = (client, raidTemplate, pageInfo, msg, res) => {
+    if (res) {
+        const args = tools.getArgs(res);
+        let newReqs = {
+            valid: false,
+        };
+        for (const arg of args) {
+            if ((typeof arg === "boolean") && !arg) {
+                raidTemplate.reqs = "";
+            } else {
+                switch (arg.toLowerCase()) {
+                    case "hp":
+                    case "health":
+                        newReqs.valid = true;
+                        newReqs.hp = true;
+                        break;
+    
+                    case "mp":
+                    case "mana":
+                        newReqs.valid = true;
+                        newReqs.mp = true;
+                        break;
+    
+                    case "att":
+                    case "atk":
+                    case "attack":
+                        newReqs.valid = true;
+                        newReqs.att = true;
+                        break;
+    
+                    case "def":
+                    case "defense":
+                        newReqs.valid = true;
+                        newReqs.def = true;
+                        break;
+                    
+                    case "spd":
+                    case "speed":
+                        newReqs.valid = true;
+                        newReqs.spd = true;
+                        break;
+    
+                    case "wis":
+                    case "wisdom":
+                        newReqs.valid = true;
+                        newReqs.wis = true;
+                        break;
+    
+                    case "vit":
+                    case "vitality":
+                        newReqs.valid = true;
+                        newReqs.vit = true;
+                        break;
+    
+                    case "dex":
+                    case "dexterity":
+                        newReqs.valid = true;
+                        newReqs.dex = true;
+                        break;
+                }
+                
+                if (newReqs.valid) {
+                    let reqString = "";
+                    if (newReqs.hp) {reqString += reqString === "" ? "Hp" : " | Hp";}
+                    if (newReqs.mp) {reqString += reqString === "" ? "Mp" : " | Mp";}
+                    if (newReqs.att) {reqString += reqString === "" ? "Att" : " | Att";}
+                    if (newReqs.def) {reqString += reqString === "" ? "Def" : " | Def";}
+                    if (newReqs.spd) {reqString += reqString === "" ? "Sps" : " | Sps";}
+                    if (newReqs.vit) {reqString += reqString === "" ? "Vit" : " | Vit";}
+                    if (newReqs.wis) {reqString += reqString === "" ? "Wis" : " | Wis";}
+                    if (newReqs.dex) {reqString += reqString === "" ? "Dex" : " | Dex";}
+                    raidTemplate.reqs = reqString;
+                }
+
+            }
+        }
+    }
+    displayReqsPage(client, raidTemplate, pageInfo, msg);
+};
+
+const displayEndPage = (client, p, raidTemplate, msg, pageInfo, finished) => {
     const nameSplit = raidTemplate.name.split(" ");
     const commandDisplayName = nameSplit.length > 1 ? `"${raidTemplate.name}"` : `${raidTemplate.name}`;
     let templateDescription;
@@ -258,6 +458,9 @@ ${descriptionPiece}
         {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},
         {name: "Reacts", value: `${selectedList}`},
+        {name: "--------------------------------------------------------------------------------------------------",
+                value: `-----------------------------------------------------------------------------------------------`},
+        {name: "Stat Requirements", value: `${raidTemplate.reqs != "" ? raidTemplate.reqs : "No character stat requirements"}`},
         )
         .setFooter(`Iris Bot | Page ${pageInfo.pagePosition} of ${pageInfo.pagesLength}`, client.user.avatarURL());
     msg.edit(embed);
@@ -270,115 +473,35 @@ const updateCurrentPage = (client, p, type, raidTemplate, guildConfig, pageInfo,
             break;
 
         case "name":
-            let exists = false;
-            if (res) {
-                const arg = tools.getArgs(res)[0];
-                exists = tools.raidTemplateExists(arg, guildConfig);
-                if (!exists) {
-                    raidTemplate.name = arg;
-                }
-            }
-            displayNamePage(client, p, raidTemplate, guildConfig, msg, exists, res, pageInfo);
+            processName(client, p, raidTemplate, guildConfig, pageInfo, msg, res);
             break;
 
         case "description":
-            if (res) {
-                raidTemplate.description = res;
-            }
-            displayDescriptionPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+            processDescription(client, raidTemplate, pageInfo, clientEmojisList, msg, res);
             break;
 
         case "primary":
-            if (res) {
-                const split = res.split(" ");
-                if (tools.getEmoji(client, split[0], msg.guild.id)) {
-                    raidTemplate.primaryEmoji = split[0];
-                    if (split[1] && (split[1] != "")) {
-                        const attemptedNum = parseInt(split[1].trim());
-                        if (Number.isNaN(attemptedNum) || attemptedNum < 0) {
-                            raidTemplate.primaryMin = 0;
-                        } else {
-                            raidTemplate.primaryMin = attemptedNum;
-                        }
-                    } else {
-                        raidTemplate.primaryMin = 0;
-                    }
-                }
-            }
-            displayPrimaryEmojiPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+            processPrimaryEmoji(client, raidTemplate, pageInfo, clientEmojisList, msg, res);
             break;
 
         case "secondarySetup":
-            if (res) {
-                const attemptedNum = parseInt(res.split(" ")[0].trim());
-                if (Number.isNaN(attemptedNum) || attemptedNum < 0){
-                    raidTemplate.secondaryNum = 0;
-                    if (attemptedNum < raidTemplate.secondaryNum) {
-                        raidTemplate.secondaryEmojis = raidTemplate.secondaryEmojis.slice(0, attemptedNum);
-                        raidTemplate.secondaryLimits = raidTemplate.secondaryLimits.slice(0, attemptedNum);
-                    }
-                } else {
-                    if (attemptedNum < raidTemplate.secondaryNum) {
-                        raidTemplate.secondaryEmojis = raidTemplate.secondaryEmojis.slice(0, attemptedNum);
-                        raidTemplate.secondaryLimits = raidTemplate.secondaryLimits.slice(0, attemptedNum);
-                    }
-                    raidTemplate.secondaryNum = attemptedNum;
-                }
-                pageInfo.secondaryNum = raidTemplate.secondaryNum;
-                pageInfo.pagesLength = pageInfo.pages.length + pageInfo.secondaryNum;
-            }
-            displaySecondarySetupPage(client, raidTemplate, msg, pageInfo);
+            processSecondarySetup(client, raidTemplate, pageInfo, msg, res);
             break;
 
         case "secondary":
-            if (res) {
-                const split = res.split(" ");
-                // checks that it's a valid emoji
-                if (tools.getEmoji(client, split[0], msg.guild.id)) {
-                    // check that the emoji doesn't exist in the list already and that it is not the primary emoji
-                    if (raidTemplate.primaryEmoji != split[0]) {
-                        raidTemplate.secondaryEmojis[pageInfo.currentSecondaryPos-1] = split[0];
-                        if (split[1] && (split[1] != "")) {
-                            const attemptedNum = parseInt(split[1].trim());
-                            if (Number.isNaN(attemptedNum) || attemptedNum < 0) {
-                                raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = 0;
-                            } else {
-                                raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = attemptedNum;
-                            }
-                            
-                        } else {
-                            raidTemplate.secondaryLimits[pageInfo.currentSecondaryPos-1] = 0;
-                        }
-                    }
-                }
-            }
-            displaySecondaryEmojiPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+            processSecondaryEmoji(client, raidTemplate, pageInfo, clientEmojisList, msg, res);
             break;
 
         case "reacts":
-            if (res) {
-                const split = res.split(" ");
-                let emojis = [];
-                for (const emoji of split) {
-                    const partTrim = emoji.trim();
-                    if (tools.getEmoji(client, partTrim, msg.guild.id)) {
-                        if (partTrim.startsWith("<") && partTrim.endsWith(">")) {
-                            emojis.push(partTrim);
-                        } else if (partTrim.startsWith("<") && (partTrim.charAt(partTrim.length-2) === ">")) {
-                            // handles punctuation after emoji ending
-                            emojis.push(partTrim.substring(0, partTrim.length-1));
-                        } else {
-                            emojis.push(emoji);
-                        }
-                    }
-                }
-                raidTemplate.reacts = emojis;
-            }
-            displayReactsPage(client, raidTemplate, clientEmojisList, msg, pageInfo);
+            processReacts(client, raidTemplate, pageInfo, clientEmojisList, msg, res);
+            break;
+
+        case "reqs":
+            processReqs(client, raidTemplate, pageInfo, msg, res);
             break;
 
         case "end":
-            displayEndPage(client, p, raidTemplate, msg, false, pageInfo);
+            displayEndPage(client, p, raidTemplate, msg, pageInfo, false);
             break;
     }
 
@@ -399,6 +522,7 @@ const updateTemplateDatabase = async (raidTemplate, guildConfig, newTemplate, ms
         "secondaryEmojis": raidTemplate.secondaryEmojis,
         "secondaryLimits": raidTemplate.secondaryLimits,
         "reacts": raidTemplate.reacts,
+        "reqs": raidTemplate.reqs,
     }));
 
     if (newTemplate) {
@@ -426,6 +550,7 @@ const updatePagesList = (newTemplate, secondaryNum) => {
         pages.push("secondary");
     }
     pages.push("reacts");
+    pages.push("reqs");
     pages.push("end");
     return pages;
 };
@@ -445,6 +570,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
             secondaryEmojis: [],
             secondaryLimits: [],
             reacts: [],
+            reqs: "",
         };
     }
     return raidTemplate;
@@ -498,7 +624,7 @@ const processCollection = (client, p, msg, collector, reaction, type, newTemplat
             // finish
             if (!leftUndefined(raidTemplate)) {
                 updateTemplateDatabase(raidTemplate, guildConfig, newTemplate, msg, db).then(() => {
-                    displayEndPage(client, p, raidTemplate, m, true, pageInfo);
+                    displayEndPage(client, p, raidTemplate, m, pageInfo, true);
                 });
                 collector.stop();
             }
@@ -514,11 +640,11 @@ module.exports.editRaidTemplate = async (client, p, msg, guildConfig, db, newTem
     let pages = updatePagesList(newTemplate, raidTemplate.secondaryNum);
     let pageInfo = {
         pages: pages,
-        secondaryNum: 0,
+        secondaryNum: raidTemplate.secondaryNum,
         currentPage: 0,
         currentSecondaryPos: 1,
         pagePosition: 1,
-        pagesLength: pages.length,
+        pagesLength: (pages.length + raidTemplate.secondaryNum),
         pageName: pages[0],
     };
 
