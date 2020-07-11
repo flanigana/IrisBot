@@ -390,7 +390,7 @@ const processReqs = (client, raidTemplate, pageInfo, msg, res) => {
                     if (newReqs.mp) {reqString += reqString === "" ? "Mp" : " | Mp";}
                     if (newReqs.att) {reqString += reqString === "" ? "Att" : " | Att";}
                     if (newReqs.def) {reqString += reqString === "" ? "Def" : " | Def";}
-                    if (newReqs.spd) {reqString += reqString === "" ? "Sps" : " | Sps";}
+                    if (newReqs.spd) {reqString += reqString === "" ? "Spd" : " | Spd";}
                     if (newReqs.vit) {reqString += reqString === "" ? "Vit" : " | Vit";}
                     if (newReqs.wis) {reqString += reqString === "" ? "Wis" : " | Wis";}
                     if (newReqs.dex) {reqString += reqString === "" ? "Dex" : " | Dex";}
