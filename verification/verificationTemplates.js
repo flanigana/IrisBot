@@ -14,7 +14,6 @@ const deleteTemplate = (templateName, guildConfig, db) => {
         }
     }
     promises.push(guildDoc.update({
-        "guildName": msg.guild.name,
         "verificationTemplateNames": updatedNames,
     }));
 

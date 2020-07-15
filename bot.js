@@ -249,6 +249,14 @@ client.on("guildCreate", async guild => {
     return setUpGuild(guild);
 });
 
+client.on("guildUpdate", async (oldGuild, newGuild) => {
+    if (oldGuild.name !== newGuild.name) {
+        return db.collection("guilds").doc(newGuild.id).update({
+            guildName: newGuild.name,
+        });
+    }
+});
+
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
         

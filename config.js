@@ -14,7 +14,6 @@ const configPrefix = async (client, msg, p, args, doc) => {
 
     } else {
         return doc.update({
-            "guildName": msg.guild.name,
             "prefix": args[0],
         }).then(() => {
             const embed = tools.getStandardEmbed(client)
@@ -68,7 +67,6 @@ const configAdmins = async (client, msg, p, args, guildConfig, doc) => {
         adminsList = adminsList != "" ? adminsList : "No admins set.";
 
         return doc.update({
-            "guildName": msg.guild.name,
             "admins": newAdmins,
         }).then(() => {
             const embed = tools.getStandardEmbed(client)
@@ -116,7 +114,6 @@ const configMods = async (client, msg, p, args, guildConfig, doc) => {
         modsList = modsList != "" ? modsList : "No mods set.";
 
         return doc.update({
-            "guildName": msg.guild.name,
             "mods": newMods,
         }).then(() => {
             const embed = tools.getStandardEmbed(client)

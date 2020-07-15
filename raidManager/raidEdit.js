@@ -530,7 +530,6 @@ const updateTemplateDatabase = async (raidTemplate, guildConfig, newTemplate, ms
         newRaidNames.push(raidTemplate.name);
     
         promises.push(guildDoc.update({
-            "guildName": msg.guild.name,
             "raidTemplateNames": newRaidNames,
         }));
     }

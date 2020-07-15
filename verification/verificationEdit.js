@@ -697,7 +697,6 @@ const updateTemplateDatabase = async (template, guildConfig, newTemplate, msg, d
     }
     
     promises.push(guildDoc.update({
-        "guildName": msg.guild.name,
         "verificationTemplateNames": newTemplates,
     }));
 
