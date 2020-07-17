@@ -261,7 +261,7 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
 
     }
 
-    return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+    return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
         if (!realmEyeData.exists) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle(`${ign} Not Found`)

@@ -259,6 +259,10 @@ client.on("guildUpdate", async (oldGuild, newGuild) => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
+
+        // for (let i=0; i<50; i++) {
+        //     tools.getRealmEyeInfo(msg.content);
+        // }
         
         if (msg.guild) {
 
@@ -323,7 +327,7 @@ client.on("message", async msg => {
                 case "parse":
                     if (parserServerWhitelist.includes(msg.guild.id)) {
                         if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
-                            parser.parse(client, p, msg, visionClient, guildConfig, db);
+                            parser.parse(client, p, msg, visionClient, guildConfig, classInfo, db);
                         }
                     }
                     break;

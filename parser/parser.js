@@ -58,21 +58,28 @@ const compareToVoiceChannel = (playerList, channel) => {
     return results;
 };
 
-const checkRequirements = async (playerList, reqs) => {
-    const reqsSplit = reqs.split(" | ");
+const checkRequirements = async (playerList, reqs, classInfo) => {
     let results = {
         passed: [],
         failed: [],
     };
 
+    if (playerList.length === 0) {
+        return results;
+    }
+    
+    const reqsSplit = reqs.split(" | ");
+
     let promises = [];
     let playerCount = 0;
-    const waitTime = 1200;
+    const intervalTime = 300;
+    const minimumWait = 1000;
+    const pause = ((playerList.length+1)*intervalTime) > minimumWait ? ((playerList.length+1)*intervalTime) : minimumWait;
     promises.push(new Promise((resovle, reject) => {
         let wait = setTimeout(() => {
             clearTimeout(wait);
             resovle();
-        }, playerList.length*waitTime);
+        }, pause);
     }));
 
     let interval = setInterval (() => {
@@ -82,7 +89,7 @@ const checkRequirements = async (playerList, reqs) => {
 
         // saves the player position in the interval
         let playerNum = playerCount;
-        promises.push(tools.getRealmEyeInfo(playerList[playerNum]).then(realmEyeData => {
+        promises.push(tools.getRealmEyeInfo(playerList[playerNum], false, classInfo).then(realmEyeData => {
             if (realmEyeData.exists && !realmEyeData.hiddenCharacters && realmEyeData.characters.length > 0) {
                 const recentCharacter = realmEyeData.characters[0];
                 for (const req of reqsSplit) {
@@ -101,7 +108,7 @@ const checkRequirements = async (playerList, reqs) => {
         }));
         
         playerCount++;
-    }, 1200);
+    }, intervalTime);
 
     return Promise.all(promises).then(() => {
         return results;
@@ -129,7 +136,7 @@ const attachmentNotFound = (client, msg) => {
     msg.channel.send(embed);
 };
 
-module.exports.parse = async (client, p, msg, visionClient, guildConfig, db) => {
+module.exports.parse = async (client, p, msg, visionClient, guildConfig, classInfo, db) => {
 
     const args = tools.getArgs(msg.content, p, 1);
     const channel = tools.getChannel(msg.guild, args[0], "voice");
@@ -145,8 +152,7 @@ module.exports.parse = async (client, p, msg, visionClient, guildConfig, db) => 
                     .setTitle("Beginning Parsing...");
                 msg.channel.send(embed).then(async sent => {
                     const parseResults = await createPlayerList(visionClient, attach.url);
-                    const voiceResults = compareToVoiceChannel(parseResults.playerList, channel);
-                    
+                    const voiceResults = await compareToVoiceChannel(parseResults.playerList, channel);
 
                     embed = tools.getStandardEmbed(client)
                         .setTitle("Parsing Results")
@@ -167,7 +173,7 @@ module.exports.parse = async (client, p, msg, visionClient, guildConfig, db) => 
                             sent.edit(loadingRest);
 
                             const template = await tools.getRaidTemplate(templateName, guildConfig, db);
-                            reqResults = await checkRequirements(voiceResults.present, template.reqs);
+                            reqResults = await checkRequirements(voiceResults.present, template.reqs, classInfo);
                         }
 
                         embed = embed.addField(`Failed Stat Requirement Check (${reqResults.failed.length})`, reqResults.failed.length > 0 ? reqResults.failed : "No players failed stat requirement checks");

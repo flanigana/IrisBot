@@ -52,7 +52,7 @@ module.exports.checkForIgnVerification = async (client, msg, db) => {
         const veriCode = userData.veriCode;
         const ign = msg.content.split(" ")[1];
 
-        return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
             // ign doesn't exist on RealmEye
             if (!realmEyeData.exists) {
                 const embed = tools.getStandardEmbed(client)
@@ -188,7 +188,7 @@ They need to do this first by attempting to verify in any verification channel a
         }
         
 
-        return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
             if (!realmEyeData.exists) {
                 const embed = tools.getStandardEmbed(client)
                     .setTitle("User Not Found")
@@ -215,7 +215,7 @@ const serverVerificationCheck = async (client, msg, templateName, guildConfig, d
         const userData = currentUser.data();
         const ign =  userData.ign;
 
-        return tools.getRealmEyeInfo(ign).then(realmEyeData => {
+        return tools.getRealmEyeInfo(ign, true).then(realmEyeData => {
             if (!realmEyeData.exists) {
                 const embed = tools.getStandardEmbed(client)
                     .setTitle("User Not Found")

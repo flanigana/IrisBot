@@ -391,7 +391,7 @@ module.exports.getClassInfo = async () => {
     }).catch(console.error);
 };
 
-module.exports.getRealmEyeInfo = async ign => {
+module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
     let promises = [];
     let options = {
         url: `https://www.realmeye.com/player/${ign}`,
@@ -498,8 +498,6 @@ module.exports.getRealmEyeInfo = async ign => {
                 }
             }
 
-            const classInfo = await this.getClassInfo();
-
             // get character table
             const characters = $(".table-responsive > .table > tbody > tr");
             let characterList = [];
@@ -527,23 +525,25 @@ module.exports.getRealmEyeInfo = async ign => {
                 }
                 character.equipment = characterEquipment;
 
-                // get specific maxed stats
-                const dataStats = characters[i].children[statsPos].children[0].attribs["data-stats"];
-                const dataBonuses = characters[i].children[statsPos].children[0].attribs["data-bonuses"];
-                const statsSplit = dataStats.match(/-*\d+/g);
-                const bonusesSplit = dataBonuses.match(/-*\d+/g);
-                let adjustedStats = [];
-                for (let j=0; j < statsSplit.length; j++) {
-                    adjustedStats[j] = parseInt(statsSplit[j]) - parseInt(bonusesSplit[j]);
+                if (classInfo) {
+                    // get specific maxed stats
+                    const dataStats = characters[i].children[statsPos].children[0].attribs["data-stats"];
+                    const dataBonuses = characters[i].children[statsPos].children[0].attribs["data-bonuses"];
+                    const statsSplit = dataStats.match(/-*\d+/g);
+                    const bonusesSplit = dataBonuses.match(/-*\d+/g);
+                    let adjustedStats = [];
+                    for (let j=0; j < statsSplit.length; j++) {
+                        adjustedStats[j] = parseInt(statsSplit[j]) - parseInt(bonusesSplit[j]);
+                    }
+                    character.maxHP = (classInfo[character.class].maxHP - adjustedStats[0]) === 0 ? true : false;
+                    character.maxMP = (classInfo[character.class].maxMP - adjustedStats[1]) === 0 ? true : false;
+                    character.maxAtt = (classInfo[character.class].maxAtt - adjustedStats[2]) === 0 ? true : false;
+                    character.maxDef = (classInfo[character.class].maxDef - adjustedStats[3]) === 0 ? true : false;
+                    character.maxSpd = (classInfo[character.class].maxSpd - adjustedStats[4]) === 0 ? true : false;
+                    character.maxVit = (classInfo[character.class].maxVit - adjustedStats[5]) === 0 ? true : false;
+                    character.maxWis = (classInfo[character.class].maxWis - adjustedStats[6]) === 0 ? true : false;
+                    character.maxDex = (classInfo[character.class].maxDex - adjustedStats[7]) === 0 ? true : false;
                 }
-                character.maxHP = (classInfo[character.class].maxHP - adjustedStats[0]) === 0 ? true : false;
-                character.maxMP = (classInfo[character.class].maxMP - adjustedStats[1]) === 0 ? true : false;
-                character.maxAtt = (classInfo[character.class].maxAtt - adjustedStats[2]) === 0 ? true : false;
-                character.maxDef = (classInfo[character.class].maxDef - adjustedStats[3]) === 0 ? true : false;
-                character.maxSpd = (classInfo[character.class].maxSpd - adjustedStats[4]) === 0 ? true : false;
-                character.maxVit = (classInfo[character.class].maxVit - adjustedStats[5]) === 0 ? true : false;
-                character.maxWis = (classInfo[character.class].maxWis - adjustedStats[6]) === 0 ? true : false;
-                character.maxDex = (classInfo[character.class].maxDex - adjustedStats[7]) === 0 ? true : false;
 
                 characterList.push(character);
             }
@@ -554,37 +554,39 @@ module.exports.getRealmEyeInfo = async ign => {
 
     }));
 
-    options.url = `https://www.realmeye.com/graveyard-summary-of-player/${ign}`;
-    promises.push(axios(options).then(response => {
-        const html = response.data;
-        const $ = cheerio.load(html);
-
-        const playerNameBox = $(".col-md-12")[0].children[0];
-        const header = playerNameBox.children[0];
-        if (header.data && header.data.startsWith("Sorry")) {
-            return accountInfo;
-        }
-
-        let dungeons = {};
-        const tbody = $(".table-responsive > .table > tbody > tr");
-        for (let i=0; i < tbody.length; i++) {
-            const rowTitle = tbody[i].children[1].children[0].data;
-            if (!rowTitle.toLowerCase().endsWith("completed")) {
-                continue;
+    if (graveyard) {
+        options.url = `https://www.realmeye.com/graveyard-summary-of-player/${ign}`;
+        promises.push(axios(options).then(response => {
+            const html = response.data;
+            const $ = cheerio.load(html);
+    
+            const playerNameBox = $(".col-md-12")[0].children[0];
+            const header = playerNameBox.children[0];
+            if (header.data && header.data.startsWith("Sorry")) {
+                return accountInfo;
             }
-
-            const shortTitle = rowTitle.toLowerCase().substring(0, rowTitle.length-10);
-            if (!shortTitle.toLowerCase().includes("quests")) {
-                dungeons[shortTitle] = parseInt(tbody[i].children[2].children[0].data);
-                // check for last dungeon
-                if (shortTitle === "pirate caves") {
-                    break;
+    
+            let dungeons = {};
+            const tbody = $(".table-responsive > .table > tbody > tr");
+            for (let i=0; i < tbody.length; i++) {
+                const rowTitle = tbody[i].children[1].children[0].data;
+                if (!rowTitle.toLowerCase().endsWith("completed")) {
+                    continue;
+                }
+    
+                const shortTitle = rowTitle.toLowerCase().substring(0, rowTitle.length-10);
+                if (!shortTitle.toLowerCase().includes("quests")) {
+                    dungeons[shortTitle] = parseInt(tbody[i].children[2].children[0].data);
+                    // check for last dungeon
+                    if (shortTitle === "pirate caves") {
+                        break;
+                    }
                 }
             }
-        }
-        accountInfo.dungeons = dungeons;
-        return accountInfo;
-    }));
+            accountInfo.dungeons = dungeons;
+            return accountInfo;
+        }));
+    }
 
     return Promise.all(promises).then(() => {
         return accountInfo;

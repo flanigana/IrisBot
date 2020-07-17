@@ -30,6 +30,18 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 * Raid tracking used to log various raid parameters
 
 ### Change List -
+#### July 17, 2020
+* RealmEye Info
+  * Reduced number of requests sent during RealmEye info retrieval. Now only makes the necessary requests what is needed.
+* Parsing
+  * Increased rate of parsing due to the decrease in number of requests
+
+### July 6-16, 2020
+* Parsing
+  * Added a parser, but only limited servers have access to it
+* Adjustments / Bug Fixes
+  * Various small backend changes
+
 #### July 5, 2020
 * Verification
   * Added dungeon completions to verification templates and checks
