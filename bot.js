@@ -259,10 +259,6 @@ client.on("guildUpdate", async (oldGuild, newGuild) => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
-
-        // for (let i=0; i<50; i++) {
-        //     tools.getRealmEyeInfo(msg.content);
-        // }
         
         if (msg.guild) {
 
