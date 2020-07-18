@@ -3,7 +3,7 @@ const verificationTools = require("./verificationTools");
 const verificationTemplates = require("./verificationTemplates");
 const modifyUser = require("./modifyUser");
 
-const updateNameInServers = (client, userId, db) => {
+const updateNameInServers = (client, userId, realmEyeData, db) => {
     db.collection("users").doc(userId).get().then(snapshot => {
         if (!snapshot.exists) {
             return false;
@@ -66,7 +66,7 @@ module.exports.checkForIgnVerification = async (client, msg, db) => {
             if (realmEyeData.description.includes(veriCode)) {
                 verificationTools.updateIgnVerification(msg.author.id, realmEyeData.name, db);
                 verificationTools.sendIgnVerificationSuccessMessage(client, msg, realmEyeData.name);
-                updateNameInServers(client, msg.author.id, db);
+                updateNameInServers(client, msg.author.id, realmEyeData, db);
                 return true;
 
             // can't verify ign

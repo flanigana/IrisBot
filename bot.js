@@ -242,7 +242,7 @@ client.on("ready", async () => {
     
     Promise.all(promises).then(() => {
         console.log("Ready!");
-    })
+    });
 });
 
 client.on("guildCreate", async guild => {
