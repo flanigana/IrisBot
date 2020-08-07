@@ -25,11 +25,15 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 * !raid edit : edits an existing raid template
 * !raid delete : deletes the raid template with the given name
 * !raid start : starts a raid using the given raid template
+* !hc : starts a headcount
 
 ### Coming Soon - 
 * Raid tracking used to log various raid parameters
 
 ### Change List -
+#### August 7, 2020
+* Headcount command added
+
 #### July 17, 2020
 * RealmEye Info
   * Reduced number of requests sent during RealmEye info retrieval. Now only makes the necessary requests what is needed.

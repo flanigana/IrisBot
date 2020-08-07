@@ -10,6 +10,7 @@ const verification = require("./verification/verification");
 const render = require("./render");
 const raidManager = require("./raidManager/raidManager");
 const raidShorthand = require("./raidManager/raidShorthand");
+const headcount = require("./raidManager/headcount");
 const parser = require("./parser/parser");
 
 const client = new Discord.Client();
@@ -113,6 +114,7 @@ const raidHelp = (p, msg) => {
             {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
             {name: "Raid Template Management", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
             {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
+            {name: "Headcount", value: `\`\`\`${p}hc\`\`\``},
         );
     msg.channel.send(embed);
 };
@@ -318,6 +320,11 @@ client.on("message", async msg => {
                 case "r":
                     if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
                         raidShorthand.startShorthand(client, p, msg, guildConfig, db);
+                    }
+                    break;
+                case "hc":
+                    if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
+                        headcount.headcount(client, p, msg, guildConfig, db);
                     }
                     break;
                 case "parse":

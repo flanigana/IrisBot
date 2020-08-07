@@ -261,8 +261,8 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
     const primaryEmoji = raidTools.formatPrimaryEmoji(client, raidTemplate, msg.guild.id);
     const primaryMin = raidTemplate.primaryMin;
 
-    let secondaryEmojis = raidTools.formatSecondaryEmojis(client, raidTemplate, msg.guild.id);
-    let secondaryLimits = raidTemplate.secondaryLimits;
+    const secondaryEmojis = raidTools.formatSecondaryEmojis(client, raidTemplate, msg.guild.id);
+    const secondaryLimits = raidTemplate.secondaryLimits;
 
     let emojiList = [];
     emojiList.push(primaryEmoji);
