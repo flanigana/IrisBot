@@ -19,7 +19,7 @@ React with ${secondaryEmojis} if applicable.`);
             sent.react(emoji);
         }
     });
-}
+};
 
 const sendGenericHeadcount = (client, msg, channel) => {
     const embed = tools.getStandardEmbed(client)
