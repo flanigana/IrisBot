@@ -167,6 +167,7 @@ const raidDeleteHelp = (client, p, msg, guildConfig) => {
     for (const name of guildConfig.raidTemplateNames) {
         existingNames += existingNames === "" ? `${name}` : ` | ${name}`;
     }
+    existingNames = existingNames === "" ? "No existing raid templates." : existingNames;
     const embed = tools.getStandardEmbed(client)
         .setTitle("Iris Bot Raid Commands")
         .setDescription(`Delete an exiting raid template using:
