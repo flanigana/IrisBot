@@ -277,6 +277,10 @@ client.on("message", async msg => {
 
             const args = tools.getArgs(msg.content, p, 0);
 
+            if (args.length === 0) {
+                return false;
+            }
+
             switch (args[0].toLowerCase()) {
                 case "help":
                     generalHelp(p, msg);

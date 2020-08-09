@@ -248,7 +248,7 @@ const listRaidConfig = (client, msg, guildConfig) => {
 module.exports.configRaid = async (client, p, msg, guildConfig, db) => {
     let args = tools.getArgs(msg.content, p, 2);
 
-    if (args.length === 0){
+    if (args.length === 0) {
         const embed = tools.getStandardEmbed(client)
             .setTitle("Raid Configuration")
             .setDescription("Configure settings used within the raid manager.")
@@ -279,7 +279,7 @@ module.exports.configRaid = async (client, p, msg, guildConfig, db) => {
             return configRaidLeaderRoles(client, msg, p, args, guildConfig, doc);
         case "confirmationchannel":
             return configConfirmationChannel(client, msg, p, args, guildConfig, doc);
-        case "boosterRole":
+        case "boosterrole":
             return configBooster(client, msg, p, args, guildConfig, doc);
 
     }
