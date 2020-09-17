@@ -195,6 +195,7 @@ module.exports.getEmoji = (client, emojiName, guildId) => {
 };
 
 module.exports.createClientEmojisList = (client, guild) => {
+    let emojiGuildIds = ["710578568211464192", "708761992705474680", "711504382394630194", "711491483588493313"];
     let types = ["Portal", "Key", "Class", "Ability"];
     let typesLength = types.length;
     let emojisList = {};
@@ -202,7 +203,7 @@ module.exports.createClientEmojisList = (client, guild) => {
 
     client.emojis.cache.map(emoji => {
         for (let i=0; i<typesLength; i++) {
-            if (emoji.name.endsWith(types[i].toLowerCase())) {
+            if (emojiGuildIds.includes(emoji.guild.id) && emoji.name.endsWith(types[i].toLowerCase())) {
                 if (emojisList[`${types[i]}`] === undefined) {
                     emojisList[`${types[i]}`] = `${emoji}`;
                 } else {
