@@ -30,6 +30,136 @@ const updateNameInServers = (client, userId, realmEyeData, db) => {
     }).catch(console.error);
 };
 
+const updateWithFailure = (userDoc, guildId, templateName) => {
+
+    return userDoc.get().then(snapshot => {
+
+        if (snapshot.exists) {
+            return userDoc.update({
+                [`${guildId} | ${templateName}`]: "failed",
+            }).then(() => {
+                return true;
+            }).catch(console.error);
+
+        } else {
+            return userDoc.set({
+                [`${guildId} | ${templateName}`]: "failed",
+            }).then(() => {
+                return true;
+            }).catch(console.error);
+        }
+    });
+};
+
+const verifyUser = async (client, user, guild, guildMember, template, realmEyeData, db, manual=false) => {
+    let promises = [];
+
+    // assign user roles
+    await verificationTools.assignRoles(template, guildMember, realmEyeData);
+
+    // update user's and server's verification list
+    promises.push(verificationTools.updateServerVerification(guild, guildMember.user, template, db));
+
+    const verifyingUser = manual ? guildMember.user : user;
+
+    // send user success message
+    verificationTools.sendUserVerificationSuccess(client, verifyingUser, guild, template, manual);
+
+    Promise.all(promises).then(() => {
+        // send new verified user message to server
+        return verificationTools.sendGuildVerificationSuccess(client, template, guildMember, realmEyeData, manual, user);
+    }).catch(console.error);
+};
+
+const serverVerificationCheck = async (client, userDoc, user, guild, templateName, guildConfig, db) => {
+    return userDoc.get().then(currentUser => {
+        if (!currentUser.exists) {
+            return false;
+        }
+        const userData = currentUser.data();
+        const ign =  userData.ign;
+
+        return tools.getRealmEyeInfo(ign, true).then(realmEyeData => {
+            if (!realmEyeData.exists) {
+                const embed = tools.getStandardEmbed(client)
+                    .setTitle("User Not Found")
+                    .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. Make sure your profile is not private.
+If **${ign}** is no longer your ign, update it by responding with \`!updateIGN\` and follow the steps.`);
+                user.send(embed);
+                return false;
+            }
+
+            const guildMember = guild.members.cache.find(aUser => aUser.id === user.id);
+
+            // set server nickname to realm ign
+            if (guildMember.manageable) {
+                guildMember.setNickname(realmEyeData.name);
+            }
+
+            return tools.getVerificationTemplate(client, guild, templateName, guildConfig, db).then(template => {
+                let notInGuild = false;
+
+                // check if template is a guild type and if the verifying user is in the guild
+                if (template.guildType && (realmEyeData.guild.toLowerCase() != template.guildName.toLowerCase())) {
+                    notInGuild = true;
+                    verificationTools.sendUserNotInGuild(client, user, guild, template, realmEyeData);
+                }
+
+                const reqCheck = verificationTools.meetsReqs(client, user, guild, template.verificationChannel, template, realmEyeData, notInGuild);
+                if (reqCheck.pass) {
+
+                    // sends message to guild to notify that user meets reqs but is not in guild
+                    if (template.guildType && (realmEyeData.guild.toLowerCase() != template.guildName.toLowerCase())) {
+                        verificationTools.sendGuildVerificationGuildFailure(client, guildConfig.prefix, template, guildMember, realmEyeData);
+                        updateWithFailure(userDoc, guild.id, templateName);
+                        return false;
+                    }
+
+                    verifyUser(client, user, guild, guildMember, template, realmEyeData, db, false);
+
+                } else if (!notInGuild) {
+                    verificationTools.sendGuildVerificationReqFailure(client, guildConfig.prefix, template, guildMember, realmEyeData, reqCheck);
+                    updateWithFailure(userDoc, guild.id, templateName);
+                    return false;
+                }
+            }).catch(console.error);
+        }).catch(console.error);
+    }).catch(console.error);
+};
+
+const checkQueuedVerifications = async (client, userDoc, msg, db) => {
+
+    return userDoc.get().then(async snapshot => {
+        if (!snapshot.exists) {
+            return false;
+        }
+
+        const userData = snapshot.data();
+        const props = Object.getOwnPropertyNames(userData);
+        const regex = /[\d* | ]/g;
+        let promises = [];
+
+        for (const prop of props) {
+            if (regex.test(prop)) {
+                if (userData[prop] === "queued") {
+                    const split = prop.split(" | ");
+                    const guildId = split[0];
+                    const templateName = split[1];
+                    const guildConfig = await tools.getGuildConfig(guildId, db, msg);
+                    const guild = tools.getGuildById(client, guildId);
+
+                    promises.push(serverVerificationCheck(client, userDoc, msg.author, guild, templateName, guildConfig, db));
+                }
+
+            }
+        }
+
+        return Promise.all(promises).then(() => {
+            return true;
+        }).catch(console.error);
+    });
+};
+
 module.exports.checkForIgnVerification = async (client, msg, db) => {
     if (msg.content.split(" ").length <= 1) {
         const embed = tools.getStandardEmbed(client)
@@ -66,6 +196,7 @@ module.exports.checkForIgnVerification = async (client, msg, db) => {
             if (realmEyeData.description.includes(veriCode)) {
                 verificationTools.updateIgnVerification(msg.author.id, realmEyeData.name, db);
                 verificationTools.sendIgnVerificationSuccessMessage(client, msg, realmEyeData.name);
+                checkQueuedVerifications(client, userDoc, msg, db);
                 updateNameInServers(client, msg.author.id, realmEyeData, db);
                 return true;
 
@@ -82,6 +213,26 @@ module.exports.checkForIgnVerification = async (client, msg, db) => {
     });
 };
 
+const addQueuedVerification = async (userDoc, guildId, templateName) => {
+    return userDoc.get().then(snapshot => {
+
+        if (snapshot.exists) {
+            return userDoc.update({
+                [`${guildId} | ${templateName}`]: "queued",
+            }).then(() => {
+                return true;
+            }).catch(console.error);
+
+        } else {
+            return userDoc.set({
+                [`${guildId} | ${templateName}`]: "queued",
+            }).then(() => {
+                return true;
+            }).catch(console.error);
+        }
+    });
+};
+
 module.exports.beginIgnVerification = (client, msg, db) => {
     const userDoc = db.collection("users").doc(msg.author.id);
     return verificationTools.makeNewVeriCode(userDoc).then(veriCode => {
@@ -90,31 +241,7 @@ module.exports.beginIgnVerification = (client, msg, db) => {
     }).catch(console.error);
 };
 
-const verifyUser = (client, msg, guildMember, template, realmEyeData, db, manual=false) => {
-    let promises = [];
 
-    // assign user roles
-    promises.push(verificationTools.assignRoles(template, guildMember, realmEyeData));
-
-    // update user's and server's verification list
-    promises.push(verificationTools.updateServerVerification(msg, guildMember.user, template, db));
-
-    const verifyUser = manual ? guildMember.user : msg.author;
-
-    // send user success message
-    if (manual) {
-        verificationTools.sendUserVerificationSuccess(client, msg, verifyUser, template, manual);
-    } else {
-        verificationTools.sendUserVerificationSuccess(client, msg, verifyUser, template, manual);
-    }
-
-    Promise.all(promises).then(() => {
-        // send new verified user message to server
-        // updates guildMember to include new roles
-        guildMember = msg.guild.members.cache.find(user => user.id === verifyUser.id);
-        return verificationTools.sendGuildVerificationSuccess(client, template, guildMember, realmEyeData, manual, msg.author);
-    }).catch(console.error);
-};
 
 module.exports.manualVerify = async (client, p, msg, guildConfig, db) => {
     let args = tools.getArgs(msg.content, p, 1);
@@ -186,7 +313,6 @@ They need to do this first by attempting to verify in any verification channel a
                 return true;
             }
         }
-        
 
         return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
             if (!realmEyeData.exists) {
@@ -198,64 +324,9 @@ If **${ign}** is no longer their ign, they need to update it by DMing this bot w
                 return false;
             }
 
-            return tools.getVerificationTemplate(client, msg, templateName, guildConfig, db).then(template => {
-                verifyUser(client, msg, guildMember, template, realmEyeData, db, true);
+            return tools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg).then(template => {
+                return verifyUser(client, msg.author, msg.guild, guildMember, template, realmEyeData, db, true);
 
-            }).catch(console.error);
-        }).catch(console.error);
-    }).catch(console.error);
-};
-
-const serverVerificationCheck = async (client, msg, templateName, guildConfig, db) => {
-    const userDoc = db.collection("users").doc(msg.author.id);
-    return userDoc.get().then(currentUser => {
-        if (!currentUser.exists) {
-            return false;
-        }
-        const userData = currentUser.data();
-        const ign =  userData.ign;
-
-        return tools.getRealmEyeInfo(ign, true).then(realmEyeData => {
-            if (!realmEyeData.exists) {
-                const embed = tools.getStandardEmbed(client)
-                    .setTitle("User Not Found")
-                    .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. Make sure your profile is not private.
-If **${ign}** is no longer your ign, update it by responding with \`!updateIGN\` and follow the steps.`);
-                msg.author.send(embed);
-                return false;
-            }
-
-            const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
-
-            // set server nickname to realm ign
-            if (guildMember.manageable) {
-                guildMember.setNickname(realmEyeData.name);
-            }
-
-            return tools.getVerificationTemplate(client, msg, templateName, guildConfig, db).then(template => {
-                let notInGuild = false;
-
-                // check if template is a guild type and if the verifying user is in the guild
-                if (template.guildType && (realmEyeData.guild.toLowerCase() != template.guildName.toLowerCase())) {
-                    notInGuild = true;
-                    verificationTools.sendUserNotInGuild(client, msg, template, realmEyeData);
-                }
-
-                const reqCheck = verificationTools.meetsReqs(client, msg, template, realmEyeData, notInGuild);
-                if (reqCheck.pass) {
-
-                    // sends message to guild to notify that user meets reqs but is not in guild
-                    if (template.guildType && (realmEyeData.guild.toLowerCase() != template.guildName.toLowerCase())) {
-                        verificationTools.sendGuildVerificationGuildFailure(client, guildConfig.prefix, template, guildMember, realmEyeData);
-                        return false;
-                    }
-
-                    verifyUser(client, msg, guildMember, template, realmEyeData, db, false);
-
-                } else if (!notInGuild) {
-                    verificationTools.sendGuildVerificationReqFailure(client, guildConfig.prefix, template, guildMember, realmEyeData, reqCheck);
-                    return false;
-                }
             }).catch(console.error);
         }).catch(console.error);
     }).catch(console.error);
@@ -272,7 +343,17 @@ const beginVerification = async (client, msg, templateName, guildConfig, db) => 
             
             if (!userData.ign) {
                 // user has not started or completed IGN verification
-                this.beginIgnVerification(client, msg, db);
+                if (!userData[`${guildId} | ${templateName}`]) {
+                    // add attempted verification to userDoc for auto verification check after IGN verification
+                    addQueuedVerification(userDoc, guildId, templateName, db).then(() => {
+                        // restart IGN verification
+                        this.beginIgnVerification(client, msg, db);
+                    }).catch(console.error);
+
+                } else {
+                    // restart IGN verification
+                    this.beginIgnVerification(client, msg, db);
+                }
                 return true;
 
             } else if (userData[`${guildId} | ${templateName}`]) {
@@ -286,18 +367,22 @@ const beginVerification = async (client, msg, templateName, guildConfig, db) => 
                     return true;
                 } else {
                     // user has verified IGN -> start server verification
-                    serverVerificationCheck(client, msg, templateName, guildConfig, db);
+                    serverVerificationCheck(client, userDoc, msg.author, msg.guild, templateName, guildConfig, db);
                     return true;
                 }
 
             } else {
                 // user has verified IGN -> start server verification
-                serverVerificationCheck(client, msg, templateName, guildConfig, db);
+                serverVerificationCheck(client, userDoc, msg.author, msg.guild, templateName, guildConfig, db);
                 return true;
             }
 
         } else {
-            this.beginIgnVerification(client, msg, db);
+            // add attempted verification to userDoc for auto verification check after IGN verification
+            addQueuedVerification(userDoc, guildId, templateName, db).then(() => {
+                // begin IGN verification
+                this.beginIgnVerification(client, msg, db);
+            }).catch(console.error);
             return true;
         }
     }).catch(console.error);

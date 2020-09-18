@@ -94,7 +94,7 @@ const unverifyUser = async (client, msg, guildMember, templateName, guildConfig,
         return false;
     }
 
-    const template = await tools.getVerificationTemplate(client, msg, templateName, guildConfig, db);
+    const template = await tools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg);
     let promises = [];
 
     // remove user roles and remove user from verified list in template

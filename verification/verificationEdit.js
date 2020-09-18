@@ -760,7 +760,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
     let verificationTemplate;
     const templateName = tools.getArgs(msg.content, p, 2)[0];
     if (!newTemplate) {
-        verificationTemplate = await tools.getVerificationTemplate(client, msg, templateName, guildConfig, db);
+        verificationTemplate = await tools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg);
     } else {
         verificationTemplate = {
             name: templateName,

@@ -865,7 +865,7 @@ module.exports.verificationTemplateExists = (template, guildConfig) => {
     return undefined;
 };
 
-module.exports.getVerificationTemplate = async (client, msg, templateName, guildConfig, db) => {
+module.exports.getVerificationTemplate = async (client, guild, templateName, guildConfig, db, msg) => {
     let actualName;
     const templateList = guildConfig.verificationTemplateNames;
     for (let i=0; i<templateList.length; i++) {
@@ -892,20 +892,20 @@ module.exports.getVerificationTemplate = async (client, msg, templateName, guild
     }).then(template => {
         if (template) {
             if (template.verificationChannel) {
-                template.verificationChannel = this.getChannelById(msg.guild, template.verificationChannel, "text");
+                template.verificationChannel = this.getChannelById(guild, template.verificationChannel, "text");
             }
             if (template.logChannel) {
-                template.logChannel = this.getChannelById(msg.guild, template.logChannel, "text");
+                template.logChannel = this.getChannelById(guild, template.logChannel, "text");
             }
             if (template.guildRoles) {
-                template.founderRole = this.getRoleById(msg.guild, template.founderRole);
-                template.leaderRole = this.getRoleById(msg.guild, template.leaderRole);
-                template.officerRole = this.getRoleById(msg.guild, template.officerRole);
-                template.memberRole = this.getRoleById(msg.guild, template.memberRole);
-                template.initiateRole = this.getRoleById(msg.guild, template.initiateRole);
+                template.founderRole = this.getRoleById(guild, template.founderRole);
+                template.leaderRole = this.getRoleById(guild, template.leaderRole);
+                template.officerRole = this.getRoleById(guild, template.officerRole);
+                template.memberRole = this.getRoleById(guild, template.memberRole);
+                template.initiateRole = this.getRoleById(guild, template.initiateRole);
             }
             if (template.verifiedRole) {
-                template.verifiedRole = this.getRoleById(msg.guild, template.verifiedRole);
+                template.verifiedRole = this.getRoleById(guild, template.verifiedRole);
             }
             return template;
         } else {

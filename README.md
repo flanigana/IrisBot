@@ -31,6 +31,13 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 * Raid tracking used to log various raid parameters
 
 ### Change List -
+
+#### September 18, 2020
+* Automatically verifies user in queued servers upon IGN verification
+  * Before, the user would have to go back to the original channel and reuse the verify command to be verified. This is now done automatically after IGN verification.
+* Adjustments / Bug Fixes
+  * New roles are now correctly included in the server verification message. Before, it would only show old roles and none of the newly assigned ones. New ones should be showing up now as well.
+
 #### August 7, 2020
 * Headcount command added
 

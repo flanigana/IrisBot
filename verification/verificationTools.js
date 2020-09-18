@@ -56,8 +56,8 @@ module.exports.updateIgnVerification = async (userId, ign, db) => {
     }).catch(console.error);
 };
 
-module.exports.updateServerVerification = async (msg, user, template, db) => {
-    const guildId = msg.guild.id;
+module.exports.updateServerVerification = async (guild, user, template, db) => {
+    const guildId = guild.id;
     const userId = user.id;
     const userDoc = db.collection("users").doc(userId);
 
@@ -110,26 +110,27 @@ You can now verify in any verification channel using this bot by using the verif
     msg.author.send(embed);
 };
 
-module.exports.sendUserNotInGuild = (client, msg, template, realmEyeData) => {
+module.exports.sendUserNotInGuild = (client, user, guild, template, realmEyeData) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle("Verification Failure")
         .setDescription(`**${realmEyeData.name}** is not a member of **${template.guildName}**.
-Because of this, you were not verified in **${msg.guild}**:${template.verificationChannel}.
+Because of this, you were not verified in **${guild}**:${template.verificationChannel}.
 \nIf this is not your username, reply with \`!updateIGN\` to start the process of re-verifying your current IGN.`);
-    msg.author.send(embed);
+    user.send(embed);
 };
 
-module.exports.sendUserVerificationSuccess = (client, msg, user, template, manual) => {
+module.exports.sendUserVerificationSuccess = (client, user, guild, template, manual) => {
     const embed = tools.getStandardEmbed(client)
         .setTitle(`${manual ? `Manually ` : ""}Verified!`)
         .setDescription(`Congratulations! You have been ${manual ? `manually ` : "successfully "}verified in 
-**${msg.guild}**:${template.verificationChannel}.`);
+**${guild}**:${template.verificationChannel}.`);
     user.send(embed);
 };
 
 module.exports.sendGuildVerificationSuccess = async (client, template, guildMember, realmEyeData, manual, verifier) => {
-    const roles = [];
+    let roles = [];
     guildMember.roles.cache.map(role => roles.push(role));
+
     const embed = tools.getStandardEmbed(client)
         .setTitle(`${guildMember.displayName} Has Been ${manual ? `Manually ` : ""}Verified!`)
         .setURL(`https://www.realmeye.com/player/${realmEyeData.name}`)
@@ -214,7 +215,7 @@ const checkDungeonCounts = (template, realmEyeData) => {
     return dungeonCounts;
 };
 
-module.exports.meetsReqs = (client, msg, template, realmEyeData, notInGuild) => {
+module.exports.meetsReqs = (client, user, guild, verificationChannel, template, realmEyeData, notInGuild) => {
     let results = {
         pass: true,
         reasons: [],
@@ -224,7 +225,7 @@ module.exports.meetsReqs = (client, msg, template, realmEyeData, notInGuild) => 
     let embed = tools.getStandardEmbed(client)
         .setTitle(`${realmEyeData.name} Does Not Meet Verification Requirements`)
         .setDescription(`Below are the reasons you do not meet the requirements for
-**${msg.guild}**:${msg.channel}.`);
+**${guild}**:${verificationChannel}.`);
     if (realmEyeData.fame < template.fame) {
         results.pass = false;
         results.reasons.push("fame");
@@ -359,7 +360,7 @@ module.exports.meetsReqs = (client, msg, template, realmEyeData, notInGuild) => 
             {name: "Seem Like An Error?", value: "You may need to re-log all of your characters as RealmEye will stop tracking characters it has not seen after a period of time."},
             {name: `${realmEyeData.name} No Longer Your IGN?`, value: "If this is the wrong IGN, reply with \`!updateIGN\` to re-verify your IGN with the bot."},
         );
-        msg.author.send(embed);
+        user.send(embed);
     }
     
     return results;
@@ -444,7 +445,7 @@ module.exports.assignRoles = async (template, guildMember, realmEyeData) => {
         template.logChannel.send(outrankMsg);
     }
 
-    Promise.all(promises).then(() => {
+    return Promise.all(promises).then(() => {
         return true;
     }).catch(console.error);
 };
