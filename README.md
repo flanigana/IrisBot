@@ -33,7 +33,11 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 ### Change List -
 
 #### September 18, 2020
-* Automatically verifies user in queued servers upon IGN verification
+* Configuration
+  * Command prefix options have been restricted to a list of potential options. There should still be enough to be sure there are no conflicting prefixes with any other bot you may have.
+  * This list includes !, -, ., +, ?, $, >, /, ;, *, s!, =, m! and !!
+* Verification
+  * Automatically verifies user in queued servers upon IGN verification.
   * Before, the user would have to go back to the original channel and reuse the verify command to be verified. This is now done automatically after IGN verification.
 * Adjustments / Bug Fixes
   * New roles are now correctly included in the server verification message. Before, it would only show old roles and none of the newly assigned ones. New ones should be showing up now as well.

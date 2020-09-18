@@ -24,6 +24,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const visionClient = new vision.ImageAnnotatorClient();
 
+const commonPrefixList = ["!", "-", ".", "+", "?", "$", ">", "/", ";", "*", "s!", "=", "m!", "!!"];
 const parserServerWhitelist = ["710578568211464192", "708761992705474680", "726510098737922108"];
 const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
 const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
@@ -124,7 +125,7 @@ const configGuild = async (p, msg, guildConfig) => {
     if (args.length === 0) {
         return configHelp(p, msg);
     } else {
-        return config.configGuild(client, p, msg, guildConfig, db);
+        return config.configGuild(client, p, msg, guildConfig, commonPrefixList, db);
     }
 };
 
@@ -263,6 +264,12 @@ client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
         
         if (msg.guild) {
+            if (commonPrefixList.every(prefix => {
+                    return !msg.content.startsWith(prefix);
+                    })) {
+                // if the message does not start with one of the common prefixes, return
+                return false;
+            }
 
             const guildConfig = await tools.getGuildConfig(msg.guild.id, db, msg);
             if (!guildConfig) {

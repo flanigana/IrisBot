@@ -1,16 +1,29 @@
 const tools = require("./tools");
 
-const configPrefix = async (client, msg, p, args, doc) => {
+const configPrefix = async (client, msg, p, args, prefixList, doc) => {
     if (args.length === 0) {
         const embed = tools.getStandardEmbed(client)
             .setTitle("Prefix Configuration")
             .setDescription("The command prefix that the bot will use to identify commands.")
             .addFields(
                 {name: "Instructions", value: `Change the command prefix for Iris Bot using:\`\`\`${p}config prefix <prefix>\`\`\``},
-                {name: "Current Configuration", value: `${p}`},
+                {name: "Valid Prefixes", value: prefixList},
+                {name: "Current Configuration", value: p},
             );
         msg.channel.send(embed);
         return true;
+
+    } else if (!prefixList.includes(args[0])) {
+        const embed = tools.getStandardEmbed(client)
+            .setTitle("Invalid Prefix!")
+            .setDescription("The prefix you attempted to use is not a valid prefix. Please use one of the prefixes listed below.")
+            .addFields(
+                {name: "Instructions", value: `Change the command prefix for Iris Bot using:\`\`\`${p}config prefix <prefix>\`\`\``},
+                {name: "Valid Prefixes", value: prefixList},
+                {name: "Current Configuration", value: p},
+            );
+        msg.channel.send(embed);
+        return false;
 
     } else {
         return doc.update({
@@ -20,7 +33,7 @@ const configPrefix = async (client, msg, p, args, doc) => {
                 .setTitle("Prefix Configuration")
                 .setDescription("Success! The command prefix was successfully changed!")
                 .addFields(
-                    {name: "New Prefix", value: `${args[0]}`},
+                    {name: "New Prefix", value: args[0]},
                 );
             msg.channel.send(embed);
             return true;
@@ -157,7 +170,7 @@ const configList = (client, msg, p, guildConfig) => {
     return true;
 };
 
-module.exports.configGuild = async (client, p, msg, guildConfig, db) => {
+module.exports.configGuild = async (client, p, msg, guildConfig, prefixList, db) => {
     const doc = db.collection("guilds").doc(msg.guild.id);
     
     const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
@@ -171,7 +184,7 @@ module.exports.configGuild = async (client, p, msg, guildConfig, db) => {
 
     switch (command) {
         case "prefix":
-            configPrefix(client, msg, p, args, doc);
+            configPrefix(client, msg, p, args, prefixList, doc);
             break;
         case "admins":
             configAdmins(client, msg, p, args, guildConfig, doc);
