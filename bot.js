@@ -243,8 +243,11 @@ client.on("ready", async () => {
         });
     }));
     
-    Promise.all(promises).then(() => {
+    return Promise.all(promises).then(async () => {
         console.log("Ready!");
+        // uncomment to view server and user counts
+        // console.log(await db.collection("guilds").get());
+        // console.log(await db.collection("users").get());
     });
 });
 

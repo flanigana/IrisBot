@@ -27,10 +27,14 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 * !raid start : starts a raid using the given raid template
 * !hc : starts a headcount
 
-### Coming Soon - 
+### Planned Future Updates - 
 * Raid tracking used to log various raid parameters
 
 ### Change List -
+
+#### October 6, 2020
+* RealmEye Info
+  * Can now display a user's RealmEye info by using "!realmeye @user"
 
 #### September 18, 2020
 * Configuration
@@ -51,7 +55,7 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 * Parsing
   * Increased rate of parsing due to the decrease in number of requests
 
-### July 6-16, 2020
+#### July 6-16, 2020
 * Parsing
   * Added a parser, but only limited servers have access to it
 * Adjustments / Bug Fixes

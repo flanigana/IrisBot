@@ -175,7 +175,12 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
         xMod += statsWidth;
 
         // character skin (default for now)
-        ctx.drawImage(renders[`${char.class} Default Skin`], xMod, yMod, sizing, sizing);
+        let renderImage = renders[`${char.class} Default Skin`];
+        if (!renderImage) {
+            renderImage = renders[`Empty slot`];
+        }
+
+        ctx.drawImage(renderImage, xMod, yMod, sizing, sizing);
         xMod += spacing;
 
         // character equipment
@@ -184,7 +189,6 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
             let renderImage = renders[`${equip}`];
             if (!renderImage) {
                 renderImage = renders[`Empty slot`];
-                // renderImage = renders[`"marid pet skin"`];
             }
             ctx.drawImage(renderImage, xMod, yMod, sizing, sizing);
             xMod += spacing;
@@ -248,6 +252,8 @@ const characterListEmbed = (client, realmEyeData, renders) => {
 };
 
 module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, renders) => {
+    const userRegex = /<@!\d{18}>/g;
+
     if (ign === "") {
         ign = await tools.getUserIgn(userId, db);
         if (!ign) {
@@ -258,7 +264,17 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
             channel.send(embed);
             return false;
         }
-
+    } else if (userRegex.test(ign)) {
+        const user = ign;
+        const id = ign.substring(3, 21);
+        ign = await tools.getUserIgn(id, db);
+        if (!ign) {
+            const embed = tools.getStandardEmbed(client)
+                .setTitle("User Not Found")
+                .setDescription(`${user} has not yet verified with Iris Bot. You can try using an in-game usename instead.`);
+            channel.send(embed);
+            return false;
+        }
     }
 
     return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
