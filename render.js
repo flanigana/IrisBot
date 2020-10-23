@@ -278,7 +278,7 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
     }
 
     return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
-        if (!realmEyeData.exists) {
+        if (!realmEyeData || !realmEyeData.exists) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle(`${ign} Not Found`)
                 .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.`);

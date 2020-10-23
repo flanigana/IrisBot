@@ -75,7 +75,7 @@ const checkRequirements = async (playerList, reqs, classInfo) => {
     const intervalTime = 300;
     const minimumWait = 1000;
     const pause = ((playerList.length+1)*intervalTime) > minimumWait ? ((playerList.length+1)*intervalTime) : minimumWait;
-    promises.push(new Promise((resovle, reject) => {
+    promises.push(new Promise((resolve, reject) => {
         let wait = setTimeout(() => {
             clearTimeout(wait);
             resovle();
