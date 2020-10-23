@@ -88,19 +88,21 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl, classInfo) => {
     }).catch(console.error);
 
     // load default skin images
-    const classNames = Object.getOwnPropertyNames(classInfo);
-    for (let i=0; i < classNames.length; i++) {
-        const cl = classInfo[classNames[i]];
-        const skinUrl = cl.defaultSkin;
-        promises.push(Jimp.read(skinUrl).then(image => {
-            return image.getBufferAsync("image/png").then(buffer => {
-                const render = new Image();
-                render.src = buffer;
-                renders[`${cl.className} Default Skin`] = render;
-                return true;
+    if (classInfo) {
+        const classNames = Object.getOwnPropertyNames(classInfo);
+        for (let i=0; i < classNames.length; i++) {
+            const cl = classInfo[classNames[i]];
+            const skinUrl = cl.defaultSkin;
+            promises.push(Jimp.read(skinUrl).then(image => {
+                return image.getBufferAsync("image/png").then(buffer => {
+                    const render = new Image();
+                    render.src = buffer;
+                    renders[`${cl.className} Default Skin`] = render;
+                    return true;
 
-        }).catch(console.error);
-        }));
+            }).catch(console.error);
+            }));
+        }
     }
 
     return Promise.all(promises).then(() => {
@@ -278,13 +280,23 @@ module.exports.realmEyeDisplay = async (client, p, ign, userId, channel, db, ren
     }
 
     return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
-        if (!realmEyeData || !realmEyeData.exists) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle(`${ign} Not Found`)
-                .setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.`);
+        if (!realmEyeData.exists) {
+            let embed = tools.getStandardEmbed(client)
+                    .setTitle(`${ign} Not Found`)
+                    .setURL(realmEyeData.url);
+
+            if (realmEyeData.status === 404) {
+                embed = embed.setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.
+\n**The page could not be reached, so RealmEye may be down at the moment!**`);
+
+            } else {
+                embed = embed.setDescription(`It looks like **${ign}** couldn't be found on RealmEye. The profile is either private or does not exist.`);
+            }
+            
             channel.send(embed);
             return false;
         }
+
         const embed = characterListEmbed(client, realmEyeData, renders);
         channel.send(embed);
         return true;
@@ -352,12 +364,22 @@ module.exports.guildDisplay = async (client, p, guildName, guildId, channel, db,
     
     return tools.getRealmEyeGuildInfo(guildName).then(realmEyeData => {
         if (!realmEyeData.exists) {
-            const embed = tools.getStandardEmbed(client)
-                .setTitle(`${guildName} Not Found`)
-                .setDescription(`It looks like **${guildName}** couldn't be found on RealmEye.`);
+            let embed = tools.getStandardEmbed(client)
+                    .setTitle(`${guildName} Not Found`)
+                    .setURL(realmEyeData.url);
+
+            if (realmEyeData.status === 404) {
+                embed = embed.setDescription(`It looks like **${guildName}** couldn't be found on RealmEye.
+\n**The page could not be reached, so RealmEye may be down at the moment!**`);
+
+            } else {
+                embed = embed.setDescription(`It looks like **${guildName}** couldn't be found on RealmEye.`);
+            }
+            
             channel.send(embed);
             return false;
         }
+
         const embed = guildEmbed(client, realmEyeData, renders);
         channel.send(embed);
         return true;

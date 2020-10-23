@@ -28,6 +28,7 @@ const commonPrefixList = ["!", "-", ".", "+", "?", "$", ">", "/", ";", "*", "s!"
 const parserServerWhitelist = ["710578568211464192", "708761992705474680", "726510098737922108"];
 const realmEyeRendersUrl = "https://www.realmeye.com/s/e0/css/renders.png";
 const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
+const classInfoUrl = `https://www.realmeye.com/wiki/classes`;
 let classInfo;
 let renders;
 
@@ -176,24 +177,29 @@ const endPpeReactionCollector = (collected, msg, originalMsg) => {
     });
     // set list to all classes if none are selected
     if (selectedCharacters.length === 0) {
-        selectedCharacters = Object.getOwnPropertyNames(classInfo);
+        selectedCharacters = classInfo.classList;
     }
     // generate class based on selected classes
     const characterNum = Math.floor(Math.random() * selectedCharacters.length);
     let character = selectedCharacters[characterNum];
-    const characterImage = classInfo[character].defaultSkin;
+    let characterImage;
+    if (classInfo.exists) {
+        characterImage = classInfo[character].defaultSkin;
+    }
 
     // edit embed in message to class selection
-    const embed = tools.getStandardEmbed(client)
-        .setTitle(`You Should Play ${character}`)
-        .setImage(characterImage);
+    let embed = tools.getStandardEmbed(client)
+        .setTitle(`You Should Play ${character}`);
+    if (characterImage) {
+        embed = embed.setImage(characterImage);
+    }
     msg.edit(embed);
     msg.reactions.removeAll().catch(console.error);
 };
 
 const ppe = (msg) => {
     let emojiList = [];
-    const classList = Object.getOwnPropertyNames(classInfo);
+    const classList = classInfo.classList;
     for (char of classList) {
         emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`, msg.guild.id));
     }
@@ -229,26 +235,79 @@ React with ❌ to cancel.`);
     });
 };
 
+const retryInitialization = async (interval) => {
+    console.log(`Retrying to retrieve class info from RealmEye...`);
+
+    return tools.getClassInfo(classInfoUrl).then(results => {
+        if (results.exists) { // successfully got class info
+            clearInterval(interval);
+            console.log(`Successfully retrieved class info!`);
+
+            return true;
+
+        } else { // still failed to get class info
+            console.error(`Failed to retrieve class info again...`);
+
+            return false;
+        }
+
+    }).then(async res => {
+        if (res) {
+            return render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl, classInfo).then(results => {
+                renders = results;
+
+                return true;
+            });
+
+        } else {
+            return false;
+        }
+        
+    }).catch(console.error);
+};
+
+const initializeBot = async () => {
+
+    return tools.getClassInfo(classInfoUrl).then(results => {
+        classInfo = results;
+        if (classInfo.exists) { // successfully got class info
+            return true;
+
+        } else { // if getting class info fails, start an interval to try again later
+            const retryInterval = 600000;
+            console.error(`Failed to retrieve class info. Retrying in ${retryInterval/60000} minutes...`);
+            const interval = setInterval(() => {
+                retryInitialization(interval);
+            }, retryInterval);
+
+            return false;
+
+        }
+
+    }).then(async res => {
+        if (res) {
+            return render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl, classInfo).then(results => {
+                renders = results;
+                return true;
+            });
+        } else {
+            return false;
+        }
+    }).catch(console.error);
+};
+
 client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}`);
     console.log("Loading...");
-    let promises = [];
-    promises.push(tools.getClassInfo().then(results => {
-        classInfo = results;
-        return results;
-    }).then(async classInfo => {
-        return render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl, classInfo).then(results => {
-            renders = results;
-            return true;
-        });
-    }));
-    
-    return Promise.all(promises).then(async () => {
-        console.log("Ready!");
-        // uncomment to view server and user counts
-        // console.log(await db.collection("guilds").get());
-        // console.log(await db.collection("users").get());
-    });
+    initializeBot().then(result => {
+        if (result) {
+            console.log("Successfully Initialized!");
+        }
+    }).catch(console.error);
+
+    // uncomment to view server and user counts
+    // db.collection("guilds").get().then(console.log));
+    // db.collection("users").get().then(console.log));
 });
 
 client.on("guildCreate", async guild => {
@@ -344,7 +403,15 @@ client.on("message", async msg => {
                 case "parse":
                     if (parserServerWhitelist.includes(msg.guild.id)) {
                         if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
-                            parser.parse(client, p, msg, visionClient, guildConfig, classInfo, db);
+                            if (classInfo.exists) {
+                                parser.parse(client, p, msg, visionClient, guildConfig, classInfo, db);
+                            } else {
+                                const embed = tools.getStandardEmbed(client)
+                                        .setTitle("Failed to retrieve class info from RealmEye")
+                                        .setURL(classInfoUrl)
+                                        .setDescription("RealmEye may be experiencing trouble right now.");
+                                msg.channel.send(embed);
+                            }
                         }
                     }
                     break;

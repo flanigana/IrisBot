@@ -336,22 +336,28 @@ module.exports.isRaidLeader = (guildMember, guildConfig) => {
     return false;
 };
 
-module.exports.getClassInfo = async () => {
+module.exports.getClassInfo = async (url) => {
     let options = {
-        url: `https://www.realmeye.com/wiki/classes`,
+        url: url,
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
     };
 
-    let classes = {};
+    // initialize with basic data in case of failure
+    let classes = {
+        classList: ["Archer", "Huntress", "Bard", "Wizard", "Necromancer", "Mystic", "Sorcerer", "Priest", "Warrior", "Knight", "Paladin", "Rogue", "Trickster", "Assassin", "Ninja", "Samurai"],
+        exists: false,
+    };
 
     return axios(options).then(response => {
+        classes.exists = true;
         const html = response.data;
         const $ = cheerio.load(html);
 
         const tables = $(".table-responsive > .table-striped");
         let statCapTable;
+        let classList = [];
 
         for (let i=0; i < tables.length; i++) {
             if (tables[i].children[1].name === "caption") {
@@ -363,6 +369,7 @@ module.exports.getClassInfo = async () => {
                 for (let j=1; j < charactersRow.length; j+=2) {
                     const classInfo = {};
                     classInfo.className = charactersRow[j].children[0].children[0].children[0].attribs.alt.trim();
+                    classList.push(classInfo.className);
                     let imgSource = charactersRow[j].children[0].children[0].children[0].attribs.src.trim();
                     if (imgSource.startsWith("/s/a/img")) {
                         classInfo.defaultSkin = `https://www.realmeye.com${imgSource}`;
@@ -373,6 +380,8 @@ module.exports.getClassInfo = async () => {
                 }
             }
         }
+        
+        classes.classList = classList;
 
         const classRows = $(statCapTable).find("tbody > tr");
         for (let i=0; i < classRows.length; i++) {
@@ -389,13 +398,17 @@ module.exports.getClassInfo = async () => {
         }
         return classes;
 
-    }).catch(console.error);
+    }).catch(e => {
+        console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+        return classes;
+    });
 };
 
 module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
+    const url = `https://www.realmeye.com/player/${ign}`;
     let promises = [];
     let options = {
-        url: `https://www.realmeye.com/player/${ign}`,
+        url: url,
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
@@ -403,6 +416,8 @@ module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
 
     let accountInfo = {
         name: ign,
+        url: url,
+        status: -1,
         exists: false,
         charactersCount: 0,
         fame: 0,
@@ -416,6 +431,7 @@ module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
     };
 
     promises.push(axios(options).then(async response => {
+        accountInfo.status = response.status;
         const html = response.data;
         const $ = cheerio.load(html);
 
@@ -591,7 +607,11 @@ module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
 
     return Promise.all(promises).then(() => {
         return accountInfo;
-    }).catch(console.error);
+    }).catch(e => {
+        console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+        accountInfo.status = e.response.status;
+        return accountInfo;
+    });
 };
 
 module.exports.getGuildUrlForm = guildName => {
@@ -660,9 +680,9 @@ module.exports.getTopCharacters = async guildName => {
 };
 
 module.exports.getRealmEyeGuildInfo = async guildName => {
-    const url = this.getGuildUrlForm(guildName);
+    const url = `https://www.realmeye.com/guild/${this.getGuildUrlForm(guildName)}`;
     const options = {
-        url: `https://www.realmeye.com/guild/${url}`,
+        url: url,
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
@@ -670,6 +690,8 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
 
     let guildInfo = {
         name: guildName,
+        url: url,
+        status: -1,
         exists: false,
         membersCount: 0,
         charactersCount: 0,
@@ -682,6 +704,7 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
     };
 
     return axios(options).then(response => {
+        guildInfo.status = response.status;
         const html = response.data;
         const $ = cheerio.load(html);
 
@@ -764,7 +787,11 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
             return guildInfo;
         });
 
-    }).catch(console.error);
+    }).catch(e => {
+        console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+        guildInfo.status = e.response.status;
+        return guildInfo;
+    });
 };
 
 module.exports.getRealmEyeDungeonsList = async () => {
