@@ -13,6 +13,10 @@ const raidShorthand = require("./raidManager/raidShorthand");
 const headcount = require("./raidManager/headcount");
 const parser = require("./parser/parser");
 
+const Canvas = require("canvas");
+const { Image } = require("canvas");
+const Jimp = require("jimp");
+
 const client = new Discord.Client();
 admin.initializeApp({
     credential: admin.credential.cert({
@@ -31,6 +35,7 @@ const realmEyeDefinitionsUrl = "https://www.realmeye.com/s/e0/js/definition.js";
 const classInfoUrl = `https://www.realmeye.com/wiki/classes`;
 let classInfo;
 let renders;
+let skins = [];
 
 const setUpGuild = async guild => {
     return db.collection("guilds").doc(guild.id).set({
@@ -289,6 +294,23 @@ const initializeBot = async () => {
             return render.loadRenders(realmEyeRendersUrl, realmEyeDefinitionsUrl, classInfo).then(results => {
                 renders = results;
                 return true;
+            }).then(() => {
+                let promises = [];
+                // load all skins from RealmEye
+                promises.push(Jimp.read(`https://www.realmeye.com/s/eb/img/sheets.png`).then(allSkins => {
+                        
+                    for (let i=0; i < 500; i++) {
+                        promises.push(allSkins.clone().crop(4, 4+(i*50)+4, 42, 42).getBufferAsync("image/png").then(buffer => {
+                            const render = new Image();
+                            render.src = buffer;
+                            skins[i] = render;
+                            return true;
+                        }).catch(console.error));
+                    }
+                }));
+                return Promise.all(promises).then(() => {
+                    return true;
+                });
             });
         } else {
             return false;
@@ -327,6 +349,17 @@ client.on("guildUpdate", async (oldGuild, newGuild) => {
 
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
+
+        // console.log(skins[parseInt(msg.content)]);
+        const canvas = Canvas.createCanvas(42, 42);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(skins[parseInt(msg.content)], 0, 0, 42, 42);
+        const image = canvas.toBuffer("image/png");
+        const attachment = new Discord.MessageAttachment(image, "skin.png");
+        const testEmbed = tools.getStandardEmbed(client)
+                .attachFiles(attachment)
+                .setImage("attachment://skin.png");
+        msg.channel.send(testEmbed);
         
         if (msg.guild) {
             if (commonPrefixList.every(prefix => {

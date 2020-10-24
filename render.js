@@ -12,7 +12,7 @@ const getDefinitions = async definitionsUrl => {
         let definitionData = response.data;
 
         // uncomment line below to test a subset of renders for quicker loads
-        // definitionData = definitionData.substring(0, 486) + "};";
+        definitionData = definitionData.substring(0, 486) + "};";
 
         definitionData = definitionData.substring(7, definitionData.length-2);
         let splits = definitionData.split(":[");
@@ -56,7 +56,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl, classInfo) => {
     let promises = [];
     let renders = {};
 
-    // load all renders from RealmEye renders image
+    // load all equipment renders from RealmEye renders image
     promises.push(getDefinitions(definitionsUrl).then(definitions => {
         return Jimp.read(rendersUrl).then(allRenders => {
             
@@ -71,6 +71,8 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl, classInfo) => {
             }
         });
     }));
+
+    
 
     // load fame icon
     promises.push(Canvas.loadImage("./fame-icon.png").then(image => {
