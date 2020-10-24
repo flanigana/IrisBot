@@ -32,6 +32,17 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 
 ### Change List -
 
+#### October 24, 2020
+* Adjustments / Bug Fixes
+  * Small fix when loading class skins
+
+#### October 23, 2020
+* Adjustments / Bug Fixes
+  * When RealmEye goes down (returns 404 errors for many of its pages), the bot will now still be able to run all commands.
+  * Error messages during this time now suggest that RealmEye may be down.
+  * Upon failing to retrieve class info, the bot will now retry to retrieve the info in 10 minute intervals until successful.
+  * PPE command will not display an image, but will still work without reliance on RealmEye class info if the site is down.
+
 #### October 6, 2020
 * RealmEye Info
   * Can now display a user's RealmEye info by using "!realmeye @user"

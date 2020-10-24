@@ -89,7 +89,7 @@ module.exports.loadRenders = async (rendersUrl, definitionsUrl, classInfo) => {
 
     // load default skin images
     if (classInfo) {
-        const classNames = Object.getOwnPropertyNames(classInfo);
+        const classNames = classInfo.classList;
         for (let i=0; i < classNames.length; i++) {
             const cl = classInfo[classNames[i]];
             const skinUrl = cl.defaultSkin;
