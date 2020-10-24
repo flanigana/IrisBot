@@ -21,6 +21,14 @@ const getDefinitions = async definitionsUrl => {
         for (let i=1; i<splits.length; i++) {
             splits[i] = splits[i].substring(0, splits[i].indexOf("]"));
             let info = splits[i].split(",");
+            
+            if (info.length === 8) { // if it is a standard definition
+                const type = parseInt(info[1]);
+                if (type > 28 || type === 10 || type === 26) { // if it is not a neccessary render (equipment) then ignore it
+                    continue;
+                }
+            }
+
             let name = info[0].substring(1, info[0].length-1);
 
             let startX = 0;

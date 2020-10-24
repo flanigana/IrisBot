@@ -299,9 +299,12 @@ const initializeBot = async () => {
 client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}`);
     console.log("Loading...");
+
+    const startTime = Date.now();
+
     initializeBot().then(result => {
         if (result) {
-            console.log("Successfully Initialized!");
+            console.log(`Successfully initialized in ${(Date.now() - startTime) / 1000} seconds!`);
         }
     }).catch(console.error);
 

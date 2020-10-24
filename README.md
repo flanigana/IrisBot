@@ -33,6 +33,10 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 ### Change List -
 
 #### October 24, 2020
+* Performance
+  * Reduced the number of loaded renders to only those that are currently used.
+    * This reduced start-up time by more than half (takes about <20 seconds now versus 40-60 seconds before).
+    * It also cut memory usage by about half.
 * Adjustments / Bug Fixes
   * Small fix when loading class skins
 
