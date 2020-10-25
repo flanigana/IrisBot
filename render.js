@@ -24,7 +24,9 @@ const getDefinitions = async definitionsUrl => {
             
             if (info.length === 8) { // if it is a standard definition
                 const type = parseInt(info[1]);
-                if (type > 28 || type === 10 || type === 26) { // if it is not a neccessary render (equipment) then ignore it
+                if (type > 28 || type === 26) { // if it is not a neccessary render (equipment) then ignore it
+                    continue;
+                } else if (type === 10 && info[0] !== '"Backpack"') { // checks for backpack
                     continue;
                 }
             }
