@@ -32,6 +32,10 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 
 ### Change List -
 
+#### October 39, 2020
+* Adjustments / Bug Fixes
+  * Fixed server owner ID retrieval when adding a new server
+
 #### October 24, 2020
 * Performance
   * Reduced the number of loaded renders to only those that are currently used.

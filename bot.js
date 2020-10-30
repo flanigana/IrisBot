@@ -42,7 +42,7 @@ const setUpGuild = async guild => {
         defaultRunTimeSec: 120,
         guildId: guild.id,
         guildName: guild.name,
-        guildOwner: guild.owner.id,
+        guildOwner: guild.ownerID,
         mods: [],
         prefix: "!",
         raidLeaderRoles: [],
