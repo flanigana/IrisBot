@@ -309,8 +309,8 @@ client.on("ready", async () => {
     }).catch(console.error);
 
     // uncomment to view server and user counts
-    // db.collection("guilds").get().then(console.log));
-    // db.collection("users").get().then(console.log));
+    // db.collection("guilds").get().then(console.log);
+    // db.collection("users").get().then(console.log);
 });
 
 client.on("guildCreate", async guild => {

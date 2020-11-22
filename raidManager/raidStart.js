@@ -297,7 +297,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
 
     const raidStartReactionFilter = (reaction, user) => {
         const guildMember = guildMembers.find(mem => mem.id === user.id);
-        if ((reaction.emoji.name === "✅" || reaction.emoji.name === "❌") && tools.isRaidLeader(guildMember, guildConfig)) {
+        if ((reaction.emoji.name === "✅" || reaction.emoji.name === "❌") && tools.isRaidLeader(guildMember, guildConfig) && !user.bot) {
             return true;
         } else if ((reaction.emoji === primaryEmoji) || (secondaryEmojis.includes(reaction.emoji))) {
             return true;

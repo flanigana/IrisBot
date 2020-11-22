@@ -32,7 +32,11 @@ A Discord bot for managing Realm of the Mad God servers. Generally used for serv
 
 ### Change List -
 
-#### October 39, 2020
+#### November 22, 2020
+* Adjustments / Bug Fixes
+  * Fixed a bug where if the bot had a raid leader role and a raid was started, the bot's ✅ or ❌ reaction would stop the raid check.
+
+#### October 29, 2020
 * Adjustments / Bug Fixes
   * Fixed server owner ID retrieval when adding a new server
 
