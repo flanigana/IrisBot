@@ -1,7 +1,12 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
+const realmEyeTools = require("../general/realmEyeTools");
 const verificationTools = require("./verificationTools");
 const verificationTemplates = require("./verificationTemplates");
 const modifyUser = require("./modifyUser");
+
+/////////////////////////////////////////////////////////////////////
+//**                        Update User                            */
+/////////////////////////////////////////////////////////////////////
 
 const updateNameInServers = (client, userId, realmEyeData, db) => {
     db.collection("users").doc(userId).get().then(snapshot => {
@@ -51,6 +56,11 @@ const updateWithFailure = (userDoc, guildId, templateName) => {
     });
 };
 
+
+/////////////////////////////////////////////////////////////////////
+//**                  Verification Handling                        */
+/////////////////////////////////////////////////////////////////////
+
 const verifyUser = async (client, user, guild, guildMember, template, realmEyeData, db, manual=false) => {
     let promises = [];
 
@@ -79,7 +89,7 @@ const serverVerificationCheck = async (client, userDoc, user, guild, templateNam
         const userData = currentUser.data();
         const ign =  userData.ign;
 
-        return tools.getRealmEyeInfo(ign, true).then(realmEyeData => {
+        return realmEyeTools.getRealmEyeInfo(ign, true).then(realmEyeData => {
             if (!realmEyeData.exists) {
                 const embed = tools.getStandardEmbed(client)
                     .setTitle("User Not Found")
@@ -96,7 +106,7 @@ If **${ign}** is no longer your ign, update it by responding with \`!updateIGN\`
                 guildMember.setNickname(realmEyeData.name);
             }
 
-            return tools.getVerificationTemplate(client, guild, templateName, guildConfig, db).then(template => {
+            return verificationTools.getVerificationTemplate(client, guild, templateName, guildConfig, db).then(template => {
                 let notInGuild = false;
 
                 // check if template is a guild type and if the verifying user is in the guild
@@ -182,7 +192,7 @@ module.exports.checkForIgnVerification = async (client, msg, db) => {
         const veriCode = userData.veriCode;
         const ign = msg.content.split(" ")[1];
 
-        return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
+        return realmEyeTools.getRealmEyeInfo(ign, false).then(realmEyeData => {
             // ign doesn't exist on RealmEye
             if (!realmEyeData.exists) {
                 const embed = tools.getStandardEmbed(client)
@@ -241,8 +251,6 @@ module.exports.beginIgnVerification = (client, msg, db) => {
     }).catch(console.error);
 };
 
-
-
 module.exports.manualVerify = async (client, p, msg, guildConfig, db) => {
     let args = tools.getArgs(msg.content, p, 1);
     let verifyUserId;
@@ -262,7 +270,7 @@ module.exports.manualVerify = async (client, p, msg, guildConfig, db) => {
         return false;
     }
 
-    let templateName = tools.verificationTemplateExists(args[1], guildConfig);
+    let templateName = verificationTools.verificationTemplateExists(args[1], guildConfig);
     // template name not found in server
     if (!templateName) {
         const embed = tools.getStandardEmbed(client)
@@ -314,7 +322,7 @@ They need to do this first by attempting to verify in any verification channel a
             }
         }
 
-        return tools.getRealmEyeInfo(ign, false).then(realmEyeData => {
+        return realmEyeTools.getRealmEyeInfo(ign, false).then(realmEyeData => {
             if (!realmEyeData.exists) {
                 const embed = tools.getStandardEmbed(client)
                     .setTitle("User Not Found")
@@ -324,7 +332,7 @@ If **${ign}** is no longer their ign, they need to update it by DMing this bot w
                 return false;
             }
 
-            return tools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg).then(template => {
+            return verificationTools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg).then(template => {
                 return verifyUser(client, msg.author, msg.guild, guildMember, template, realmEyeData, db, true);
 
             }).catch(console.error);
@@ -387,6 +395,11 @@ const beginVerification = async (client, msg, templateName, guildConfig, db) => 
         }
     }).catch(console.error);
 };
+
+
+/////////////////////////////////////////////////////////////////////
+//**                     Command Handling                          */
+/////////////////////////////////////////////////////////////////////
 
 module.exports.verification = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 0);

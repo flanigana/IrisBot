@@ -1,4 +1,4 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
 
 const configDefaultRunTime = async (client, msg, p, args, guildConfig, doc) => {
     if (args.length === 0) {
@@ -231,7 +231,7 @@ const listRaidConfig = (client, msg, guildConfig) => {
         .setTitle("Raid Configuration")
         .setDescription("Here is the current raid configuration for this server.")
         .addFields(
-            {name: "Raid Run Time", value: `${guildConfig.defaultRunTimeSec}`},
+            {name: "Raid Run Time", value: `${guildConfig.defaultRunTimeSec} seconds`},
             {name: "Raid Leader Roles", value: `${rolesList}`},
             {name: "--------------------------------------------------------------------------------------------------",
                 value: `-----------------------------------------------------------------------------------------------`},

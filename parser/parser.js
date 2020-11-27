@@ -1,4 +1,6 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
+const realmEyeTools = require("../general/realmEyeTools");
+const raidTools = require("../raidManager/raidTools");
 
 const createPlayerList = async (visionClient, url) => {
     const [fullResult] = await visionClient.textDetection(url);
@@ -89,7 +91,7 @@ const checkRequirements = async (playerList, reqs, classInfo) => {
 
         // saves the player position in the interval
         let playerNum = playerCount;
-        promises.push(tools.getRealmEyeInfo(playerList[playerNum], false, classInfo).then(realmEyeData => {
+        promises.push(realmEyeTools.getRealmEyeInfo(playerList[playerNum], false, classInfo).then(realmEyeData => {
             if (realmEyeData.exists && !realmEyeData.hiddenCharacters && realmEyeData.characters.length > 0) {
                 const recentCharacter = realmEyeData.characters[0];
                 for (const req of reqsSplit) {
@@ -161,7 +163,7 @@ module.exports.parse = async (client, p, msg, visionClient, guildConfig, classIn
                     sent.edit(embed);
 
                     if (args.length > 1) {
-                        const templateName = tools.raidTemplateExists(args[1], guildConfig);
+                        const templateName = raidTools.raidTemplateExists(args[1], guildConfig);
                         let reqResults;
                         if (templateName) {
                             let loadingRest = tools.getStandardEmbed(client)
@@ -172,7 +174,7 @@ module.exports.parse = async (client, p, msg, visionClient, guildConfig, classIn
                                 );
                             sent.edit(loadingRest);
 
-                            const template = await tools.getRaidTemplate(templateName, guildConfig, db);
+                            const template = await raidTools.getRaidTemplate(templateName, guildConfig, db);
                             reqResults = await checkRequirements(voiceResults.present, template.reqs, classInfo);
                         }
 

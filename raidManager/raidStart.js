@@ -1,4 +1,4 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
 const raidTools = require("./raidTools");
 
 const raidStatusUpdated = (client, status, raidMsg, raidStarter, raidName, destinationVc, emoji, reactsCount, min, raidLeaderCount, stoppedBy) => {
@@ -252,7 +252,7 @@ module.exports.startRaid = async (client, p, msg, guildConfig, db) => {
         location = args[4];
     }
     const templateName = args[0];
-    const raidTemplate = await tools.getRaidTemplate(templateName, guildConfig, db, client, msg);
+    const raidTemplate = await raidTools.getRaidTemplate(templateName, guildConfig, db, client, msg);
     if (!raidTemplate) {return false;}
 
     const raidName = raidTemplate.name;

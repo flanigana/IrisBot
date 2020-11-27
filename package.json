@@ -14,9 +14,9 @@
     "axios": "^0.19.2",
     "canvas": "^2.6.1",
     "cheerio": "^1.0.0-rc.3",
-    "discord.js": "^12.4.1",
+    "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "firebase-admin": "^9.3.0",
+    "firebase-admin": "^9.4.1",
     "jimp": "^0.14.0",
     "puppeteer": "^3.3.0"
   }

@@ -1,5 +1,10 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
+const verificationTools = require("./verificationTools");
 const verificationEdit = require("./verificationEdit");
+
+/////////////////////////////////////////////////////////////////////
+//**                   Template Deletion                           */
+/////////////////////////////////////////////////////////////////////
 
 const deleteTemplate = (templateName, guildConfig, db) => {
     let promises = [];
@@ -32,20 +37,9 @@ const cancelDeleteTemplate = (client, msg) => {
     msg.edit(embed);
 };
 
-const templateNotFound = (client, templateName, msg) => {
-    const embed = tools.getStandardEmbed(client)
-        .setTitle(`${templateName} Not Found`)
-        .setDescription(`A verification template with the name ${templateName} could not be found in this server.`);
-    msg.channel.send(embed);
-};
-
 const deleteVerificationTemplate = async (client, p, msg, guildConfig, db) => {
     const templateName = tools.getArgs(msg.content, p, 2)[0];
-    const actualName = tools.verificationTemplateExists(templateName, guildConfig);
-    // if (!actualName) {
-    //     templateNotFound(client, templateName, msg);
-    //     return false;
-    // }
+    const actualName = verificationTools.verificationTemplateExists(templateName, guildConfig);
 
     const embed = tools.getStandardEmbed(client)
         .setTitle("Template Delete Confirmation")
@@ -70,6 +64,10 @@ Reply with **yes** or **no**.`);
     }).catch(console.error);
 };
 
+/////////////////////////////////////////////////////////////////////
+//**                     Template Listing                          */
+/////////////////////////////////////////////////////////////////////
+
 const listVerificationTemplates = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 2);
 
@@ -89,7 +87,7 @@ const listVerificationTemplates = (client, p, msg, guildConfig, db) => {
         msg.channel.send(embed);
 
     } else {
-        const templateName = tools.verificationTemplateExists(args[0], guildConfig);
+        const templateName = verificationTools.verificationTemplateExists(args[0], guildConfig);
         
         const nameSplit = templateName.split(" ");
         const commandDisplayName = nameSplit.length > 1 ? `"${templateName}"` : `${templateName}`;
@@ -149,6 +147,11 @@ To delete this template, use \`${p}verification delete ${commandDisplayName}\``)
     }
 };
 
+
+/////////////////////////////////////////////////////////////////////
+//**                       Help Commands                           */
+/////////////////////////////////////////////////////////////////////
+
 const verificationEditHelp = (client, p, msg, guildConfig) => {
     const templateNames = guildConfig.verificationTemplateNames;
     let nameList = ``;
@@ -183,6 +186,11 @@ const verificationDeleteHelp = (client, p, msg, guildConfig) => {
     msg.channel.send(embed);
 };
 
+
+/////////////////////////////////////////////////////////////////////
+//**                     Command Handling                          */
+/////////////////////////////////////////////////////////////////////
+
 module.exports.verificationConfig = (client, p, msg, guildConfig, db) => {
     const args = tools.getArgs(msg.content, p, 1);
     if (args.length < 1) {
@@ -203,7 +211,7 @@ module.exports.verificationConfig = (client, p, msg, guildConfig, db) => {
     }
 
     if (args.length > 1) {
-        if ((command === "create") && (tools.verificationTemplateExists(args[1], guildConfig))) {
+        if ((command === "create") && (verificationTools.verificationTemplateExists(args[1], guildConfig))) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("Verification Template Already Exists")
                 .setDescription(`There is already a verification template named **${args[1]}** in this server. If you would like to edit it, use:
@@ -212,7 +220,7 @@ Otherwise, please enter a unique verification template name.`);
             msg.channel.send(embed);
             return false;
 
-        } else if ((command != "create") && (!tools.verificationTemplateExists(args[1], guildConfig))) {
+        } else if ((command != "create") && (!verificationTools.verificationTemplateExists(args[1], guildConfig))) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("Verification Template Does Not Exist")
                 .setDescription(`There is no verification template named **${args[1]}** in this server.`);

@@ -1,4 +1,4 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
 
 /////////////////////////////////////////////////////////////////////
 //**                   General Functions                           */
@@ -447,5 +447,102 @@ module.exports.assignRoles = async (template, guildMember, realmEyeData) => {
 
     return Promise.all(promises).then(() => {
         return true;
+    }).catch(console.error);
+};
+
+
+/////////////////////////////////////////////////////////////////////
+//**                      Template Tools                           */
+/////////////////////////////////////////////////////////////////////
+
+module.exports.verificationChannelUsed = (channelId, guildConfig) => {
+    const templateList = guildConfig.verificationTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        /**
+         *  verification templates are stored in the database with the name and id to quickly check for the related verification channel
+         *  this then looks like "templateName | channel.id" in the verificationTemplateNames variable in the db
+        */
+        const tempChannelId = templateList[i].split(" | ")[1].trim();
+        if (tempChannelId === channelId) {
+            return true;
+        }
+    }
+    return false;
+};
+
+module.exports.verificationTemplateExists = (template, guildConfig) => {
+    const templateList = guildConfig.verificationTemplateNames;
+    let channelId;
+    if (template.startsWith("<#") && template.endsWith(">")) {
+        channelId = template.substring(2, template.length-1);
+    }
+    for (let i=0; i<templateList.length; i++) {
+        /**
+         *  verification templates are stored in the database with the name and id to quickly check for the related verification channel
+         *  this then looks like "templateName | channel.id" in the verificationTemplateNames variable in the db
+        */
+        if (channelId) {
+            const templateSplit = templateList[i].split(" | ");
+            const tempChannelId = templateSplit[1].trim();
+            if (tempChannelId === channelId) {
+                return templateSplit[0].trim();
+            }
+
+        } else {
+            const listName = templateList[i].split(" | ")[0].trim();
+            if (listName.toLowerCase() === template.toLowerCase()) {
+                return listName;
+            }
+        }
+    }
+    return undefined;
+};
+
+module.exports.getVerificationTemplate = async (client, guild, templateName, guildConfig, db, msg) => {
+    let actualName;
+    const templateList = guildConfig.verificationTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        /**
+         *  verification templates are stored in the database with the name and id to quickly check for the related verification channel
+         *  this then looks like "templateName | channel.id" in the verificationTemplateNames variable in the db
+        */
+        const listName = templateList[i].split(" | ")[0].trim();
+        if (listName.toLowerCase() === templateName.toLowerCase()) {
+            actualName = listName;
+        }
+    }
+    return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("verificationTemplates").doc(`${actualName}`).get().then(snapshot => {
+        if (!snapshot) {
+            if (msg) {
+                const embed = this.getStandardEmbed(client)
+                    .setTitle("No Raid Template Found")
+                    .setDescription(`There is no existing raid template with the name ${templateName} for this server.`);
+                msg.channel.send(embed);
+            }
+            return undefined;
+        }
+        return snapshot.data();
+    }).then(template => {
+        if (template) {
+            if (template.verificationChannel) {
+                template.verificationChannel = this.getChannelById(guild, template.verificationChannel, "text");
+            }
+            if (template.logChannel) {
+                template.logChannel = this.getChannelById(guild, template.logChannel, "text");
+            }
+            if (template.guildRoles) {
+                template.founderRole = this.getRoleById(guild, template.founderRole);
+                template.leaderRole = this.getRoleById(guild, template.leaderRole);
+                template.officerRole = this.getRoleById(guild, template.officerRole);
+                template.memberRole = this.getRoleById(guild, template.memberRole);
+                template.initiateRole = this.getRoleById(guild, template.initiateRole);
+            }
+            if (template.verifiedRole) {
+                template.verifiedRole = this.getRoleById(guild, template.verifiedRole);
+            }
+            return template;
+        } else {
+            return undefined;
+        }
     }).catch(console.error);
 };

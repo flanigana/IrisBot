@@ -1,4 +1,6 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
+const realmEyeTools = require("../general/realmEyeTools");
+const verificationTools = require("./verificationTools");
 
 const leftUndefined = template => {
     if (!template.name) {
@@ -69,7 +71,7 @@ const processName = (client, p, template, guildConfig, pageInfo, msg, res) => {
     let exists = false;
     if (res) {
         const arg = tools.getArgs(res)[0];
-        exists = tools.verificationTemplateExists(arg, guildConfig);
+        exists = verificationTools.verificationTemplateExists(arg, guildConfig);
         if (!exists) {
             template.name = arg;
         }
@@ -117,7 +119,7 @@ const processChannels = (client, p, template, guildConfig, pageInfo, msg, res) =
         if (args.length > 0) {
             const verificationChannel = tools.getChannel(msg.guild, args[0], "text");
             if (verificationChannel) {
-                if (!tools.verificationChannelUsed(verificationChannel.id, guildConfig)) {
+                if (!verificationTools.verificationChannelUsed(verificationChannel.id, guildConfig)) {
                     template.verificationChannel = verificationChannel;
                     template.logChannel = verificationChannel;
                     if (args.length > 1) {
@@ -184,7 +186,7 @@ const displayGuildNamePage = (client, template, msg, pageInfo, valid, attemptedR
 const processGuildName = async (client, template, pageInfo, msg, res) => {
     let valid = true;
     if (res) {
-        const guildRealmEye = await tools.getRealmEyeGuildInfo(res);
+        const guildRealmEye = await realmEyeTools.getRealmEyeGuildInfo(res);
         if (guildRealmEye.exists) {
             template.guildName = guildRealmEye.name;
         } else {
@@ -760,7 +762,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
     let verificationTemplate;
     const templateName = tools.getArgs(msg.content, p, 2)[0];
     if (!newTemplate) {
-        verificationTemplate = await tools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg);
+        verificationTemplate = await verificationTools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg);
     } else {
         verificationTemplate = {
             name: templateName,
@@ -791,7 +793,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
 
 module.exports.editVerificationTemplate = async (client, p, msg, guildConfig, db, newTemplate=false) => {
     let template = await getTemplateData(client, p, msg, guildConfig, db, newTemplate);
-    let dungeons = await tools.getRealmEyeDungeonsList();
+    let dungeons = await realmEyeTools.getRealmEyeDungeonsList();
 
     let pages = updatePagesList(template, newTemplate);
     let pageInfo = {

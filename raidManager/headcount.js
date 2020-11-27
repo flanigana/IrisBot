@@ -1,4 +1,4 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
 const raidTools = require("./raidTools");
 
 const sendHeadcount = (client, msg, channel, template) => {
@@ -47,7 +47,7 @@ const startHeadcount = async (client, p, msg, guildConfig, db) => {
         sendGenericHeadcount(client, msg, channel);
     } else {
         // if template argument is given, check for template
-        const template = await tools.getRaidTemplate(args[1], guildConfig, db, client, msg);
+        const template = await raidTools.getRaidTemplate(args[1], guildConfig, db, client, msg);
         if (!template) {
             // if template name does not exist, return
             return false;

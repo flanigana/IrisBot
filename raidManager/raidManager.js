@@ -1,6 +1,6 @@
-const tools = require("../tools");
-const raidConfig = require("./raidConfig");
+const tools = require("../general/tools");
 const raidTools = require("./raidTools");
+const raidConfig = require("./raidConfig");
 const raidStart = require("./raidStart");
 const raidEdit = require("./raidEdit");
 const raidShorthand = require("./raidShorthand");
@@ -44,7 +44,7 @@ const templateNotFound = (client, templateName, msg) => {
 
 const deleteRaidTemplate = async (client, p, msg, guildConfig, db) => {
     const templateName = tools.getArgs(msg.content, p, 2)[0];
-    const actualName = tools.raidTemplateExists(templateName, guildConfig);
+    const actualName = raidTools.raidTemplateExists(templateName, guildConfig);
     if (!actualName) {
         templateNotFound(client, templateName, msg);
         return false;
@@ -235,7 +235,7 @@ module.exports.raid = (client, p, msg, guildConfig, db) => {
     }
 
     if (args.length > 1) {
-        if ((command === "create") && (tools.raidTemplateExists(args[1], guildConfig))) {
+        if ((command === "create") && (raidTools.raidTemplateExists(args[1], guildConfig))) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("Raid Template Already Exists")
                 .setDescription(`There is already a raid template named **${args[1]}** in this server. If you would like to edit it, use:
@@ -244,7 +244,7 @@ Otherwise, please enter a unique raid template name.`);
             msg.channel.send(embed);
             return false;
 
-        } else if (((command != "create") && (command != "shorthand") && (command != "config")) && (!tools.raidTemplateExists(args[1], guildConfig))) {
+        } else if (((command != "create") && (command != "shorthand") && (command != "config")) && (!raidTools.raidTemplateExists(args[1], guildConfig))) {
             const embed = tools.getStandardEmbed(client)
                 .setTitle("Raid Template Does Not Exist")
                 .setDescription(`There is no raid template named **${args[1]}** in this server.`);

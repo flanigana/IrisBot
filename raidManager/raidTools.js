@@ -1,4 +1,20 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
+
+/////////////////////////////////////////////////////////////////////
+//**                    General Tools                              */
+/////////////////////////////////////////////////////////////////////
+
+module.exports.isNitroBooster = (guildMember, guildConfig) => {
+    if (guildMember.roles.cache.find(memberRole => memberRole.id === guildConfig.boosterRole)) {
+        return true;
+    }
+    return false;
+};
+
+
+/////////////////////////////////////////////////////////////////////
+//**                   Formatting Tools                            */
+/////////////////////////////////////////////////////////////////////
 
 module.exports.formatRaidDescription = (client, description, guildId) => {
     let list = description.split(/\s+/);
@@ -57,9 +73,39 @@ module.exports.formatReactsListString = (client, raidTemplate, guildId) => {
     return reactsList != "" ? reactsList : "No reactions selected.";
 };
 
-module.exports.isNitroBooster = (guildMember, guildConfig) => {
-    if (guildMember.roles.cache.find(memberRole => memberRole.id === guildConfig.boosterRole)) {
-        return true;
+
+/////////////////////////////////////////////////////////////////////
+//**                    Template Tools                             */
+/////////////////////////////////////////////////////////////////////
+
+module.exports.raidTemplateExists = (templateName, guildConfig) => {
+    const templateList = guildConfig.raidTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        if (templateList[i].toLowerCase() === templateName.toLowerCase()) {
+            return templateList[i];
+        }
     }
-    return false;
+    return undefined;
+};
+
+module.exports.getRaidTemplate = async (templateName, guildConfig, db, client, msg) => {
+    let actualName;
+    const templateList = guildConfig.raidTemplateNames;
+    for (let i=0; i<templateList.length; i++) {
+        if (templateList[i].toLowerCase() === templateName.toLowerCase()) {
+            actualName = templateList[i];
+        }
+    }
+    return db.collection("guilds").doc(`${guildConfig.guildId}`).collection("raidTemplates").doc(`${actualName}`).get().then(snapshot => {
+        if (!snapshot) {
+            if (msg) {
+                const embed = this.getStandardEmbed(client)
+                    .setTitle("No Raid Template Found")
+                    .setDescription(`There is no existing raid template with the name ${templateName} for this server.`);
+                msg.channel.send(embed);
+            }
+            return undefined;
+        }
+        return snapshot.data();
+    }).catch(console.error);
 };

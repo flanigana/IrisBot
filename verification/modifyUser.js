@@ -1,4 +1,5 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
+const verificationTools = require("./verificationTools");
 
 const removeRoles = async (msg, guildMember, template) => {
     let roleList = [];
@@ -94,7 +95,7 @@ const unverifyUser = async (client, msg, guildMember, templateName, guildConfig,
         return false;
     }
 
-    const template = await tools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg);
+    const template = await verificationTools.getVerificationTemplate(client, msg.guild, templateName, guildConfig, db, msg);
     let promises = [];
 
     // remove user roles and remove user from verified list in template
@@ -136,7 +137,7 @@ module.exports.modify = (client, p, msg, guildConfig, db) => {
         return false;
     }
 
-    const templateName = tools.verificationTemplateExists(args[2], guildConfig);
+    const templateName = verificationTools.verificationTemplateExists(args[2], guildConfig);
     if (!templateName) {
         const embed = tools.getStandardEmbed(client)
             .setTitle("Verification Template Does Not Exist")

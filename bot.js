@@ -4,10 +4,13 @@ const Discord = require("discord.js");
 const admin = require("firebase-admin");
 const vision = require("@google-cloud/vision");
 
-const tools = require("./tools");
-const config = require("./config");
+const help = require("./general/help")
+const tools = require("./general/tools");
+const realmEyeTools = require("./general/realmEyeTools");
+const config = require("./general/config");
 const verification = require("./verification/verification");
-const render = require("./render");
+const render = require("./realm/render");
+const ppe = require("./realm/ppe");
 const raidManager = require("./raidManager/raidManager");
 const raidShorthand = require("./raidManager/raidShorthand");
 const headcount = require("./raidManager/headcount");
@@ -32,6 +35,10 @@ const classInfoUrl = `https://www.realmeye.com/wiki/classes`;
 let classInfo;
 let renders;
 
+/////////////////////////////////////////////////////////////////////
+//**                     Command Handling                          */
+/////////////////////////////////////////////////////////////////////
+
 const setUpGuild = async guild => {
     return db.collection("guilds").doc(guild.id).set({
         admins: [],
@@ -53,78 +60,10 @@ const setUpGuild = async guild => {
     });
 };
 
-const generalHelp = (p, msg) => {
-    const embed = tools.getStandardEmbed(client)
-            .setTitle("Iris Bot Commands")
-            .addFields(
-                {name: "Server Configuration", value: `\`\`\`${p}config\`\`\``},
-                {name: "Raid Manager", value: `\`\`\`${p}raid\`\`\``},
-                {name: "User Verification", value: `\`\`\`${p}verification\`\`\``},
-                {name: "Realm-Related", value: `\`\`\`${p}realmEye\n${p}ppe\`\`\``},
-            );
-    msg.channel.send(embed);
-};
-
-const configHelp = (p, msg) => {
-    const embed = tools.getStandardEmbed(client)
-        .setTitle("Iris Bot Configuration Commands")
-        .setDescription("Commands to configure bot permissions and general settings for your server.")
-        .addFields(
-            {name: "Server Setup", value: `\`\`\`${p}config prefix\n${p}config admins\n${p}config mods\`\`\``},
-            {name: "View Current Configuration", value: `\`\`\`${p}config list\`\`\``},
-        );
-    msg.channel.send(embed);
-};
-
-const verifyHelp = (p, msg) => {
-    const embed = tools.getStandardEmbed(client)
-        .setTitle("Iris Bot Verification Commands")
-        .setDescription("Commands to set up and use verification in your server.")
-        .addFields(
-            {name: "Verification Configuration", value: `\`\`\`${p}verification\`\`\``},
-            {name: "List Existing Verification Templates", value: `\`\`\`${p}verification list\`\`\``},
-            {name: "Verification Template Management", value: `\`\`\`${p}verification create\n${p}verification edit\n${p}verification delete\`\`\``},
-            {name: "Verifying", value: `\`\`\`${p}verify\n${p}unverify\n${p}manualVerify\`\`\``},
-        );
-    msg.channel.send(embed);
-};
-
-const unverifyHelp = (p, msg) => {
-    const embed = tools.getStandardEmbed(client)
-        .setTitle("Iris Bot Unverify")
-        .setDescription(`Unverify a user that is verified in one of your server's verification templates using the following command:
-\`\`\`${p}unverify <@userOruserId> <templateNameOR#verificationChannel>\`\`\``)
-        .addField("View Verification Template Names", `To view this server's verification templates, use the \`${p}verification list\` command.`);
-    msg.channel.send(embed);
-};
-
-const manualVerifyHelp = (p, msg) => {
-    const embed = tools.getStandardEmbed(client)
-        .setTitle("Iris Bot Manual Verification")
-        .setDescription(`Manually verify a user that is not in your guild or does not meet requirements using the following command:
-\`\`\`${p}manualVerify <@userOruserId> <templateNameOR#verificationChannel>\`\`\``)
-        .addField("View Verification Template Names", `To view this server's verification templates, use the \`${p}verification list\` command.`);
-    msg.channel.send(embed);
-};
-
-const raidHelp = (p, msg) => {
-    const embed = tools.getStandardEmbed(client)
-        .setTitle("Iris Bot Raid Commands")
-        .setDescription("Commands to run raids in your server.")
-        .addFields(
-            {name: "Raid Configuration", value: `\`\`\`${p}raid config\n${p}raid shorthand\`\`\``},
-            {name: "List Existing Raid Templates", value: `\`\`\`${p}raid list\`\`\``},
-            {name: "Raid Template Management", value: `\`\`\`${p}raid create\n${p}raid edit\n${p}raid delete\`\`\``},
-            {name: "Raiding", value: `\`\`\`${p}raid start\`\`\``},
-            {name: "Headcount", value: `\`\`\`${p}hc\`\`\``},
-        );
-    msg.channel.send(embed);
-};
-
 const configGuild = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
     if (args.length === 0) {
-        return configHelp(p, msg);
+        return help.configHelp(p, msg, client);
     } else {
         return config.configGuild(client, p, msg, guildConfig, commonPrefixList, db);
     }
@@ -133,9 +72,9 @@ const configGuild = async (p, msg, guildConfig) => {
 const verify = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 0);
     if (args[0].toLowerCase() === "verification" && args.length === 1) {
-        return verifyHelp(p, msg);
+        return help.verifyHelp(p, msg, client);
     } else if (args[0].toLowerCase() === "unverify" && args.length === 1) {
-        return unverifyHelp(p, msg);
+        return help.unverifyHelp(p, msg, client);
     } else {
         return verification.verification(client, p, msg, guildConfig, db);
     }
@@ -144,7 +83,7 @@ const verify = async (p, msg, guildConfig) => {
 const manualVerify = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
     if (args.length < 2) {
-        return manualVerifyHelp(p, msg);
+        return help.manualVerifyHelp(p, msg, client);
     } else {
         return verification.manualVerify(client, p, msg, guildConfig, db);
     }
@@ -153,92 +92,21 @@ const manualVerify = async (p, msg, guildConfig) => {
 const raid = async (p, msg, guildConfig) => {
     const args = tools.getArgs(msg.content, p, 1);
     if (args.length === 0) {
-        return raidHelp(p, msg);
+        return help.raidHelp(p, msg, client);
     } else {
         return raidManager.raid(client, p, msg, guildConfig, db);
     }
 };
 
-const endPpeReactionCollector = (collected, msg, originalMsg) => {
-    let selectedCharacters = [];
-    // delete message if cancelled
-    if (collected.has("❌")) {
-        msg.delete();
-        originalMsg.delete();
-        return false;
-    }
-    // add selected classes to class list
-    collected.map(reaction => {
-        if (reaction.emoji.name != "✅") {
-            let capitalized = reaction.emoji.name;
-            capitalized = capitalized.charAt(0).toUpperCase() + capitalized.substring(1, capitalized.length-5);
-            selectedCharacters.push(capitalized);
-        }
-    });
-    // set list to all classes if none are selected
-    if (selectedCharacters.length === 0) {
-        selectedCharacters = classInfo.classList;
-    }
-    // generate class based on selected classes
-    const characterNum = Math.floor(Math.random() * selectedCharacters.length);
-    let character = selectedCharacters[characterNum];
-    let characterImage;
-    if (classInfo.exists) {
-        characterImage = classInfo[character].defaultSkin;
-    }
 
-    // edit embed in message to class selection
-    let embed = tools.getStandardEmbed(client)
-        .setTitle(`You Should Play ${character}`);
-    if (characterImage) {
-        embed = embed.setImage(characterImage);
-    }
-    msg.edit(embed);
-    msg.reactions.removeAll().catch(console.error);
-};
-
-const ppe = (msg) => {
-    let emojiList = [];
-    const classList = classInfo.classList;
-    for (char of classList) {
-        emojiList.push(tools.getEmoji(client, `${char.toLowerCase()}class`, msg.guild.id));
-    }
-    emojiList.push("✅");
-    emojiList.push("❌");
-
-    let embed = tools.getStandardEmbed(client)
-        .setTitle("PPE Recommendation")
-        .setDescription(`React with the classes you are willing to play or select none for all to be chosen.
-Once classes are selected, react with ✅ to recieve your recommendation.
-React with ❌ to cancel.`);
-
-    const reactionFilter = (reaction, user) => ((user.id === msg.author.id) && (emojiList.includes(reaction.emoji) || reaction.emoji.name === "✅" || reaction.emoji.name === "❌"));
-    msg.channel.send(embed).then(m => {
-        const collector = m.createReactionCollector(reactionFilter, {time: 60000});
-        collector.on("collect", reaction => {
-            if (reaction.emoji.name === "✅" || reaction.emoji.name === "❌") {
-                collector.stop();
-            }
-        });
-        collector.on("end", collected => {
-            endPpeReactionCollector(collected, m, msg);
-        });
-
-        let promises = [];
-        for (const emoji of emojiList) {
-            promises.push(m.react(emoji));
-        }
-
-        return Promise.all(promises).then(() => {
-            return true;
-        });
-    });
-};
+/////////////////////////////////////////////////////////////////////
+//**                      Initialization                           */
+/////////////////////////////////////////////////////////////////////
 
 const retryInitialization = async (interval) => {
     console.log(`Retrying to retrieve class info from RealmEye...`);
 
-    return tools.getClassInfo(classInfoUrl).then(results => {
+    return realmEyeTools.getClassInfo(classInfoUrl).then(results => {
         if (results.exists) { // successfully got class info
             clearInterval(interval);
             console.log(`Successfully retrieved class info!`);
@@ -268,7 +136,7 @@ const retryInitialization = async (interval) => {
 
 const initializeBot = async () => {
 
-    return tools.getClassInfo(classInfoUrl).then(results => {
+    return realmEyeTools.getClassInfo(classInfoUrl).then(results => {
         classInfo = results;
         if (classInfo.exists) { // successfully got class info
             return true;
@@ -295,6 +163,11 @@ const initializeBot = async () => {
         }
     }).catch(console.error);
 };
+
+
+/////////////////////////////////////////////////////////////////////
+//**                       Client Events                           */
+/////////////////////////////////////////////////////////////////////
 
 client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}`);
@@ -328,7 +201,8 @@ client.on("guildUpdate", async (oldGuild, newGuild) => {
 client.on("message", async msg => {
     if (msg.author.id != client.user.id) {
         
-        if (msg.guild) {
+        if (msg.guild) { // message sent in server
+            // check if message has a command prefix
             if (commonPrefixList.every(prefix => {
                     return !msg.content.startsWith(prefix);
                     })) {
@@ -336,6 +210,7 @@ client.on("message", async msg => {
                 return false;
             }
 
+            // retrieve guild config
             const guildConfig = await tools.getGuildConfig(msg.guild.id, db, msg);
             if (!guildConfig) {
                 return false;
@@ -343,19 +218,19 @@ client.on("message", async msg => {
             const p = guildConfig.prefix;
             const guildMember = msg.guild.members.cache.find(user => user.id === msg.author.id);
             
-            if (!msg.content.toLowerCase().startsWith(p)) {
+            if (!msg.content.toLowerCase().startsWith(p)) { // check that message starts with the correct command prefix
                 return false;
             }
 
+            // parse arguments
             const args = tools.getArgs(msg.content, p, 0);
-
             if (args.length === 0) {
                 return false;
             }
 
-            switch (args[0].toLowerCase()) {
+            switch (args[0].toLowerCase()) { // check command and handle
                 case "help":
-                    generalHelp(p, msg);
+                    help.generalHelp(p, msg, client);
                     break;
                 case "config":
                     if (tools.isAdmin(guildMember, guildConfig)) {
@@ -386,7 +261,7 @@ client.on("message", async msg => {
                     render.guildDisplay(client, p, guildName, msg.guild.id, msg.channel, db, renders);
                     break;
                 case "ppe":
-                    ppe(msg);
+                    ppe.ppe(msg, classInfo, client);
                     break;
                 case "raid":
                     if (tools.isAdmin(guildMember, guildConfig) || tools.isRaidLeader(guildMember, guildConfig)) {
@@ -419,12 +294,10 @@ client.on("message", async msg => {
                     }
                     break;
             }
-        }
-
-        const args = tools.getArgs(msg.content, "!");
-        if (msg.channel.type === "dm") {
-
-            switch (args[0].toLowerCase()) {
+        } else if (msg.channel.type === "dm") { // message sent as dm to bot
+            
+            const args = tools.getArgs(msg.content, "!");
+            switch (args[0].toLowerCase()) { // check command and handle
                 case "verify":
                     if (args.length > 1) {
                         verification.checkForIgnVerification(client, msg, db);

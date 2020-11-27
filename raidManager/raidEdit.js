@@ -1,4 +1,4 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
 const raidTools = require("./raidTools");
 
 const addClientEmojisToEmbed = (clientEmojisList, embed) => {
@@ -87,7 +87,7 @@ const processName = (client, p, raidTemplate, guildConfig, pageInfo, msg, res) =
     let exists = false;
     if (res) {
         const arg = tools.getArgs(res)[0];
-        exists = tools.raidTemplateExists(arg, guildConfig);
+        exists = raidTools.raidTemplateExists(arg, guildConfig);
         if (!exists) {
             raidTemplate.name = arg;
         }
@@ -558,7 +558,7 @@ const getTemplateData = async (client, p, msg, guildConfig, db, newTemplate) => 
     let raidTemplate;
     const templateName = tools.getArgs(msg.content, p, 2)[0];
     if (!newTemplate) {
-        raidTemplate = await tools.getRaidTemplate(templateName, guildConfig, db, client, msg);
+        raidTemplate = await raidTools.getRaidTemplate(templateName, guildConfig, db, client, msg);
     } else {
         raidTemplate = {
             name: templateName,

@@ -1,4 +1,4 @@
-const tools = require("../tools");
+const tools = require("../general/tools");
 const raid = require("./raidStart");
 
 const getShorthand = (actualName, guildConfig, db) => {
