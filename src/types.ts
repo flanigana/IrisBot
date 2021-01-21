@@ -1,5 +1,8 @@
 export const TYPES = {
     Bot: Symbol('Bot'),
     Client: Symbol('Client'),
-    Token: Symbol('Token'),
+    DiscordToken: Symbol('Token'),
+    Mongoose: Symbol('Mongoose'),
+    GuildRepository: Symbol('GuildRepository'),
+    GuildService: Symbol('GuildService')
 };

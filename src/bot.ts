@@ -1,7 +1,9 @@
-import {Client, Message} from 'discord.js';
 import {inject, injectable} from 'inversify';
-import {TYPES} from './types';
-// import {MessageResponder} from "./services/message-responder";
+import container from '../inversify.config';
+import { TYPES } from './types';
+import { Mongoose } from 'mongoose';
+import {Client, Guild, Message} from 'discord.js';
+import { GuildService } from './services/guild_service';
 
 /**
  * Responsible for the core functionality including:
@@ -13,6 +15,8 @@ import {TYPES} from './types';
 export class Bot {
     private client: Client;
     private readonly token: string;
+    private readonly guildService: GuildService;
+
     private readonly prefixes = ['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!'];
 
     /**
@@ -22,10 +26,12 @@ export class Bot {
      */
     constructor(
         @inject(TYPES.Client) client: Client,
-        @inject(TYPES.Token) token: string
+        @inject(TYPES.DiscordToken) token: string,
+        @inject(TYPES.GuildService) guildService: GuildService,
     ) {
         this.client = client;
         this.token = token;
+        this.guildService = guildService;
     }
 
     /**
@@ -44,12 +50,23 @@ export class Bot {
      * @param login whether to log the client in. Defaults to true, can be set to false for testing
      */
     public listen(login = true): Promise<string> {
+        // on message
         this.client.on('message', (message: Message) => {
             if (message.author.bot || !this.startsWithValidPrefix(message)) {
                 return;
             }
 
             console.log('Message received! Contents: ', message.content);
+        });
+
+        // on guild creation
+        this.client.on('guildCreate', (guild: Guild) => {
+            this.guildService.save(guild);
+        });
+
+        // on guild update
+        this.client.on('guildUpdate', (guild: Guild) => {
+            this.guildService.save(guild);
         });
 
         if (login) {
@@ -60,9 +77,10 @@ export class Bot {
     }
 
     /**
-     * Logs out the Discord Client
+     * Logs out the Discord Client and closes the connection to the database
      */
-    public logout() {
+    public async logout() {
         this.client.destroy();
+        await container.get<Mongoose>(TYPES.Mongoose).connection.close();
     }
 }

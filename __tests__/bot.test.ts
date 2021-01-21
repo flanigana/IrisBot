@@ -23,8 +23,9 @@ describe('Bot', () => {
         messageMock = jest.createMockFromModule('discord.js');
         messageMock.author = userMock;
     });
-    afterAll(() => {
-        bot.logout();
+    afterAll(async (done) => {
+        await bot.logout();
+        done();
     });
     describe('startsWithValidPrefix', () => {
         test('startsWithValidPrefix returns false when message does not begin with valid prefix', () => {
