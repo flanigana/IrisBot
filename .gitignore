@@ -1,4 +1,5 @@
 /node_modules
-.vscode
+/coverage
+/lib
 .env
-IrisBot-7d0f07513b84.json
+.jshintrc

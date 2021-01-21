@@ -1,23 +1,44 @@
 {
-  "name": "Iris-Bot",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "irisbot",
+  "version": "2.0.0",
+  "description": "A Discord bot for use with Realm of the Mad God",
+  "main": "lib/src/index.js",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node lib/src/index.js",
+    "tsc": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json -w",
+    "test": "jest",
+    "coverage": "jest --coverage"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flanigana/IrisBot.git"
+  },
+  "keywords": [
+    "RotMG",
+    "Realm",
+    "Discord",
+    "bot",
+    "Discord.js"
+  ],
+  "author": "Alec Flanigan",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/flanigana/IrisBot/issues"
+  },
+  "homepage": "https://github.com/flanigana/IrisBot#readme",
   "dependencies": {
-    "@google-cloud/vision": "^2.1.2",
-    "axios": "^0.19.2",
-    "canvas": "^2.6.1",
-    "cheerio": "^1.0.0-rc.3",
-    "discord.js": "^12.4.1",
+    "@types/node": "^14.14.21",
+    "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "firebase-admin": "^9.3.0",
-    "jimp": "^0.14.0",
-    "puppeteer": "^3.3.0"
+    "inversify": "^5.0.5",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.20",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.4.4",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
   }
 }
