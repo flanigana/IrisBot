@@ -6,5 +6,9 @@ module.exports = {
   testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   testEnvironment: 'node',
-  verbose: true
+  verbose: true,
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/src/data_access/repositories/"
+  ]
 };

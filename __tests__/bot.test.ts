@@ -1,27 +1,37 @@
-import container from "../inversify.config";
-import { TYPES } from "../src/types";
-import { Client, Message, TextChannel, User } from "discord.js";
-import { Bot } from "../src/bot";
+import { Bot } from '../src/bot';
+import container from '../inversify.config';
+import { TYPES } from '../src/types';
+import { Client, Guild, Message, TextChannel, User } from 'discord.js';
+import { GuildService } from '../src/services/guild_service';
 
 describe('Bot', () => {
     let bot: Bot;
     let client: Client;
+    let guildMock: Guild;
     let channelMock: TextChannel;
     let userMock: User;
     let messageMock: Message;
+    let guildServiceMock: GuildService;
     beforeAll(async (done) => {
         client = container.get<Client>(TYPES.Client);
+
+        guildServiceMock = jest.createMockFromModule('../src/services/guild_service.ts');
+        container.rebind<GuildService>(TYPES.GuildService).toConstantValue(guildServiceMock);
+
+        guildMock = jest.createMockFromModule('discord.js');
+        channelMock = jest.createMockFromModule('discord.js');
+        userMock = jest.createMockFromModule('discord.js');
+        messageMock = jest.createMockFromModule('discord.js');
+        userMock.bot = false;
+        messageMock.author = userMock;
+        guildServiceMock.save = jest.fn();
+        
         bot = container.get<Bot>(TYPES.Bot);
         await bot.listen(false).catch(console.error);
         done();
     });
     beforeEach(() => {
-        jest.clearAllMocks();
-        channelMock = jest.createMockFromModule('discord.js');
-        userMock = jest.createMockFromModule('discord.js');
-        userMock.bot = false;
-        messageMock = jest.createMockFromModule('discord.js');
-        messageMock.author = userMock;
+        jest.resetAllMocks();
     });
     afterAll(async (done) => {
         await bot.logout();
@@ -43,14 +53,25 @@ describe('Bot', () => {
                 bot.startsWithValidPrefix = jest.fn();
                 messageMock.content = 'test';
                 messageMock.author.bot = true;
-                client.emit('message', messageMock);
+                client.emit<'message'>('message', messageMock);
                 expect(bot.startsWithValidPrefix).toHaveBeenCalledTimes(0);
             });
             test('startsWithValidPrefix is called when message is received and author is not a bot', () => {
                 bot.startsWithValidPrefix = jest.fn();
                 messageMock.content = 'test';
-                client.emit('message', messageMock);
+                messageMock.author.bot = false;
+                client.emit<'message'>('message', messageMock);
                 expect(bot.startsWithValidPrefix).toHaveBeenCalledTimes(1);
+            });
+        });
+        describe('guild events', () => {
+            test('GuildService save is called when Client emits guildCreate', () => {
+                client.emit<'guildCreate'>('guildCreate', guildMock);
+                expect(guildServiceMock.save).toHaveBeenCalledTimes(1);
+            });
+            test('GuildService save is called when Client emits guildCreate', () => {
+                client.emit<'guildUpdate'>('guildUpdate', guildMock, guildMock);
+                expect(guildServiceMock.save).toHaveBeenCalledTimes(1);
             });
         });
     });

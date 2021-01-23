@@ -1,7 +1,7 @@
 import {inject, injectable} from 'inversify';
 import container from '../inversify.config';
 import { TYPES } from './types';
-import { Mongoose } from 'mongoose';
+import * as mongoose from 'mongoose';
 import {Client, Guild, Message} from 'discord.js';
 import { GuildService } from './services/guild_service';
 
@@ -51,7 +51,7 @@ export class Bot {
      */
     public listen(login = true): Promise<string> {
         // on message
-        this.client.on('message', (message: Message) => {
+        this.client.on<'message'>('message', (message: Message) => {
             if (message.author.bot || !this.startsWithValidPrefix(message)) {
                 return;
             }
@@ -60,13 +60,13 @@ export class Bot {
         });
 
         // on guild creation
-        this.client.on('guildCreate', (guild: Guild) => {
-            this.guildService.save(guild);
+        this.client.on<'guildCreate'>('guildCreate', async (guild: Guild) => {
+            return this.guildService.save(guild);
         });
 
         // on guild update
-        this.client.on('guildUpdate', (guild: Guild) => {
-            this.guildService.save(guild);
+        this.client.on<'guildUpdate'>('guildUpdate', async (guild: Guild) => {
+            return this.guildService.save(guild);
         });
 
         if (login) {
@@ -81,6 +81,6 @@ export class Bot {
      */
     public async logout() {
         this.client.destroy();
-        await container.get<Mongoose>(TYPES.Mongoose).connection.close();
+        await mongoose.disconnect();
     }
 }

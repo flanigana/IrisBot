@@ -3,7 +3,7 @@ import { injectable, unmanaged } from 'inversify';
 import { Document, Model } from 'mongoose';
 
 @injectable()
-export class GenericRepository<IEntity, EntityDoc extends Document> implements Repository<IEntity, EntityDoc> {
+export abstract class GenericRepository<IEntity, EntityDoc extends Document> implements Repository<IEntity, EntityDoc> {
 
     protected readonly Model: Model<any>
 
@@ -11,6 +11,10 @@ export class GenericRepository<IEntity, EntityDoc extends Document> implements R
         @unmanaged() model: Model<any>
     ) {
         this.Model = model;
+    }
+
+    public async existsById(id: string): Promise<boolean> {
+        return Model.exists({_id: id});
     }
 
     public async save(doc: EntityDoc): Promise<IEntity> {
@@ -22,12 +26,16 @@ export class GenericRepository<IEntity, EntityDoc extends Document> implements R
     public async findAll(): Promise<IEntity[]> {
         return Model.find().then(res => {
             return res.map((r) => this._readMapper(r));
-        });;
+        });
     }
 
     public async findById(id: string): Promise<IEntity> {
         return Model.findById(id).then(res => {
-            return this._readMapper(res);
+            if (res === null) {
+                return null;
+            } else {
+                return this._readMapper(res);
+            }
         });
     }
 
