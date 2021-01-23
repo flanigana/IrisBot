@@ -24,7 +24,7 @@ describe('Bot', () => {
         messageMock = jest.createMockFromModule('discord.js');
         userMock.bot = false;
         messageMock.author = userMock;
-        guildServiceMock.save = jest.fn();
+        guildServiceMock.saveDiscordGuild = jest.fn();
         
         bot = container.get<Bot>(TYPES.Bot);
         await bot.listen(false).catch(console.error);
@@ -67,11 +67,11 @@ describe('Bot', () => {
         describe('guild events', () => {
             test('GuildService save is called when Client emits guildCreate', () => {
                 client.emit<'guildCreate'>('guildCreate', guildMock);
-                expect(guildServiceMock.save).toHaveBeenCalledTimes(1);
+                expect(guildServiceMock.saveDiscordGuild).toHaveBeenCalledTimes(1);
             });
             test('GuildService save is called when Client emits guildCreate', () => {
                 client.emit<'guildUpdate'>('guildUpdate', guildMock, guildMock);
-                expect(guildServiceMock.save).toHaveBeenCalledTimes(1);
+                expect(guildServiceMock.saveDiscordGuild).toHaveBeenCalledTimes(1);
             });
         });
     });

@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export interface IRaidTemplate {
+    _id?: string;
     guildId: string;
     name: string;
     desription: string;

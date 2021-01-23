@@ -4,5 +4,7 @@ export const TYPES = {
     DiscordToken: Symbol('Token'),
     Mongoose: Symbol('Mongoose'),
     GuildRepository: Symbol('GuildRepository'),
-    GuildService: Symbol('GuildService')
+    GuildService: Symbol('GuildService'),
+    RaidTemplateRepository: Symbol('RaidTemplateRepository'),
+    RaidTemplateService: Symbol('RaidTemplateService')
 };

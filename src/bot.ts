@@ -51,22 +51,22 @@ export class Bot {
      */
     public listen(login = true): Promise<string> {
         // on message
-        this.client.on<'message'>('message', (message: Message) => {
+        this.client.on<'message'>('message', async (message: Message) => {
             if (message.author.bot || !this.startsWithValidPrefix(message)) {
                 return;
             }
-
+            // console.log(await this.guildService.findById('710578568211464192'));
             console.log('Message received! Contents: ', message.content);
         });
 
         // on guild creation
         this.client.on<'guildCreate'>('guildCreate', async (guild: Guild) => {
-            return this.guildService.save(guild);
+            return this.guildService.saveDiscordGuild(guild);
         });
 
         // on guild update
         this.client.on<'guildUpdate'>('guildUpdate', async (guild: Guild) => {
-            return this.guildService.save(guild);
+            return this.guildService.saveDiscordGuild(guild);
         });
 
         if (login) {

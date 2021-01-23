@@ -37,12 +37,12 @@ describe('GuildService', () => {
     });
     describe('saving Guild documents', () => {
         test('save calls save in repository', async () => {
-            await guildService.save(guildMock1);
+            await guildService.saveDiscordGuild(guildMock1);
             expect(repoMock.save).toHaveBeenCalled();
         });
         test('save called with new Guild creates new GuildDoc and saves', async () => {
             repoMock.existsById = jest.fn().mockReturnValueOnce(false);
-            await guildService.save(guildMock1);
+            await guildService.saveDiscordGuild(guildMock1);
             expect(repoMock.save).toHaveBeenCalled();
         });
         test('save called with existing Guild updates GuildDoc and saves', async () => {
@@ -52,12 +52,12 @@ describe('GuildService', () => {
             iGuildMock.name = guildMock2.name;
             iGuildMock.prefix = '!';
             repoMock.findById = jest.fn().mockImplementationOnce(() => Promise.resolve(iGuildMock));
-            await guildService.save(guildMock2);
+            await guildService.saveDiscordGuild(guildMock2);
             expect(repoMock.save).toHaveBeenLastCalledWith(Guild.build(iGuildMock));
         });
         test('update calls save in repository', async () => {
             let iGuild = jest.createMockFromModule<IGuild>('../../src/models/guild');
-            await guildService.update(iGuild);
+            await guildService.save(iGuild);
             expect(repoMock.save).toHaveBeenCalled();
         });
     });
