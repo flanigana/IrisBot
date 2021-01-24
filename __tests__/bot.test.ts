@@ -12,6 +12,7 @@ describe('Bot', () => {
     let userMock: User;
     let messageMock: Message;
     let guildServiceMock: GuildService;
+
     beforeAll(async (done) => {
         client = container.get<Client>(TYPES.Client);
 

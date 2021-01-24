@@ -3,8 +3,7 @@ import container from '../../inversify.config';
 import { TYPES } from '../../src/types';
 import { Guild, IGuild } from '../../src/models/guild';
 import { GuildRepository } from '../../src/data_access/repositories/guild_repository';
-import { Guild as DiscordGuild } from 'discord.js';
-import * as mongoose from 'mongoose';
+import { Client, Guild as DiscordGuild } from 'discord.js';
 
 describe('GuildService', () => {
     let guildService: GuildService;
@@ -31,9 +30,8 @@ describe('GuildService', () => {
     beforeEach(() => {
         jest.resetAllMocks();
     })
-    afterAll(async (done) => {
-        await mongoose.disconnect();
-        done();
+    afterAll(() => {
+        container.get<Client>(TYPES.Client).destroy();
     });
     describe('saving Guild documents', () => {
         test('save calls save in repository', async () => {

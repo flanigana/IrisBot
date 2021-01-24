@@ -7,6 +7,7 @@ import { GuildService } from './src/services/guild_service';
 import { GuildRepository } from './src/data_access/repositories/guild_repository';
 import { RaidTemplateRepository } from './src/data_access/repositories/raid_template_repository';
 import { RaidTemplateService } from './src/services/raid_template_service';
+import { MessageDispatcher } from './src/services/message_dispatcher';
 
 let container = new Container();
 
@@ -18,6 +19,8 @@ container.bind<GuildService>(TYPES.GuildService).to(GuildService).inSingletonSco
 
 container.bind<RaidTemplateRepository>(TYPES.RaidTemplateRepository).to(RaidTemplateRepository).inSingletonScope();
 container.bind<RaidTemplateService>(TYPES.RaidTemplateService).to(RaidTemplateService).inSingletonScope();
+
+container.bind<MessageDispatcher>(TYPES.MessageDispatcher).to(MessageDispatcher).inSingletonScope();
 
 container.bind<Bot>(TYPES.Bot).to(Bot).inSingletonScope();
 

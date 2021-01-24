@@ -3,6 +3,7 @@ export const TYPES = {
     Client: Symbol('Client'),
     DiscordToken: Symbol('Token'),
     Mongoose: Symbol('Mongoose'),
+    MessageDispatcher: Symbol('MessageDispatcher'),
     GuildRepository: Symbol('GuildRepository'),
     GuildService: Symbol('GuildService'),
     RaidTemplateRepository: Symbol('RaidTemplateRepository'),

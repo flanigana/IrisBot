@@ -1,9 +1,9 @@
 import {inject, injectable} from 'inversify';
-import container from '../inversify.config';
 import { TYPES } from './types';
 import * as mongoose from 'mongoose';
 import {Client, Guild, Message} from 'discord.js';
 import { GuildService } from './services/guild_service';
+import container from '../inversify.config';
 
 /**
  * Responsible for the core functionality including:
@@ -27,7 +27,7 @@ export class Bot {
     constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.DiscordToken) token: string,
-        @inject(TYPES.GuildService) guildService: GuildService,
+        @inject(TYPES.GuildService) guildService: GuildService
     ) {
         this.client = client;
         this.token = token;
