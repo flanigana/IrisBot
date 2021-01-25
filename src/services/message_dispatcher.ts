@@ -10,15 +10,15 @@ import { GuildService } from './guild_service';
 @injectable()
 export class MessageDispatcher {
 
-    private readonly client: Client;
-    private readonly guildService: GuildService;
+    private readonly _Client: Client;
+    private readonly _GuildService: GuildService;
 
     public constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.GuildService) guildService: GuildService
     ) {
-        this.client = client;
-        this.guildService = guildService;
+        this._Client = client;
+        this._GuildService = guildService;
     }
 
     // Regex for role and channel matching /(<(#|@&)\d*>)/g
@@ -45,7 +45,7 @@ export class MessageDispatcher {
      * @param message the received Message
      */
     public async handleGuildMessage(message: Message) {
-        const guild = await this.guildService.findById(message.guild.id);
+        const guild = await this._GuildService.findById(message.guild.id);
         if (!message.content.startsWith(guild.prefix)) {
             return;
         }

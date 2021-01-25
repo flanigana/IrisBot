@@ -11,6 +11,11 @@ export class RaidTemplateRepository
         super(RaidTemplate);
     }
 
+    public async existsByName(guildId: string, templateName: string): Promise<boolean> {
+        const query = {guildId: guildId, name: templateName} as Query<IRaidTemplate>;
+        return this.existsByQuery(query);
+    }
+
     public async findTemplate(guildId: string, templateName: string): Promise<IRaidTemplate> {
         const query = {guildId: guildId, name: templateName} as Query<IRaidTemplate>;
         return this.findByQuery(query);

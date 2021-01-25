@@ -1,20 +1,21 @@
 import { Repository, Query } from './repositories';
 import { injectable, unmanaged } from 'inversify';
-import { Document, Model } from 'mongoose';
+import { Document } from 'mongoose';
+import { DocumentBuilder } from '../../models/DocumentBuilder';
 
 @injectable()
-export abstract class GenericRepository<IEntity, EntityDoc extends Document> implements Repository<IEntity, EntityDoc> {
+export abstract class GenericRepository<IEntity, EntityDoc extends Document> implements Repository<IEntity> {
 
-    protected readonly Model: Model<any>
+    protected readonly Model: DocumentBuilder<IEntity, EntityDoc>
 
     public constructor(
-        @unmanaged() model: Model<any>
+        @unmanaged() model: DocumentBuilder<IEntity, EntityDoc>
     ) {
         this.Model = model;
     }
 
-    public async save(doc: EntityDoc): Promise<IEntity> {
-        return doc.save().then(res => {
+    public async save(entity: IEntity): Promise<IEntity> {
+        return this.Model.build(entity).save().then(res => {
             return this._readMapper(res);
         });
     }

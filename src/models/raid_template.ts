@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { DocumentBuilder } from './DocumentBuilder';
 
 export interface IRaidTemplate {
     _id?: string;
@@ -9,10 +10,6 @@ export interface IRaidTemplate {
     primaryReactMin: number;
     secondaryReacts: string[];
     secondaryReactLimits: number[];
-}
-
-interface RaidTemplateModelInterface extends mongoose.Model<any> {
-    build(attr: IRaidTemplate): RaidTemplateDoc;
 }
 
 export interface RaidTemplateDoc extends mongoose.Document {
@@ -57,6 +54,10 @@ const raidTemplateSchema = new mongoose.Schema({
         min: 0
     }
 });
+
+interface RaidTemplateModelInterface extends DocumentBuilder<IRaidTemplate, RaidTemplateDoc> {
+    build(attr: IRaidTemplate): RaidTemplateDoc;
+}
 
 raidTemplateSchema.statics.build = (attr: IRaidTemplate): RaidTemplateDoc => {
     return new RaidTemplate(attr);

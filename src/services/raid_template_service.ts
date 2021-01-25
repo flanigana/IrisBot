@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
-import { RaidTemplate, IRaidTemplate } from '../models/raid_template';
+import { IRaidTemplate } from '../models/raid_template';
 import { RaidTemplateRepository } from '../data_access/repositories/raid_template_repository';
 
 @injectable()
@@ -14,6 +14,9 @@ export class RaidTemplateService {
         this._raidTemplateRepo = raidTemplateRepo;
     }
     
+    public async existsByName(guildId: string, templateName: string): Promise<boolean> {
+        return this._raidTemplateRepo.existsByName(guildId, templateName);
+    }
 
     /**
      * Returns a RaidTemplate given the owning guild and the template name
@@ -38,7 +41,7 @@ export class RaidTemplateService {
      * @param template RaidTemplate to save
      */
     public async save(template: IRaidTemplate): Promise<IRaidTemplate> {
-        return this._raidTemplateRepo.save(RaidTemplate.build(template));
+        return this._raidTemplateRepo.save(template);
     }
 
     /**

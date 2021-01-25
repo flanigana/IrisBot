@@ -13,9 +13,9 @@ import container from '../inversify.config';
  */
 @injectable()
 export class Bot {
-    private client: Client;
-    private readonly token: string;
-    private readonly guildService: GuildService;
+    private readonly _Client: Client;
+    private readonly _Token: string;
+    private readonly _GuildService: GuildService;
 
     private readonly prefixes = ['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!'];
 
@@ -29,9 +29,9 @@ export class Bot {
         @inject(TYPES.DiscordToken) token: string,
         @inject(TYPES.GuildService) guildService: GuildService
     ) {
-        this.client = client;
-        this.token = token;
-        this.guildService = guildService;
+        this._Client = client;
+        this._Token = token;
+        this._GuildService = guildService;
     }
 
     /**
@@ -51,7 +51,7 @@ export class Bot {
      */
     public listen(login = true): Promise<string> {
         // on message
-        this.client.on<'message'>('message', async (message: Message) => {
+        this._Client.on<'message'>('message', async (message: Message) => {
             if (message.author.bot || !this.startsWithValidPrefix(message)) {
                 return;
             }
@@ -60,17 +60,17 @@ export class Bot {
         });
 
         // on guild creation
-        this.client.on<'guildCreate'>('guildCreate', async (guild: Guild) => {
-            return this.guildService.saveDiscordGuild(guild);
+        this._Client.on<'guildCreate'>('guildCreate', async (guild: Guild) => {
+            return this._GuildService.saveDiscordGuild(guild);
         });
 
         // on guild update
-        this.client.on<'guildUpdate'>('guildUpdate', async (guild: Guild) => {
-            return this.guildService.saveDiscordGuild(guild);
+        this._Client.on<'guildUpdate'>('guildUpdate', async (guild: Guild) => {
+            return this._GuildService.saveDiscordGuild(guild);
         });
 
         if (login) {
-            return this.client.login(this.token);
+            return this._Client.login(this._Token);
         } else { // used for testing only
             return Promise.resolve('test');
         }
@@ -80,7 +80,7 @@ export class Bot {
      * Logs out the Discord Client and closes the connection to the database
      */
     public async logout() {
-        this.client.destroy();
+        this._Client.destroy();
         await mongoose.disconnect();
     }
 }

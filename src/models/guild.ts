@@ -1,14 +1,11 @@
 import * as mongoose from 'mongoose';
+import { DocumentBuilder } from './DocumentBuilder';
 
 export interface IGuild {
     _id: string;
     name: string;
     owner: string;
     prefix: string;
-}
-
-interface GuildModelInterface extends mongoose.Model<any> {
-    build(attr: IGuild): GuildDoc;
 }
 
 export interface GuildDoc extends mongoose.Document {
@@ -36,6 +33,10 @@ const guildSchema = new mongoose.Schema({
         required: true
     }
 });
+
+interface GuildModelInterface extends DocumentBuilder<IGuild, GuildDoc> {
+    build(attr: IGuild): GuildDoc;
+}
 
 guildSchema.statics.build = (attr: IGuild): GuildDoc => {
     return new Guild(attr);

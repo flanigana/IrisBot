@@ -1,18 +1,18 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
-import { Guild, GuildDoc, IGuild } from '../models/guild';
+import { IGuild } from '../models/guild';
 import { Guild as DiscordGuild } from 'discord.js';
 import { GuildRepository } from '../data_access/repositories/guild_repository';
 
 @injectable()
 export class GuildService {
 
-    private readonly _guildRepo: GuildRepository;
+    private readonly _GuildRepo: GuildRepository;
 
     public constructor(
         @inject(TYPES.GuildRepository) guildRepo: GuildRepository
     ) {
-        this._guildRepo = guildRepo;
+        this._GuildRepo = guildRepo;
     }
 
     /**
@@ -20,38 +20,38 @@ export class GuildService {
      * @param id Guild id
      */
     public async findById(id: string): Promise<IGuild> {
-        return this._guildRepo.findById(id);
+        return this._GuildRepo.findById(id);
     }
 
     /**
      * Returns the database document information for all the Guilds in the database
      */
     public async findAll(): Promise<IGuild[]> {
-        return this._guildRepo.findAll();
+        return this._GuildRepo.findAll();
     }
 
     /**
      * Generates the default database document for a given Discord Guild
      * @param guild Discord Guild object to read information from
      */
-    private getDefaultGuildDoc(guild: DiscordGuild): GuildDoc {
-        return Guild.build({
+    private getDefaultGuildDoc(guild: DiscordGuild): IGuild {
+        return {
             _id: guild.id,
             name: guild.name,
             owner: guild.ownerID,
             prefix: '!'
-        });
+        };
     }
 
     /**
      * Generates an updated database document for a given Discord Guild
      * @param guild Discord Guild object to read information from
      */
-    private async getUpdatedGuildDoc(guild: DiscordGuild): Promise<GuildDoc> {
-        return this._guildRepo.findById(guild.id).then((iguild) => {
+    private async getUpdatedGuildDoc(guild: DiscordGuild): Promise<IGuild> {
+        return this._GuildRepo.findById(guild.id).then((iguild) => {
             iguild.name = guild.name;
             iguild.owner = guild.ownerID;
-            return Guild.build(iguild);
+            return iguild;
         });
     }
     
@@ -60,13 +60,15 @@ export class GuildService {
      * @param guild Discord Guild object to read information from
      */
     public async saveDiscordGuild(guild: DiscordGuild): Promise<IGuild> {
-        let guildDoc;
-        if (!this._guildRepo.existsById(guild.id)) { // create Guild in database if it does not exist
-            guildDoc = this.getDefaultGuildDoc(guild);
-        } else { // update Guild in database
-            guildDoc = await this.getUpdatedGuildDoc(guild);
-        }
-        return this._guildRepo.save(guildDoc);
+        return this._GuildRepo.existsById(guild.id).then(async (exists) => {
+            let guildDoc;
+            if (!exists) { // create Guild in database if it does not exist
+                guildDoc = this.getDefaultGuildDoc(guild);
+            } else { // update Guild in database
+                guildDoc = await this.getUpdatedGuildDoc(guild);
+            }
+            return this._GuildRepo.save(guildDoc);
+        });
     }
 
     /**
@@ -74,6 +76,6 @@ export class GuildService {
      * @param guild Guild object used to update existing entry in the database
      */
     public async save(guild: IGuild): Promise<IGuild> {
-        return this._guildRepo.save(Guild.build(guild));
+        return this._GuildRepo.save(guild);
     }
 }

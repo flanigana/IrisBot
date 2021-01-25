@@ -2,8 +2,8 @@ export type Query<IEntity> = {
     [P in keyof IEntity]?: IEntity[P] | { $regex: RegExp};
 }
 
-export interface Repository<IEntity, EntityDoc> {
-    save(doc: EntityDoc): Promise<IEntity>;
+export interface Repository<IEntity> {
+    save(entity: IEntity): Promise<IEntity>;
     existsById(id: string): Promise<boolean>;
     existsByQuery(query: Query<IEntity>): Promise<boolean>;
     findById(id: string): Promise<IEntity>;
