@@ -1,5 +1,6 @@
-const axios = require("axios");
 const cheerio = require("cheerio");
+
+const http = require("./request");
 
 /////////////////////////////////////////////////////////////////////
 //**                           General                             */
@@ -16,20 +17,14 @@ module.exports.getItemBaseName = itemName => {
 };
 
 module.exports.getClassInfo = async (url) => {
-    let options = {
-        url: url,
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
-        }
-    };
 
     // initialize with basic data in case of failure
     let classes = {
-        classList: ["Archer", "Huntress", "Bard", "Wizard", "Necromancer", "Mystic", "Sorcerer", "Priest", "Warrior", "Knight", "Paladin", "Rogue", "Trickster", "Assassin", "Ninja", "Samurai"],
+        classList: ["archer", "huntress", "bard", "wizard", "necromancer", "mystic", "sorcerer", "priest", "warrior", "knight", "paladin", "rogue", "trickster", "assassin", "ninja", "samurai"],
         exists: false,
     };
 
-    return axios(options).then(response => {
+    return http.getRequest(url).then(response => {
         classes.exists = true;
         const html = response.data;
         const $ = cheerio.load(html);
@@ -47,7 +42,7 @@ module.exports.getClassInfo = async (url) => {
                 const charactersRow = tables[i].children[3].children[1].children;
                 for (let j=1; j < charactersRow.length; j+=2) {
                     const classInfo = {};
-                    classInfo.className = charactersRow[j].children[0].children[0].children[0].attribs.alt.trim();
+                    classInfo.className = charactersRow[j].children[0].children[0].children[0].attribs.alt.trim().toLowerCase();
                     classList.push(classInfo.className);
                     let imgSource = charactersRow[j].children[0].children[0].children[0].attribs.src.trim();
                     if (imgSource.startsWith("/s/a/img")) {
@@ -64,7 +59,7 @@ module.exports.getClassInfo = async (url) => {
 
         const classRows = $(statCapTable).find("tbody > tr");
         for (let i=0; i < classRows.length; i++) {
-            const className = classRows[i].children[1].children[0].children[0].children[0].data.trim();
+            const className = classRows[i].children[1].children[0].children[0].children[0].data.trim().toLowerCase();
 
             classes[className].maxHp = classRows[i].children[3].children[0].children[0].data;
             classes[className].maxMp = classRows[i].children[5].children[0].children[0].data;
@@ -78,21 +73,20 @@ module.exports.getClassInfo = async (url) => {
         return classes;
 
     }).catch(e => {
-        console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+        if (e.response) {
+            console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+        } else {
+            console.error(e);
+        }
         return classes;
     });
 };
 
 module.exports.getRealmEyeDungeonsList = async () => {
     // uses IAlec's (my) realmeye page to grab dungeon list (I could hard code a list, but it wouldn't stay updated automatically)
-    let options = {
-        url: `https://www.realmeye.com/graveyard-summary-of-player/IAlec`,
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
-        }
-    };
+    const url = `https://www.realmeye.com/graveyard-summary-of-player/IAlec`;
 
-    return axios(options).then(response => {
+    return http.getRequest(url).then(response => {
         const html = response.data;
         const $ = cheerio.load(html);
 
@@ -129,14 +123,8 @@ module.exports.getRealmEyeDungeonsList = async () => {
 /////////////////////////////////////////////////////////////////////
 
 module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
-    const url = `https://www.realmeye.com/player/${ign}`;
+    let url = `https://www.realmeye.com/player/${ign}`;
     let promises = [];
-    let options = {
-        url: url,
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
-        }
-    };
 
     let accountInfo = {
         name: ign,
@@ -154,7 +142,7 @@ module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
         characters: [],
     };
 
-    promises.push(axios(options).then(async response => {
+    promises.push(http.getRequest(url).then(async response => {
         accountInfo.status = response.status;
         const html = response.data;
         const $ = cheerio.load(html);
@@ -296,8 +284,8 @@ module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
     }));
 
     if (graveyard) {
-        options.url = `https://www.realmeye.com/graveyard-summary-of-player/${ign}`;
-        promises.push(axios(options).then(response => {
+        url = `https://www.realmeye.com/graveyard-summary-of-player/${ign}`;
+        promises.push(http.getRequest(url).then(response => {
             const html = response.data;
             const $ = cheerio.load(html);
     
@@ -332,8 +320,12 @@ module.exports.getRealmEyeInfo = async (ign, graveyard, classInfo) => {
     return Promise.all(promises).then(() => {
         return accountInfo;
     }).catch(e => {
-        console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
-        accountInfo.status = e.response.status;
+        if (e.response) {
+            console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+            accountInfo.status = e.response.status;
+        } else {
+            console.error(e);
+        }
         return accountInfo;
     });
 };
@@ -358,15 +350,10 @@ module.exports.getGuildUrlForm = guildName => {
 };
 
 module.exports.getTopCharacters = async guildName => {
-    const url = this.getGuildUrlForm(guildName);
-    const options = {
-        url: `https://www.realmeye.com/top-characters-of-guild/${url}`,
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
-        }
-    };
+    let url = this.getGuildUrlForm(guildName);
+    url = `https://www.realmeye.com/top-characters-of-guild/${url}`;
 
-    return axios(options).then(response => {
+    return http.getRequest(url).then(response => {
         const html = response.data;
         const $ = cheerio.load(html);
 
@@ -410,12 +397,6 @@ module.exports.getTopCharacters = async guildName => {
 
 module.exports.getRealmEyeGuildInfo = async guildName => {
     const url = `https://www.realmeye.com/guild/${this.getGuildUrlForm(guildName)}`;
-    const options = {
-        url: url,
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
-        }
-    };
 
     let guildInfo = {
         name: guildName,
@@ -432,7 +413,7 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
         members: [],
     };
 
-    return axios(options).then(response => {
+    return http.getRequest(url).then(response => {
         guildInfo.status = response.status;
         const html = response.data;
         const $ = cheerio.load(html);
@@ -517,8 +498,12 @@ module.exports.getRealmEyeGuildInfo = async guildName => {
         });
 
     }).catch(e => {
-        console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
-        guildInfo.status = e.response.status;
+        if (e.response) {
+            console.error(`Axios failed to retrieve data from the page '${url}' with error code ${e.response.status}...`);
+            guildInfo.status = e.response.status;
+        } else {
+            console.error(e);
+        }
         return guildInfo;
     });
 };

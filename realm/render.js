@@ -1,9 +1,9 @@
-const axios = require("axios");
 const Discord = require("discord.js");
 const Canvas = require("canvas");
 const { Image } = require("canvas");
 const Jimp = require("jimp");
 
+const http = require("../general/request");
 const tools = require("../general/tools");
 const realmEyeTools = require("../general/realmEyeTools");
 
@@ -13,7 +13,7 @@ const realmEyeTools = require("../general/realmEyeTools");
 
 const getDefinitions = async definitionsUrl => {
 
-    return axios.get(definitionsUrl).then(response => {
+    return http.getRequest(definitionsUrl).then(response => {
         let definitionData = response.data;
 
         // uncomment line below to test a subset of renders for quicker loads
@@ -222,7 +222,7 @@ const characterListVisualization = (characters, renders, guildCharacters=false) 
         xMod += statsWidth;
 
         // character skin (default for now)
-        let renderImage = renders[`${char.class} Default Skin`];
+        let renderImage = renders[`${char.class.toLowerCase()} Default Skin`];
         if (!renderImage) {
             renderImage = renders[`Empty slot`];
         }
