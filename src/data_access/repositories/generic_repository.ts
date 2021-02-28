@@ -2,9 +2,10 @@ import { Repository, Query } from './repositories';
 import { injectable, unmanaged } from 'inversify';
 import { Document } from 'mongoose';
 import { DocumentBuilder } from '../../models/DocumentBuilder';
+import { Template } from '../../models/templates/template';
 
 @injectable()
-export abstract class GenericRepository<IEntity, EntityDoc extends Document> implements Repository<IEntity> {
+export abstract class GenericRepository<IEntity extends Template, EntityDoc extends Document> implements Repository<IEntity> {
 
     protected readonly Model: DocumentBuilder<IEntity, EntityDoc>
 
@@ -14,10 +15,28 @@ export abstract class GenericRepository<IEntity, EntityDoc extends Document> imp
         this.Model = model;
     }
 
-    public async save(entity: IEntity): Promise<IEntity> {
-        return this.Model.build(entity).save().then(res => {
-            return this._readMapper(res);
+    public async update(entity: IEntity): Promise<boolean> {
+        const id = entity._id;
+        delete entity._id;
+        return this.Model.updateOne({_id: id}, entity, {upsert: true}).then(res => {
+            if (res.ok !== 1) {
+                return false;
+            }
+            return true;
         });
+    }
+
+    public async save(entity: IEntity): Promise<boolean> {
+        if (entity._id && entity._id !== '') {
+            return this.update(entity);
+        } else {
+            return this.Model.create(entity).then(res => {
+                if (!res) {
+                    return false;
+                }
+                return true;
+            });
+        }
     }
 
     public async existsById(id: string): Promise<boolean> {

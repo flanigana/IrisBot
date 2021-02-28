@@ -34,33 +34,6 @@ describe('MessageDispatcher', () => {
         jest.resetAllMocks();
     });
     describe('message parsing', () => {
-        describe('parseCommand', () => {
-            test('parseCommand returns [one] when given: one', () => {
-                const act = messageDispatcher.parseCommand('one');
-                const exp = ['one'];
-                expect(act).toEqual(exp);
-            });
-            test('parseCommand returns [one two] when given: "one two"', () => {
-                const act = messageDispatcher.parseCommand('"one two"');
-                const exp = ['one two'];
-                expect(act).toEqual(exp);
-            });
-            test('parseCommand returns [one two, three four] when given: "one two" "three four"', () => {
-                const act = messageDispatcher.parseCommand('"one two" "three four"');
-                const exp = ['one two', 'three four'];
-                expect(act).toEqual(exp);
-            });
-            test('parseCommand returns [one two, three four, five six] when given: "one two" \'three four\' "five six"', () => {
-                const act = messageDispatcher.parseCommand('"one two" \'three four\' "five six"');
-                const exp = ['one two', 'three four', 'five six'];
-                expect(act).toEqual(exp);
-            });
-            test('parseCommand returns [one, <@&123>] when given: one <@&123>', () => {
-                const act = messageDispatcher.parseCommand('one <@&123>');
-                const exp = ['one', '<@&123>'];
-                expect(act).toEqual(exp);
-            });
-        });
         describe('parseGuildCommand', () => {
             test('parseGuildCommand returns [one] when given: !one', () => {
                 const act = messageDispatcher.parseGuildCommand(iGuildMock, '!one');

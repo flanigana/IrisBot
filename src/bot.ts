@@ -1,9 +1,10 @@
-import {inject, injectable} from 'inversify';
+import { inject, injectable } from 'inversify';
 import { TYPES } from './types';
 import * as mongoose from 'mongoose';
-import {Client, Guild, Message} from 'discord.js';
+import { Client, ClientEvents, Guild, Message } from 'discord.js';
 import { GuildService } from './services/guild_service';
-import container from '../inversify.config';
+import { MessageDispatcher } from './services/message_dispatcher';
+import { ClientTools } from './utilities/client_tools';
 
 /**
  * Responsible for the core functionality including:
@@ -16,22 +17,47 @@ export class Bot {
     private readonly _Client: Client;
     private readonly _Token: string;
     private readonly _GuildService: GuildService;
+    private readonly _MessageDispatcher: MessageDispatcher;
 
-    private readonly prefixes = ['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!'];
+    private readonly _Prefixes = ['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!'];
 
-    /**
-     * 
-     * @param client Discord Client to connect to the bot
-     * @param token Client login token obtained through the Discord developer portal
-     */
+    private _ignoreList: Map<string, Set<string>>; // used to isolate users using the template service
+
     constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.DiscordToken) token: string,
-        @inject(TYPES.GuildService) guildService: GuildService
+        @inject(TYPES.GuildService) guildService: GuildService,
+        @inject(TYPES.MessageDispatcher) MessageDispatcher: MessageDispatcher
     ) {
         this._Client = client;
         this._Token = token;
         this._GuildService = guildService;
+        this._MessageDispatcher = MessageDispatcher;
+
+        this._ignoreList = new Map();
+    }
+
+    public userIgnore(userId: string, channelId: string): void {
+        if (!this._ignoreList.has(userId)) {
+            this._ignoreList.set(userId, new Set([channelId]));
+        } else {
+            this._ignoreList.get(userId).add(channelId);
+        }
+    }
+
+    public userUnignore(userId: string, channelId: string): void {
+        if (!this._ignoreList.has(userId) || !this._ignoreList.get(userId).has(channelId)) {
+            return;
+        }
+        this._ignoreList.get(userId).delete(channelId);
+    }
+
+    public removeListener<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): void {
+        this._Client.removeListener(event, listener);
+    }
+
+    public addListener<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): void {
+        this._Client.on(event, listener);
     }
 
     /**
@@ -40,7 +66,7 @@ export class Bot {
      * @param message received message
      */
     public startsWithValidPrefix(message: Message): boolean {
-        return !this.prefixes.every((prefix: string) => {
+        return !this._Prefixes.every((prefix: string) => {
             return !message.content.startsWith(prefix);
         })
     }
@@ -52,11 +78,14 @@ export class Bot {
     public listen(login = true): Promise<string> {
         // on message
         this._Client.on<'message'>('message', async (message: Message) => {
+            let clientTools = new ClientTools(this._Client);
             if (message.author.bot || !this.startsWithValidPrefix(message)) {
                 return;
             }
-            // console.log(await this.guildService.findById('710578568211464192'));
-            console.log('Message received! Contents: ', message.content);
+            if (this._ignoreList.has(message.author.id) && this._ignoreList.get(message.author.id).has(message.channel.id)) {
+                return;
+            }
+            this._MessageDispatcher.handleMessage(message);
         });
 
         // on guild creation

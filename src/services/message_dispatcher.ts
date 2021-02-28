@@ -1,8 +1,10 @@
-import { injectable, inject } from 'inversify';
+import { injectable, inject, interfaces } from 'inversify';
 import { TYPES } from '../types';
 import { Client, Message } from 'discord.js';
+import { MessageParser } from '../utilities/message_parser';
 import { IGuild } from '../models/guild';
 import { GuildService } from './guild_service';
+import { RaidController } from '../controllers/raid_controller';
 
 /**
  * Responsible for processing and redirecting messages to the service dealing with their respective command and origin
@@ -12,22 +14,16 @@ export class MessageDispatcher {
 
     private readonly _Client: Client;
     private readonly _GuildService: GuildService;
+    private readonly _RaidController: RaidController;
 
     public constructor(
         @inject(TYPES.Client) client: Client,
-        @inject(TYPES.GuildService) guildService: GuildService
+        @inject(TYPES.GuildService) guildService: GuildService,
+        @inject(TYPES.RaidController) raidController: RaidController
     ) {
         this._Client = client;
         this._GuildService = guildService;
-    }
-
-    // Regex for role and channel matching /(<(#|@&)\d*>)/g
-    /**
-     * Returns an array of strings grouping arguments enclosed with quotes together as one argument
-     * @param msg message string to parse
-     */
-    public parseCommand(msg: string): string[] {
-        return msg.match(/("[^"]+")|('[^']+')|(\S+)/g).map(arg => {return arg.replace(/['"]/g, '')});
+        this._RaidController = raidController;
     }
 
     /**
@@ -37,7 +33,7 @@ export class MessageDispatcher {
      */
     public parseGuildCommand(guild: IGuild, msg: string): string[] {
         msg = msg.substring(guild.prefix.length).trim();
-        return this.parseCommand(msg);
+        return MessageParser.parseMessage(msg);
     }
 
     /**
@@ -53,6 +49,7 @@ export class MessageDispatcher {
 
         switch (args[0].toLowerCase()) {
             case 'raid':
+                this._RaidController.handleMessage(message, args);
                 break;
         }
     }
@@ -61,7 +58,7 @@ export class MessageDispatcher {
      * Handles the received message based on message channel type
      * @param message the received Message
      */
-    public handleMessage(message: Message) {
+    public handleMessage(message: Message): void {
         switch (message.channel.type) {
             case 'text':
                 this.handleGuildMessage(message);

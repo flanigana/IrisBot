@@ -1,25 +1,39 @@
 import * as mongoose from 'mongoose';
-import { DocumentBuilder } from './DocumentBuilder';
+import { DocumentBuilder } from '../DocumentBuilder';
+import { Template } from './template';
 
-export interface IRaidTemplate {
+export interface IRaidTemplate extends Template {
     _id?: string;
     guildId: string;
     name: string;
-    desription: string;
+    description: string;
     primaryReact: string;
-    primaryReactMin: number;
-    secondaryReacts: string[];
-    secondaryReactLimits: number[];
+    secondaryReacts: string[] | string;
+    secondaryReactLimits: number[] | number;
+    additionalReacts: string[];
 }
 
+export function getRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
+    let template = {
+        guildId: undefined,
+        name: undefined,
+        description: undefined,
+        primaryReact: undefined,
+        secondaryReacts: [],
+        secondaryReactLimits: [],
+        additionalReacts: []
+    };
+
+    return Object.assign<IRaidTemplate, Partial<IRaidTemplate>>(template, fields);
+}
 export interface RaidTemplateDoc extends mongoose.Document {
     guildId: string;
     name: string;
-    desription: string;
+    description: string;
     primaryReact: string;
-    primaryReactMin: number;
     secondaryReacts: string[];
     secondaryReactLimits: number[];
+    additionalReacts: string[];
 }
 
 const raidTemplateSchema = new mongoose.Schema({
@@ -39,11 +53,6 @@ const raidTemplateSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    primaryReactMin: {
-        type: Number,
-        required: true,
-        min: 0
-    },
     secondaryReacts: {
         type: [String],
         required: true
@@ -52,6 +61,10 @@ const raidTemplateSchema = new mongoose.Schema({
         type: [Number],
         required: true,
         min: 0
+    },
+    additionalReacts: {
+        type: [String],
+        required: true,
     }
 });
 

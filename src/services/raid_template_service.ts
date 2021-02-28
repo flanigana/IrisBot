@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
-import { IRaidTemplate } from '../models/raid_template';
+import { IRaidTemplate } from '../models/templates/raid_template';
 import { RaidTemplateRepository } from '../data_access/repositories/raid_template_repository';
 
 @injectable()
@@ -14,8 +14,8 @@ export class RaidTemplateService {
         this._raidTemplateRepo = raidTemplateRepo;
     }
     
-    public async existsByName(guildId: string, templateName: string): Promise<boolean> {
-        return this._raidTemplateRepo.existsByName(guildId, templateName);
+    public async existsByName(guildId: string, templateName: string, caseSensitive = true): Promise<boolean> {
+        return this._raidTemplateRepo.existsByName(guildId, templateName, caseSensitive);
     }
 
     /**
@@ -23,8 +23,8 @@ export class RaidTemplateService {
      * @param guildId id of the template-owning Guild
      * @param templateName name of the template to delete
      */
-    public async findTemplate(guildId: string, templateName: string): Promise<IRaidTemplate> {
-        return this._raidTemplateRepo.findTemplate(guildId, templateName);
+    public async findTemplate(guildId: string, templateName: string, caseSensitive = true): Promise<IRaidTemplate> {
+        return this._raidTemplateRepo.findTemplate(guildId, templateName, caseSensitive);
     }
     
 
@@ -40,7 +40,7 @@ export class RaidTemplateService {
      * Creates or updates the given RaidTemplate in the database
      * @param template RaidTemplate to save
      */
-    public async save(template: IRaidTemplate): Promise<IRaidTemplate> {
+    public async save(template: IRaidTemplate): Promise<boolean> {
         return this._raidTemplateRepo.save(template);
     }
 
@@ -49,7 +49,7 @@ export class RaidTemplateService {
      * @param guildId id of the template-owning Guild
      * @param templateName name of the template to delete
      */
-    public async deleteTemplate(guildId: string, templateName: string): Promise<boolean> {
-        return this._raidTemplateRepo.deleteTemplate(guildId, templateName);
+    public async deleteTemplate(guildId: string, templateName: string, caseSensitive = true): Promise<boolean> {
+        return this._raidTemplateRepo.deleteTemplate(guildId, templateName, caseSensitive);
     }
 }

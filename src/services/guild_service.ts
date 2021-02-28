@@ -59,7 +59,7 @@ export class GuildService {
      * Creates or updates the given Guild in the database when changes occur to the Discord Guild object
      * @param guild Discord Guild object to read information from
      */
-    public async saveDiscordGuild(guild: DiscordGuild): Promise<IGuild> {
+    public async saveDiscordGuild(guild: DiscordGuild): Promise<boolean> {
         return this._GuildRepo.existsById(guild.id).then(async (exists) => {
             let guildDoc;
             if (!exists) { // create Guild in database if it does not exist
@@ -75,7 +75,7 @@ export class GuildService {
      * Updates the given Guild in the database when database-specific attributes have been changed
      * @param guild Guild object used to update existing entry in the database
      */
-    public async save(guild: IGuild): Promise<IGuild> {
+    public async save(guild: IGuild): Promise<boolean> {
         return this._GuildRepo.save(guild);
     }
 }
