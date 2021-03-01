@@ -525,20 +525,20 @@ module.exports.getVerificationTemplate = async (client, guild, templateName, gui
     }).then(template => {
         if (template) {
             if (template.verificationChannel) {
-                template.verificationChannel = this.getChannelById(guild, template.verificationChannel, "text");
+                template.verificationChannel = tools.getChannelById(guild, template.verificationChannel, "text");
             }
             if (template.logChannel) {
-                template.logChannel = this.getChannelById(guild, template.logChannel, "text");
+                template.logChannel = tools.getChannelById(guild, template.logChannel, "text");
             }
             if (template.guildRoles) {
-                template.founderRole = this.getRoleById(guild, template.founderRole);
-                template.leaderRole = this.getRoleById(guild, template.leaderRole);
-                template.officerRole = this.getRoleById(guild, template.officerRole);
-                template.memberRole = this.getRoleById(guild, template.memberRole);
-                template.initiateRole = this.getRoleById(guild, template.initiateRole);
+                template.founderRole = tools.getRoleById(guild, template.founderRole);
+                template.leaderRole = tools.getRoleById(guild, template.leaderRole);
+                template.officerRole = tools.getRoleById(guild, template.officerRole);
+                template.memberRole = tools.getRoleById(guild, template.memberRole);
+                template.initiateRole = tools.getRoleById(guild, template.initiateRole);
             }
             if (template.verifiedRole) {
-                template.verifiedRole = this.getRoleById(guild, template.verifiedRole);
+                template.verifiedRole = tools.getRoleById(guild, template.verifiedRole);
             }
             return template;
         } else {
