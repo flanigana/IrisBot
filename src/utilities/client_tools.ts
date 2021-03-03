@@ -2,6 +2,10 @@ import { injectable, inject } from 'inversify';
 import { TYPES } from '../types';
 import { Client, Guild, GuildEmoji, MessageEmbed } from 'discord.js';
 
+type FieldOptions = {
+    inline: boolean,
+    separator: string
+}
 @injectable()
 export class ClientTools {
 
@@ -26,6 +30,8 @@ export class ClientTools {
         .setTimestamp();
     }
 
+    
+
     /**
      * Adds a field to a MessageEmbed. Checks that the value is not empty first to avoid errors.
      * @param embed MessageEmbed to add field to
@@ -33,14 +39,19 @@ export class ClientTools {
      * @param value value for the field
      * @param inline whether or not to make the field inline
      */
-    public addFieldToEmbed(embed: MessageEmbed, name: string, value: string | string[], inline = false): MessageEmbed {
+    public addFieldToEmbed(embed: MessageEmbed, name: string, value: string | string[], options?: Partial<FieldOptions>): MessageEmbed {
+        const opts = Object.assign({
+            inline: false,
+            separator: ', '
+        }, options);
+        
         if (Array.isArray(value)) {
-            value = value.join(', ');
+            value = value.join(opts.separator);
         }
         if (!value || value.trim().length === 0) {
             return embed;
         }
-        return embed.addField(name, value, inline);
+        return embed.addField(name, value, opts.inline);
     }
 
     /**
@@ -56,7 +67,7 @@ export class ClientTools {
             this.addFieldToEmbed(embed, type, availableEmojiList[type]);
         }
         return embed;
-    };
+    }
 
     /**
      * Adds all of the emojis from the given list to the given embed.
@@ -68,7 +79,7 @@ export class ClientTools {
             this.addFieldToEmbed(embed, type, emojiList[type]);
         }
         return embed;
-    };
+    }
 
     /**
      * Returns an instance of a Discord Guild given its id

@@ -24,15 +24,30 @@ export class RaidTemplateController {
         this._RaidTemplateService = raidTemplateService;
     }
 
-    private sendTemplateDoesNotExist(message: Message, templateName: string) {
-        let embed = this._ClientTools.getStandardEmbed();
-        embed.setTitle('Raid Template Not Found')
-            .setDescription(`A raid template with the name **${templateName}** could not be found.`);
-        message.channel.send(embed);
+    /**
+     * Sends a message containing the names of raid templates in the guild
+     * @param message message sent by the user
+     */
+    private listRaidTemplates(message: Message): void {
+        this._RaidTemplateService.findTemplatesByGuildId(message.guild.id).then((templates) => {
+            const embed = this._ClientTools.getStandardEmbed()
+                    .setTitle(`${message.guild.name} Raid Templates`);
+            if (templates.length === 0) {
+                embed.setDescription("There are no raid templates in this server.");
+            } else {
+                this._ClientTools.addFieldToEmbed(embed, "Template Names", templates.map(t => t.name), {separator: '\n'});
+            }
+            message.channel.send(embed);
+        });
     }
 
+    /**
+     * Creates a new MessageEmbed with the status of the template deletion
+     * @param templateName name of the raid temmplate
+     * @param deleted whether or not the template was deleted
+     */
     private createDeletionConfirmation(templateName: string, deleted: boolean): MessageEmbed {
-        let embed = this._ClientTools.getStandardEmbed();
+        const embed = this._ClientTools.getStandardEmbed();
         if (deleted) {
             embed.setTitle(`**${templateName}** Successfully Deleted`);
         } else {
@@ -43,7 +58,7 @@ export class RaidTemplateController {
 
     private confirmTemplateDeletion(message: Message, templateName: string): Promise<void> {
         let bot = container.get<Bot>(TYPES.Bot);
-        let embed = this._ClientTools.getStandardEmbed()
+        const embed = this._ClientTools.getStandardEmbed()
             .setTitle('Template Deletion')
             .setDescription(`Are you sure you want to delete the **${templateName}** template? ` + 
                 '\nReply with \`yes\` to confirm.');
@@ -74,21 +89,11 @@ export class RaidTemplateController {
 
     private async deleteRaidTemplate(message: Message, args: string[]): Promise<void> {
         const templateName = args.length >= 3 ? args.slice(2).join(' ') : undefined;
-        const exists = await this._RaidTemplateService.existsByName(message.guild.id, templateName, false);
-        if (!templateName || !exists) {
-            this.sendTemplateDoesNotExist(message, templateName);
-            return null;
-        }
         return this.confirmTemplateDeletion(message, templateName);
     }
 
     private async editRaidTemplate(message: Message, args: string[]): Promise<RaidTemplateManager> {
         const templateName = args.length >= 3 ? args.slice(2).join(' ') : undefined;
-        const exists = await this._RaidTemplateService.existsByName(message.guild.id, templateName, false);
-        if (!templateName || !exists) {
-            this.sendTemplateDoesNotExist(message, templateName);
-            return null;
-        }
         const template = await this._RaidTemplateService.findTemplate(message.guild.id, templateName, false);
         return container.get<interfaces.Factory<SetupService<IRaidTemplate>>>(TYPES.SetupService)(SetupType.RaidTemplate, message, template) as RaidTemplateManager;
     }
@@ -119,6 +124,10 @@ export class RaidTemplateController {
                 break;
             case 'delete':
                 this.deleteRaidTemplate(message, args);
+                break;
+            case 'list':
+                this.listRaidTemplates(message);
+                break;
         }
     }
 }

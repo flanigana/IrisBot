@@ -62,9 +62,9 @@ export class RaidTemplateManager extends SetupService<IRaidTemplate> {
         }
         this._ClientTools.addFieldToEmbed(embed, 'Name', name ? name : 'Unset');
         this._ClientTools.addFieldToEmbed(embed, 'Description', description ? description : 'Unset');
-        this._ClientTools.addFieldToEmbed(embed, 'Primary React', primaryReact ? primaryReact : 'Unset', true);
+        this._ClientTools.addFieldToEmbed(embed, 'Primary React', primaryReact ? primaryReact : 'Unset', {inline: true});
         for (let i=0; i<secondaryReacts.length; i++) {
-            this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${secondaryReacts[i]}: ${secondaryReactLimits[i]}`, true);
+            this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${secondaryReacts[i]}: ${secondaryReactLimits[i]}`, {inline: true});
         }
         this._ClientTools.addFieldToEmbed(embed, 'Additional Reacts', additionalReacts.length > 0 ? additionalReacts : 'None');
         

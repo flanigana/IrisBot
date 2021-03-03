@@ -29,8 +29,8 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 .setDescription('Respond with the name you would like to use for this raid template. It cannot be the same name as an existing template. ' +
                 '\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!');
             clientTools.addFieldToEmbed(embed, 'Example', '\`Void\`');
-            clientTools.addFieldToEmbed(embed, 'Template Name', fields.name ? fields.name : 'Unset', true);
-            clientTools.addFieldToEmbed(embed, 'Existing Template Names', existingTemplates, true);
+            clientTools.addFieldToEmbed(embed, 'Template Name', fields.name ? fields.name : 'Unset', {inline: true});
+            clientTools.addFieldToEmbed(embed, 'Existing Template Names', existingTemplates, {inline: true});
             return Promise.resolve(embed);
         },
         async (fields: Partial<IRaidTemplate>, res: string): Promise<string> => {
@@ -108,8 +108,8 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 '\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as \`<emojiname>\`.');
             clientTools.addEmojiListToEmbed(embed, availableEmojiList);
             clientTools.addFieldToEmbed(embed, 'Example', '\`<losthallskey>\` or \`<losthallskey> 3\`');
-            clientTools.addFieldToEmbed(embed, 'Template Secondary React', fields.secondaryReacts ? fields.secondaryReacts : 'Unset', true);
-            clientTools.addFieldToEmbed(embed, 'React Limit', `${fields.secondaryReactLimits}`, true);
+            clientTools.addFieldToEmbed(embed, 'Template Secondary React', fields.secondaryReacts ? fields.secondaryReacts : 'Unset', {inline: true});
+            clientTools.addFieldToEmbed(embed, 'React Limit', `${fields.secondaryReactLimits}`, {inline: true});
             return Promise.resolve(embed);
         },
         (fields: Partial<IRaidTemplate>, res: string): Promise<string> => {

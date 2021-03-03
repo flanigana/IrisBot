@@ -76,12 +76,17 @@ export abstract class GenericRepository<IEntity extends Template, EntityDoc exte
     }
 
     public async deleteById(id: string): Promise<boolean> {
-        return this.Model.deleteOne({_id: id});
+        return this.Model.deleteOne({_id: id}).then((res) => {
+            if (res.deletedCount > 0) {
+                return true;
+            }
+            return false;
+        });
     }
 
     public async deleteByQuery(query: Query<IEntity>): Promise<boolean> {
-        return this.Model.deleteOne(query as any).then((val) => {
-            if (val > 0) {
+        return this.Model.deleteOne(query as any).then((res) => {
+            if (res.deletedCount > 0) {
                 return true;
             }
             return false;
@@ -89,7 +94,7 @@ export abstract class GenericRepository<IEntity extends Template, EntityDoc exte
     }
 
     public async deleteManyByQuery(query: Query<IEntity>): Promise<number> {
-        return this.Model.deleteMany(query as any).then((val) => {return val});
+        return this.Model.deleteMany(query as any).then((res) => {return res.deletedCount});
     }
 
     private _readMapper(model: EntityDoc): IEntity {
