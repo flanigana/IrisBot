@@ -16,6 +16,7 @@ import { ClientTools } from './src/utilities/client_tools';
 import { IRaidTemplate } from './src/models/templates/raid_template';
 import { RaidController } from './src/controllers/raid_controller';
 import { RaidTemplateController } from './src/controllers/raid_template_controller';
+import { RaidManager } from './src/services/raid_manager';
 
 let container = new Container();
 
@@ -31,6 +32,7 @@ container.bind<GuildService>(TYPES.GuildService).to(GuildService).inSingletonSco
 container.bind<RaidTemplateService>(TYPES.RaidTemplateService).to(RaidTemplateService).inSingletonScope();
 container.bind<MessageDispatcher>(TYPES.MessageDispatcher).to(MessageDispatcher).inSingletonScope();
 container.bind<ClientTools>(TYPES.ClientTools).to(ClientTools).inSingletonScope();
+container.bind<RaidManager>(TYPES.RaidManager).to(RaidManager).inSingletonScope();
 
 // controllers
 container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();

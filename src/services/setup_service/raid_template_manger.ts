@@ -67,6 +67,10 @@ export class RaidTemplateManager extends SetupService<IRaidTemplate> {
             this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${secondaryReacts[i]}: ${secondaryReactLimits[i]}`, {inline: true});
         }
         this._ClientTools.addFieldToEmbed(embed, 'Additional Reacts', additionalReacts.length > 0 ? additionalReacts : 'None');
+
+        if (!finished) {
+            this._ClientTools.addFieldToEmbed(embed, 'Error', 'Name, description, or Primary React left undefined. These are required.');
+        }
         
         return embed;
     }

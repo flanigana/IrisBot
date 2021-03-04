@@ -11,5 +11,6 @@ export const TYPES = {
     SetupService: Symbol('SetupService'),
     ClientTools: Symbol('ClientTools'),
     RaidController: Symbol('RaidController'),
-    RaidTemplateController: Symbol('RaidTemplateController')
+    RaidTemplateController: Symbol('RaidTemplateController'),
+    RaidManager: Symbol('RaidManager'),
 };

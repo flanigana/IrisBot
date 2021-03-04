@@ -1,4 +1,4 @@
-import { Guild, Channel, Role } from 'discord.js';
+import { Guild, Channel, Role, TextChannel, VoiceChannel } from 'discord.js';
 
 /**
  * Module with functions used to retrieve Channel and Role objects within a Discord Guild

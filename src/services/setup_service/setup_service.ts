@@ -5,6 +5,7 @@ import { Template } from '../../models/templates/template';
 import { Bot } from '../../bot';
 import { PageSet } from './pages/page_set';
 import { ClientTools } from '../../utilities/client_tools';
+import logger from '../../../winston';
 
 @injectable()
 export abstract class SetupService<E extends Template> {
@@ -59,6 +60,7 @@ export abstract class SetupService<E extends Template> {
     private async processCollection(collector: ReactionCollector, reaction: MessageReaction): Promise<Message> {
         switch (reaction.emoji.name) {
             case '❌': // cancel
+                logger.debug('Guild:%s|%s - User:%s|%s cancelled the SetupService.', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username);
                 collector.stop();
                 this._Bot.userUnignore(this.authorId, this.channel.id);
                 return this._view.edit(this.getCancelledPage());
@@ -78,10 +80,10 @@ export abstract class SetupService<E extends Template> {
                         collector.stop();
                         this._Bot.userUnignore(this.authorId, this.channel.id);
                         this.save();
+                        logger.info('Guild:%s|%s - User:%s|%s saved a template:%s', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username, this._template);
                         return this._view.edit(this.getEndPage(true));
                     } else {
-                        let embed: MessageEmbed = this.getEndPage();
-                        this._ClientTools.addFieldToEmbed(embed, 'Error', 'Name, description, or Primary React left undefined. These are required.');
+                        let embed: MessageEmbed = this.getEndPage(false);
                         return this._view.edit(embed);
                     }
                 }

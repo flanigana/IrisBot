@@ -34,7 +34,8 @@
     "inversify": "^5.0.5",
     "mongodb": "^3.6.3",
     "mongoose": "^5.11.13",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",

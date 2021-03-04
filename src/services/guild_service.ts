@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
 import { IGuild } from '../models/guild';
-import { Guild as DiscordGuild } from 'discord.js';
+import { Guild as DiscordGuild, Guild, GuildMember } from 'discord.js';
 import { GuildRepository } from '../data_access/repositories/guild_repository';
 
 @injectable()
@@ -13,6 +13,15 @@ export class GuildService {
         @inject(TYPES.GuildRepository) guildRepo: GuildRepository
     ) {
         this._GuildRepo = guildRepo;
+    }
+
+    /**
+     * Finds the GuildMember with the given id in the given Guild
+     * @param guild Guild to search for member in
+     * @param memberId id of the member to search for
+     */
+    public findGuildMember(guild: Guild, memberId: string): GuildMember {
+        return guild.members.cache.find(m => (m.id === memberId));
     }
 
     /**
