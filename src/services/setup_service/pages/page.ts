@@ -65,7 +65,7 @@ export class DynamicPage<E extends Template> extends Page<E> {
 
 export class DynamicRepeatedPage<E extends Template> extends DynamicPage<E> {
 
-    private readonly _DefaultFields: Partial<E>;
+    private readonly _DefaultFields: E;
 
     private _allFields: Partial<E>[];
     private _position: number;

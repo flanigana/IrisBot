@@ -4,7 +4,7 @@ import { Message } from 'discord.js';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { ClientTools } from '../utilities/client_tools';
 import { RaidTemplateController } from './raid_template_controller';
-import { RaidManager } from '../services/raid_manager';
+import { RaidManager } from '../services/raid_manager/raid_manager';
 
 @injectable()
 export class RaidController {

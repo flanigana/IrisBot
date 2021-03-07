@@ -89,7 +89,7 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
             }
         }
     ));
-    let secondaryParts: Partial<IRaidTemplate>[] = [];
+    let secondaryParts = [];
     for (let i=0; i<template.secondaryReacts.length; i++) {
         secondaryParts.push({
             secondaryReacts: template.secondaryReacts[i],
@@ -112,7 +112,7 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
             clientTools.addFieldToEmbed(embed, 'React Limit', `${fields.secondaryReactLimits}`, {inline: true});
             return Promise.resolve(embed);
         },
-        (fields: Partial<IRaidTemplate>, res: string): Promise<string> => {
+        (fields: any, res: string): Promise<string> => {
             const args = MessageParser.parseMessage(res);
             const emoji = clientTools.getEmoji(args[0], guildId);
             if (!emoji) {

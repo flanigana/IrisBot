@@ -16,7 +16,7 @@ import { ClientTools } from './src/utilities/client_tools';
 import { IRaidTemplate } from './src/models/templates/raid_template';
 import { RaidController } from './src/controllers/raid_controller';
 import { RaidTemplateController } from './src/controllers/raid_template_controller';
-import { RaidManager } from './src/services/raid_manager';
+import { RaidManager } from './src/services/raid_manager/raid_manager';
 
 let container = new Container();
 

@@ -8,8 +8,8 @@ export interface IRaidTemplate extends Template {
     name: string;
     description: string;
     primaryReact: string;
-    secondaryReacts: string[] | string;
-    secondaryReactLimits: number[] | number;
+    secondaryReacts: string[];
+    secondaryReactLimits: number[];
     additionalReacts: string[];
 }
 

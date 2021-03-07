@@ -15,6 +15,22 @@ export class GuildService {
         this._GuildRepo = guildRepo;
     }
 
+    public isAdmin(guild: Guild, memberId: string): boolean {
+        return true;
+    }
+
+    public isMod(guild: Guild, memberId: string): boolean {
+        return true;
+    }
+    
+    public isRaidLeader(guild: Guild, memberId: string): boolean {
+        return true;
+    }
+
+    public isNitroBooster(guild: Guild, memberId: string): boolean {
+        return true;
+    }
+
     /**
      * Finds the GuildMember with the given id in the given Guild
      * @param guild Guild to search for member in
