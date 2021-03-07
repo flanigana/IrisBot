@@ -21,15 +21,15 @@ export class Page<E extends Template> {
 }
 
 export class DynamicPage<E extends Template> extends Page<E> {
-    protected readonly _PageBuilder: (fields: Partial<E>) => Promise<MessageEmbed>;
-    protected readonly _Validator: (fields: Partial<E>, res: string) => Promise<string>;
+    protected readonly _PageBuilder: ((fields: Partial<E>) => MessageEmbed) | ((fields: Partial<E>) => Promise<MessageEmbed>);
+    protected readonly _Validator: ((fields: Partial<E>, res: string) => string) | ((fields: Partial<E>, res: string) => Promise<string>);
     protected _fields: Partial<E>;
     protected _status: string;
 
     public constructor(
         fields: Partial<E>,
-        pageBuilder: (fields: Partial<E>) => Promise<MessageEmbed>,
-        validator: (fields: Partial<E>, res: string) => Promise<string>
+        pageBuilder: ((fields: Partial<E>) => MessageEmbed) | ((fields: Partial<E>) => Promise<MessageEmbed>),
+        validator?: ((fields: Partial<E>, res: string) => string) | ((fields: Partial<E>, res: string) => Promise<string>)
     ) {
         super(null);
         this._PageBuilder = pageBuilder;
@@ -42,7 +42,7 @@ export class DynamicPage<E extends Template> extends Page<E> {
     }
 
     public buildPage(): Promise<MessageEmbed> {
-        return this._PageBuilder(this._fields).then((embed) => {
+        return Promise.resolve(this._PageBuilder(this._fields)).then((embed) => {
             if (this._status && this._status !== '') {
                 embed.addField('Status', this._status);
                 this._status = '';
@@ -56,7 +56,7 @@ export class DynamicPage<E extends Template> extends Page<E> {
         if (!this._Validator) {
             return Promise.resolve(this._fields);
         }
-        return this._Validator(this._fields, res).then((status) => {
+        return Promise.resolve(this._Validator(this._fields, res)).then((status) => {
             this._status = status;
             return this._fields;
         });
@@ -72,8 +72,8 @@ export class DynamicRepeatedPage<E extends Template> extends DynamicPage<E> {
 
     public constructor(
         fields: Partial<E>[],
-        pageBuilder: (fields: Partial<E>) => Promise<MessageEmbed>,
-        validator: (fields: Partial<E>, res: string) => Promise<string>,
+        pageBuilder: ((fields: Partial<E>) => MessageEmbed) | ((fields: Partial<E>) => Promise<MessageEmbed>),
+        validator: ((fields: Partial<E>, res: string) => string) | ((fields: Partial<E>, res: string) => Promise<string>),
         defaultFields: any,
         ) {
         super(defaultFields, pageBuilder, validator);
@@ -153,7 +153,7 @@ export class DynamicRepeatedPage<E extends Template> extends DynamicPage<E> {
     }
 
     public buildPage(): Promise<MessageEmbed> {
-        return this._PageBuilder(this._fields).then((embed) => {
+        return Promise.resolve(this._PageBuilder(this._fields)).then((embed) => {
             if (this._status && this._status !== '') {
                 embed.addField('Status', this._status);
                 this._status = '';
@@ -167,7 +167,7 @@ export class DynamicRepeatedPage<E extends Template> extends DynamicPage<E> {
         if (!this._Validator) {
             return Promise.resolve(this._fields);
         }
-        return this._Validator(this._fields, res).then((status) => {
+        return Promise.resolve(this._Validator(this._fields, res)).then((status) => {
             this._status = status;
             return this.joinPageFields();
         });

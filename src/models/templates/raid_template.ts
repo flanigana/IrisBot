@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { DocumentBuilder } from '../DocumentBuilder';
+import { DocumentBuilder } from '../document_builder';
 import { Template } from './template';
 
 export interface IRaidTemplate extends Template {

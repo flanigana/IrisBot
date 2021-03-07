@@ -5,6 +5,7 @@ import { MessageParser } from '../utilities/message_parser';
 import { IGuild } from '../models/guild';
 import { GuildService } from './guild_service';
 import { RaidController } from '../controllers/raid_controller';
+import { ConfigController } from '../controllers/config_controller';
 
 /**
  * Responsible for processing and redirecting messages to the service dealing with their respective command and origin
@@ -15,15 +16,18 @@ export class MessageDispatcher {
     private readonly _Client: Client;
     private readonly _GuildService: GuildService;
     private readonly _RaidController: RaidController;
+    private readonly _ConfigController: ConfigController;
 
     public constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.GuildService) guildService: GuildService,
-        @inject(TYPES.RaidController) raidController: RaidController
+        @inject(TYPES.RaidController) raidController: RaidController,
+        @inject(TYPES.ConfigController) configController: ConfigController
     ) {
         this._Client = client;
         this._GuildService = guildService;
         this._RaidController = raidController;
+        this._ConfigController = configController;
     }
 
     /**
@@ -41,6 +45,7 @@ export class MessageDispatcher {
      * @param message the received Message
      */
     public async handleGuildMessage(message: Message) {
+        await this._GuildService.validateGuildDoc(message.guild);
         const guild = await this._GuildService.findById(message.guild.id);
         if (!message.content.startsWith(guild.prefix)) {
             return;
@@ -50,6 +55,9 @@ export class MessageDispatcher {
         switch (args[0].toLowerCase()) {
             case 'raid':
                 this._RaidController.handleMessage(message, args);
+                break;
+            case 'config':
+                this._ConfigController.handleMessage(message, args);
                 break;
         }
     }

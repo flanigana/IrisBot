@@ -1,11 +1,13 @@
 import * as mongoose from 'mongoose';
-import { DocumentBuilder } from './DocumentBuilder';
+import { DocumentBuilder } from './document_builder';
 
 export interface IGuild {
     _id: string;
     name: string;
     owner: string;
     prefix: string;
+    admins: string[];
+    mods: string[];
 }
 
 export interface GuildDoc extends mongoose.Document {
@@ -13,6 +15,8 @@ export interface GuildDoc extends mongoose.Document {
     name: string;
     owner: string;
     prefix: string;
+    admins: string[];
+    mods: string[];
 }
 
 const guildSchema = new mongoose.Schema({
@@ -30,6 +34,14 @@ const guildSchema = new mongoose.Schema({
     }, 
     prefix: {
         type: String,
+        required: true
+    },
+    admins: {
+        type: [String],
+        required: true
+    },
+    mods: {
+        type: [String],
         required: true
     }
 });

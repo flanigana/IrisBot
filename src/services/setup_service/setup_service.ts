@@ -34,16 +34,9 @@ export abstract class SetupService<E extends Template> {
     }
 
     protected abstract save(): Promise<boolean>;
-    protected abstract getStartPage(): MessageEmbed;
     protected abstract getEndPage(finished?: boolean): MessageEmbed;
     protected abstract createPageSet(): PageSet<E>;
     protected abstract get isFinished(): boolean;
-
-    private getCancelledPage(): MessageEmbed {
-        return this._ClientTools.getStandardEmbed()
-            .setTitle('Service Cancelled')
-            .setDescription('No changes were saved.');
-    }
 
     protected get authorId(): string {
         return this._Message.author.id;
@@ -55,6 +48,20 @@ export abstract class SetupService<E extends Template> {
 
     protected get channel() {
         return this._Message.channel;
+    }
+
+    protected getStartPage(): MessageEmbed {
+        return this._ClientTools.getStandardEmbed()
+            .setTitle('Setup Service')
+            .setDescription('To use this service, send a response in this channel whenever prompted. ' +
+            '\nYou can navigate the pages by reacting with ⬅ and ➡. To change pages again, just unreact and react again. ' +
+            '\nTo cancel this setup at any time, react with ❌. Doing this will discard all changes made. ');
+    }
+
+    private getCancelledPage(): MessageEmbed {
+        return this._ClientTools.getStandardEmbed()
+            .setTitle('Service Cancelled')
+            .setDescription('No changes were saved.');
     }
 
     private async processCollection(collector: ReactionCollector, reaction: MessageReaction): Promise<Message> {

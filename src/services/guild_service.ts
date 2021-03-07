@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
 import { IGuild } from '../models/guild';
-import { Guild as DiscordGuild, Guild, GuildMember } from 'discord.js';
+import { Guild, GuildMember } from 'discord.js';
 import { GuildRepository } from '../data_access/repositories/guild_repository';
 
 @injectable()
@@ -56,15 +56,34 @@ export class GuildService {
     }
 
     /**
+     * Validates that the guild has an existing database entry with all of the current fields required for the IGuild interface.
+     * If the database document does not exist, it is created.
+     * If the dabase document is missing fields, defaults are added for each missing field.
+     * @param guild Discord Guild object to read information from
+     */
+    public async validateGuildDoc(guild: Guild): Promise<void> {
+        const doc = await this._GuildRepo.findById(guild.id);
+        const def = this.getDefaultGuildDoc(guild);
+        if (doc) {
+            for (const prop in def) {
+                def[prop] = doc[prop];
+            }
+        }
+        this._GuildRepo.save(def);
+    }
+
+    /**
      * Generates the default database document for a given Discord Guild
      * @param guild Discord Guild object to read information from
      */
-    private getDefaultGuildDoc(guild: DiscordGuild): IGuild {
+    private getDefaultGuildDoc(guild: Guild): IGuild {
         return {
             _id: guild.id,
             name: guild.name,
             owner: guild.ownerID,
-            prefix: '!'
+            prefix: '!',
+            admins: [],
+            mods: []
         };
     }
 
@@ -72,7 +91,7 @@ export class GuildService {
      * Generates an updated database document for a given Discord Guild
      * @param guild Discord Guild object to read information from
      */
-    private async getUpdatedGuildDoc(guild: DiscordGuild): Promise<IGuild> {
+    private async getUpdatedGuildDoc(guild: Guild): Promise<IGuild> {
         return this._GuildRepo.findById(guild.id).then((iguild) => {
             iguild.name = guild.name;
             iguild.owner = guild.ownerID;
@@ -84,7 +103,7 @@ export class GuildService {
      * Creates or updates the given Guild in the database when changes occur to the Discord Guild object
      * @param guild Discord Guild object to read information from
      */
-    public async saveDiscordGuild(guild: DiscordGuild): Promise<boolean> {
+    public async saveDiscordGuild(guild: Guild): Promise<boolean> {
         return this._GuildRepo.existsById(guild.id).then(async (exists) => {
             let guildDoc;
             if (!exists) { // create Guild in database if it does not exist

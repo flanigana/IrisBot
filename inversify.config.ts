@@ -17,6 +17,9 @@ import { IRaidTemplate } from './src/models/templates/raid_template';
 import { RaidController } from './src/controllers/raid_controller';
 import { RaidTemplateController } from './src/controllers/raid_template_controller';
 import { RaidManager } from './src/services/raid_manager/raid_manager';
+import { GuildConfigService } from './src/services/setup_service/guild_config_service';
+import { IGuild } from './src/models/guild';
+import { ConfigController } from './src/controllers/config_controller';
 
 let container = new Container();
 
@@ -37,6 +40,7 @@ container.bind<RaidManager>(TYPES.RaidManager).to(RaidManager).inSingletonScope(
 // controllers
 container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
 container.bind<RaidTemplateController>(TYPES.RaidTemplateController).to(RaidTemplateController).inSingletonScope();
+container.bind<ConfigController>(TYPES.ConfigController).to(ConfigController).inSingletonScope();
 
 // factories
 container.bind<interfaces.Factory<SetupService<Template>>>(TYPES.SetupService).toFactory<SetupService<Template>>(() => {
@@ -51,6 +55,9 @@ container.bind<interfaces.Factory<SetupService<Template>>>(TYPES.SetupService).t
                 } else {
                     return new RaidTemplateManager(bot, clientTools, raidTemplateService, message);
                 }
+            case SetupType.GuildConfig:
+                const guildService = container.get<GuildService>(TYPES.GuildService);
+                return new GuildConfigService(bot, clientTools, guildService, message, template as IGuild);
         }
     }
 });

@@ -4,6 +4,7 @@ import { Client, Guild, GuildEmoji, MessageEmbed } from 'discord.js';
 
 type FieldOptions = {
     inline: boolean,
+    default: string,
     separator: string
 }
 @injectable()
@@ -42,6 +43,7 @@ export class ClientTools {
     public addFieldToEmbed(embed: MessageEmbed, name: string, value: string | string[], options?: Partial<FieldOptions>): MessageEmbed {
         const opts = Object.assign({
             inline: false,
+            default: undefined,
             separator: ', '
         }, options);
         
@@ -49,7 +51,11 @@ export class ClientTools {
             value = value.join(opts.separator);
         }
         if (!value || value.trim().length === 0) {
-            return embed;
+            if (opts.default) {
+                value = opts.default;
+            } else {
+                return embed;
+            }
         }
         return embed.addField(name, value, opts.inline);
     }

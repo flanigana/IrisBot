@@ -19,7 +19,7 @@ export class Bot {
     private readonly _GuildService: GuildService;
     private readonly _MessageDispatcher: MessageDispatcher;
 
-    private readonly _Prefixes = ['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!'];
+    public static readonly PREFIXES = new Set<string>(['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!']);
 
     private _ignoreList: Map<string, Set<string>>; // used to isolate users using the template service
 
@@ -37,6 +37,12 @@ export class Bot {
         this._ignoreList = new Map();
     }
 
+    /**
+     * Ignores a user within a channel.
+     * Used in SetupService to focus responses for the service and prevent confusion
+     * @param userId id of user to ignore
+     * @param channelId id of channel to ignore user in
+     */
     public userIgnore(userId: string, channelId: string): void {
         if (!this._ignoreList.has(userId)) {
             this._ignoreList.set(userId, new Set([channelId]));
@@ -45,6 +51,11 @@ export class Bot {
         }
     }
 
+    /**
+     * Unignores an ignored user
+     * @param userId id of user to unignore
+     * @param channelId id of channel to unignore user in
+     */
     public userUnignore(userId: string, channelId: string): void {
         if (!this._ignoreList.has(userId) || !this._ignoreList.get(userId).has(channelId)) {
             return;
@@ -52,10 +63,20 @@ export class Bot {
         this._ignoreList.get(userId).delete(channelId);
     }
 
+    /**
+     * Removes a listener from the bot
+     * @param event event to remove from
+     * @param listener listener to remove
+     */
     public removeListener<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): void {
         this._Client.removeListener(event, listener);
     }
 
+    /**
+     * Adds a new listener to the bot
+     * @param event event to listen for
+     * @param listener callback function when the event happens
+     */
     public addListener<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): void {
         this._Client.on(event, listener);
     }
@@ -63,12 +84,15 @@ export class Bot {
     /**
      * Returns true if message content begins with one of the common prefixes and false otherwise.
      * Common prefixes include: ['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!']
-     * @param message received message
+     * @param message content of the message received
      */
-    public startsWithValidPrefix(message: Message): boolean {
-        return !this._Prefixes.every((prefix: string) => {
-            return !message.content.startsWith(prefix);
-        })
+    public startsWithValidPrefix(message: string): boolean {
+        for (const p of Bot.PREFIXES) {
+            if (message.startsWith(p)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -78,8 +102,10 @@ export class Bot {
     public listen(login = true): Promise<string> {
         // on message
         this._Client.on<'message'>('message', async (message: Message) => {
-            let clientTools = new ClientTools(this._Client);
-            if (message.author.bot || !this.startsWithValidPrefix(message)) {
+            if (message.author.bot) {
+                return;
+            }
+            if (message.channel.type === 'text' && !this.startsWithValidPrefix(message.content)) {
                 return;
             }
             if (this._ignoreList.has(message.author.id) && this._ignoreList.get(message.author.id).has(message.channel.id)) {

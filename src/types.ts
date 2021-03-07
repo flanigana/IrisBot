@@ -8,9 +8,11 @@ export const TYPES = {
     GuildService: Symbol('GuildService'),
     RaidTemplateRepository: Symbol('RaidTemplateRepository'),
     RaidTemplateService: Symbol('RaidTemplateService'),
+    GuildConfigService: Symbol('GuildConfigService'),
     SetupService: Symbol('SetupService'),
     ClientTools: Symbol('ClientTools'),
     RaidController: Symbol('RaidController'),
     RaidTemplateController: Symbol('RaidTemplateController'),
     RaidManager: Symbol('RaidManager'),
+    ConfigController: Symbol('ConfigController'),
 };

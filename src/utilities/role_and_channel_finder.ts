@@ -79,4 +79,52 @@ export module RolesAndChannels {
             return getRoleByName(guild, role);
         }
     };
+
+    /**
+     * Creates a merged list of Roles or Channels from an original list and a new list of arguments.
+     * If an argument is preceded by a +, it will add that Role or Channel to the list.
+     * If an argument is preceded by a -, it will remove that Role or Channel from the original list.
+     * If no +'s or -'s are included, then none of the original Roles or Channels will be kept and the list returned will only contain the ones in the arguments.
+     * @param guild Discord Guild containing Roles and Channels
+     * @param orig original list of Roles or Channels
+     * @param args list of arguments with Roles or Channels
+     * @param type whether the arguments expected are of type 'role' or 'channel'
+     * @returns a merged or new list depending on the arguments contained
+     */
+    export function getUpdatedList(guild: Guild, orig: string[], args: string[], type: 'role' | 'channel'): string[] {
+        const origList = new Set<string>(orig);
+        const newOnly = new Set<string>();
+        let reset = true;
+        for (let arg of args) {
+            let mode = '';
+            if (arg.startsWith('-')) {
+                mode = '-';
+                reset = false;
+                arg = arg.substr(1);
+            } else if (arg.startsWith('+')) {
+                mode = '+';
+                reset = false;
+                arg = arg.substr(1);
+            }
+            if (type === 'role') {
+                arg = getRole(guild, arg)?.toString();
+            } else {
+                arg = getChannel(guild, arg)?.toString();
+            }
+            if (arg) {
+                if (mode === '-') {
+                    origList.delete(arg);
+                } else {
+                    newOnly.add(arg);
+                }
+            }
+        }
+
+        if (!reset) {
+            newOnly.forEach(r => origList.add(r));
+            return Array.from(origList);
+        } else {
+            return Array.from(newOnly);
+        }
+    }
 }

@@ -1,7 +1,7 @@
 import { Repository, Query } from './repositories';
 import { injectable, unmanaged } from 'inversify';
 import { Document } from 'mongoose';
-import { DocumentBuilder } from '../../models/DocumentBuilder';
+import { DocumentBuilder } from '../../models/document_builder';
 import { Template } from '../../models/templates/template';
 
 @injectable()
