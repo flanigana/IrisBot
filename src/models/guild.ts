@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { DocumentBuilder } from './document_builder';
 
 export interface IGuild {
     _id: string;
@@ -46,14 +45,6 @@ const guildSchema = new mongoose.Schema({
     }
 });
 
-interface GuildModelInterface extends DocumentBuilder<IGuild, GuildDoc> {
-    build(attr: IGuild): GuildDoc;
-}
-
-guildSchema.statics.build = (attr: IGuild): GuildDoc => {
-    return new Guild(attr);
-}
-
-const Guild = mongoose.model<GuildDoc, GuildModelInterface>('Guild', guildSchema);
+const Guild = mongoose.model<GuildDoc>('Guild', guildSchema);
 
 export { Guild }

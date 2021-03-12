@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { DocumentBuilder } from '../document_builder';
 import { Template } from './template';
 
 export interface IRaidTemplate extends Template {
@@ -11,20 +10,6 @@ export interface IRaidTemplate extends Template {
     secondaryReacts: string[];
     secondaryReactLimits: number[];
     additionalReacts: string[];
-}
-
-export function getRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
-    let template = {
-        guildId: undefined,
-        name: undefined,
-        description: undefined,
-        primaryReact: undefined,
-        secondaryReacts: [],
-        secondaryReactLimits: [],
-        additionalReacts: []
-    };
-
-    return Object.assign<IRaidTemplate, Partial<IRaidTemplate>>(template, fields);
 }
 export interface RaidTemplateDoc extends mongoose.Document {
     guildId: string;
@@ -68,14 +53,20 @@ const raidTemplateSchema = new mongoose.Schema({
     }
 });
 
-interface RaidTemplateModelInterface extends DocumentBuilder<IRaidTemplate, RaidTemplateDoc> {
-    build(attr: IRaidTemplate): RaidTemplateDoc;
-}
-
-raidTemplateSchema.statics.build = (attr: IRaidTemplate): RaidTemplateDoc => {
-    return new RaidTemplate(attr);
-}
-
-const RaidTemplate = mongoose.model<RaidTemplateDoc, RaidTemplateModelInterface>('RaidTemplate', raidTemplateSchema);
+const RaidTemplate = mongoose.model<RaidTemplateDoc>('RaidTemplate', raidTemplateSchema);
 
 export { RaidTemplate }
+
+export function getRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
+    let template = {
+        guildId: undefined,
+        name: undefined,
+        description: undefined,
+        primaryReact: undefined,
+        secondaryReacts: [],
+        secondaryReactLimits: [],
+        additionalReacts: []
+    };
+
+    return Object.assign<IRaidTemplate, Partial<IRaidTemplate>>(template, fields);
+}
