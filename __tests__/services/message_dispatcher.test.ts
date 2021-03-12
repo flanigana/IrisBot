@@ -1,4 +1,4 @@
-import { MessageDispatcher } from '../../src/services/message_dispatcher';
+import { MessageDispatcher } from '../../src/general/message_dispatcher';
 import container from '../../inversify.config';
 import { TYPES } from '../../src/types';
 import { Client, TextChannel, Message, Guild } from 'discord.js';

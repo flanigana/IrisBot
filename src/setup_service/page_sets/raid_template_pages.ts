@@ -1,12 +1,12 @@
-import container from '../../../../inversify.config';
-import { TYPES } from '../../../types';
+import container from '../../../inversify.config';
+import { TYPES } from '../../types';
 import { PageSet } from '../pages/page_set';
 import { DynamicPage, DynamicRepeatedPage } from '../pages/page';
-import { MessageParser } from '../../../utilities/message_parser';
-import { IRaidTemplate } from '../../../models/templates/raid_template';
+import { MessageParser } from '../../utilities/message_parser';
+import { IRaidTemplate } from '../../models/templates/raid_template';
 import { MessageEmbed } from 'discord.js';
-import { RaidTemplateService } from '../../raid_template_service';
-import { ClientTools } from '../../../utilities/client_tools';
+import { RaidTemplateService } from '../../services/raid_template_service';
+import { ClientTools } from '../../utilities/client_tools';
 
 export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, template: Partial<IRaidTemplate>, guildId: string): void {
     const raidTemplateService = container.get<RaidTemplateService>(TYPES.RaidTemplateService);

@@ -1,11 +1,11 @@
 import { Guild, MessageEmbed, Role } from 'discord.js';
-import container from '../../../../inversify.config';
-import { Bot } from '../../../bot';
-import { IGuild } from '../../../models/guild';
-import { TYPES } from '../../../types';
-import { ClientTools } from '../../../utilities/client_tools';
-import { MessageParser } from '../../../utilities/message_parser';
-import { RolesAndChannels } from '../../../utilities/role_and_channel_finder';
+import container from '../../../inversify.config';
+import { Bot } from '../../bot';
+import { IGuild } from '../../models/guild';
+import { TYPES } from '../../types';
+import { ClientTools } from '../../utilities/client_tools';
+import { MessageParser } from '../../utilities/message_parser';
+import { RolesAndChannels } from '../../utilities/role_and_channel_finder';
 import { DynamicPage } from '../pages/page';
 import { PageSet } from '../pages/page_set';
 

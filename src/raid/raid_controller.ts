@@ -4,7 +4,7 @@ import { Message } from 'discord.js';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { ClientTools } from '../utilities/client_tools';
 import { RaidTemplateController } from './raid_template_controller';
-import { RaidManager } from '../services/raid_manager/raid_manager';
+import { RaidManager } from './raid_manager/raid_manager';
 
 @injectable()
 export class RaidController {
@@ -71,7 +71,7 @@ export class RaidController {
             case 'delete': // raid delete :templateName
                 this._RaidTemplateController.handleMessage(message, args);
                 break;
-            case 'start': // raid start :templateName :alertTextChannel :idleVoiceChannel :destVoiceChannel ?:location
+            case 'start': // raid start :templateName :alertTextChannel :destVoiceChannel ?:location
                 this._RaidManager.startRaid(message, args);
                 break;
         }

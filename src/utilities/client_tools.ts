@@ -117,7 +117,7 @@ export class ClientTools {
      * @param guildId id of guild to check for emoji
      */
     public getGuildEmoji(emojiName: string, guildId?: string): GuildEmoji {
-        let matchedEmojis = this._Client.emojis.cache.filter(({name, guild}) => ((name === emojiName) && (this._BotGuilds.has(guild.id) || (guild.id === guildId))));
+        const matchedEmojis = this._Client.emojis.cache.filter(({name, guild}) => ((name === emojiName) && (this._BotGuilds.has(guild.id) || (guild.id === guildId))));
         if (matchedEmojis.size === 0) {
             return undefined;
         } else if (matchedEmojis.size > 1) {
@@ -145,7 +145,7 @@ export class ClientTools {
             return emojiName;
         } 
         const match = fullEmoji.exec(emojiName); // ['<:emojiName:id>', 'emojiName', 'id']
-        if (match?.length > 2) { // full emoji given, check that it exists in the available Guilds
+        if (match && match[2]) { // full emoji given, check that it exists in the available Guilds
             const emoji = this._Client.emojis.cache.get(match[2]);
             if (this._BotGuilds.has(emoji?.guild.id) || (emoji?.guild.id === guildId)) {
                 return emoji;

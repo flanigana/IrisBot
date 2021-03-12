@@ -1,15 +1,15 @@
 import { inject, injectable, interfaces } from 'inversify';
 import container from '../../inversify.config';
 import { TYPES } from '../types';
-import { SetupService } from '../services/setup_service/setup_service';
-import { SetupType } from '../services/setup_service/setup_type';
+import { SetupService } from '../setup_service/setup_service';
+import { SetupType } from '../setup_service/setup_type';
 import { Message, MessageEmbed } from 'discord.js';
 import { IRaidTemplate } from '../models/templates/raid_template';
-import { RaidTemplateManager } from '../services/setup_service/raid_template_manger';
+import { RaidTemplateManager } from '../setup_service/raid_template_manger';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { ClientTools } from '../utilities/client_tools';
 import { Bot } from '../bot';
-import logger from '../../winston';
+import logger from '../utilities/logging';
 
 @injectable()
 export class RaidTemplateController {

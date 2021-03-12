@@ -7,19 +7,19 @@ import { GuildService } from './src/services/guild_service';
 import { GuildRepository } from './src/data_access/repositories/guild_repository';
 import { RaidTemplateRepository } from './src/data_access/repositories/raid_template_repository';
 import { RaidTemplateService } from './src/services/raid_template_service';
-import { MessageDispatcher } from './src/services/message_dispatcher';
-import { SetupService } from './src/services/setup_service/setup_service';
-import { SetupType } from './src/services/setup_service/setup_type';
+import { MessageDispatcher } from './src/general/message_dispatcher';
+import { SetupService } from './src/setup_service/setup_service';
+import { SetupType } from './src/setup_service/setup_type';
 import { Template } from './src/models/templates/template';
-import { RaidTemplateManager } from './src/services/setup_service/raid_template_manger';
+import { RaidTemplateManager } from './src/setup_service/raid_template_manger';
 import { ClientTools } from './src/utilities/client_tools';
 import { IRaidTemplate } from './src/models/templates/raid_template';
-import { RaidController } from './src/controllers/raid_controller';
-import { RaidTemplateController } from './src/controllers/raid_template_controller';
-import { RaidManager } from './src/services/raid_manager/raid_manager';
-import { GuildConfigService } from './src/services/setup_service/guild_config_service';
+import { RaidController } from './src/raid/raid_controller';
+import { RaidTemplateController } from './src/raid/raid_template_controller';
+import { RaidManager } from './src/raid/raid_manager/raid_manager';
+import { GuildConfigService } from './src/setup_service/guild_config_service';
 import { IGuild } from './src/models/guild';
-import { ConfigController } from './src/controllers/config_controller';
+import { ConfigController } from './src/general/config_controller';
 
 let container = new Container();
 
@@ -51,7 +51,7 @@ container.bind<interfaces.Factory<SetupService<Template>>>(TYPES.SetupService).t
             case SetupType.RaidTemplate:
                 const raidTemplateService = container.get<RaidTemplateService>(TYPES.RaidTemplateService);
                 if (template) {
-                    return new RaidTemplateManager(bot, clientTools, raidTemplateService, message, template as IRaidTemplate);
+                    return new RaidTemplateManager(bot, clientTools, raidTemplateService, message, template as IRaidTemplate, true);
                 } else {
                     return new RaidTemplateManager(bot, clientTools, raidTemplateService, message);
                 }

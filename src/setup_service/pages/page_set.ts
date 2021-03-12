@@ -1,5 +1,5 @@
 import { MessageEmbed } from 'discord.js';
-import { Template } from '../../../models/templates/template';
+import { Template } from '../../models/templates/template';
 import { DynamicRepeatedPage, Page } from './page';
 
 export class PageSet<E extends Template> {

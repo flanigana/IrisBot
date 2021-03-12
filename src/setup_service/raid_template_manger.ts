@@ -1,12 +1,12 @@
 import { injectable, inject, unmanaged } from 'inversify';
-import { TYPES } from '../../types';
+import { TYPES } from '../types';
 import { SetupService } from './setup_service';
-import { Bot } from '../../bot';
-import { IRaidTemplate, getRaidTemplate } from '../../models/templates/raid_template';
+import { Bot } from '../bot';
+import { IRaidTemplate, getRaidTemplate } from '../models/templates/raid_template';
 import { Message, MessageEmbed } from 'discord.js';
-import { RaidTemplateService } from '../raid_template_service';
+import { RaidTemplateService } from '../services/raid_template_service';
 import { Page, DynamicPage } from './pages/page';
-import { ClientTools } from '../../utilities/client_tools';
+import { ClientTools } from '../utilities/client_tools';
 import { PageSet } from './pages/page_set';
 import addRaidTemplatePages from './page_sets/raid_template_pages';
 
@@ -20,9 +20,10 @@ export class RaidTemplateManager extends SetupService<IRaidTemplate> {
         @inject(TYPES.ClientTools) clientTools: ClientTools,
         @inject(TYPES.RaidTemplateService) raidTemplateService: RaidTemplateService,
         @unmanaged() message: Message,
-        @unmanaged() template = getRaidTemplate({guildId: message.guild.id})
+        @unmanaged() template = getRaidTemplate({guildId: message.guild.id}),
+        @unmanaged() updatable = false
     ) {
-        super(bot, clientTools, message, template);
+        super(bot, clientTools, message, template, updatable);
         this._RaidTemplateService = raidTemplateService;
         this._pageSet = this.createPageSet();
     }
@@ -50,6 +51,8 @@ export class RaidTemplateManager extends SetupService<IRaidTemplate> {
             .setTitle('Raid Template Service');
     }
     
+    // TODO: Add end instructions to finish service
+    // TODO: Add command to use template after creation
     public getEndPage(finished?: boolean): MessageEmbed {
         const {name, description, primaryReact, secondaryReacts, secondaryReactLimits, additionalReacts} = this._template;
         const embed: MessageEmbed = this._ClientTools.getStandardEmbed()

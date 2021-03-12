@@ -3,9 +3,9 @@ import { TYPES } from '../types';
 import { Client, Message } from 'discord.js';
 import { MessageParser } from '../utilities/message_parser';
 import { IGuild } from '../models/guild';
-import { GuildService } from './guild_service';
-import { RaidController } from '../controllers/raid_controller';
-import { ConfigController } from '../controllers/config_controller';
+import { GuildService } from '../services/guild_service';
+import { RaidController } from '../raid/raid_controller';
+import { ConfigController } from './config_controller';
 
 /**
  * Responsible for processing and redirecting messages to the service dealing with their respective command and origin

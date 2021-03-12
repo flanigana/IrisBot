@@ -1,4 +1,4 @@
-import { Template } from '../../../models/templates/template';
+import { Template } from '../../models/templates/template';
 import { MessageEmbed } from 'discord.js';
 
 export class Page<E extends Template> {

@@ -15,29 +15,79 @@ export class GuildService {
         this._GuildRepo = guildRepo;
     }
 
-    public isAdmin(guild: Guild, memberId: string): boolean {
-        return true;
-    }
-
-    public isMod(guild: Guild, memberId: string): boolean {
-        return true;
-    }
-    
-    public isRaidLeader(guild: Guild, memberId: string): boolean {
-        return true;
-    }
-
-    public isNitroBooster(guild: Guild, memberId: string): boolean {
-        return true;
-    }
-
     /**
      * Finds the GuildMember with the given id in the given Guild
      * @param guild Guild to search for member in
      * @param memberId id of the member to search for
      */
-    public findGuildMember(guild: Guild, memberId: string): GuildMember {
+    public static findGuildMember(guild: Guild, memberId: string): GuildMember {
         return guild.members.cache.find(m => (m.id === memberId));
+    }
+
+    /**
+     * Checks to see if the given GuildMember has the given role
+     * @param member GuildMember to check roles of
+     * @param role string form of role to check for
+     * @returns whether the member has the given role
+     */
+    public static hasRole(member: GuildMember, role: string): boolean {
+        return member.roles.cache.find(aRole => aRole.toString() === role) ? true : false;
+    }
+
+    /**
+     * Checks to see if the given GuildMember has admin permissions for the bot
+     * @param guild Guild to check in
+     * @param member GuildMember to check permissions for
+     * @returns whether the member has admin permissions
+     */
+    public isAdmin(guild: Guild, member: string | GuildMember): Promise<boolean> {
+        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        if (guildMember.id === '225044370930401280' || guildMember.hasPermission('ADMINISTRATOR')) {
+            return Promise.resolve(true);
+        }
+        return this.findById(guild.id).then(iGuild => {
+            return iGuild.admins.some(role => GuildService.hasRole(guildMember, role));
+        });
+    }
+
+    /**
+     * Checks to see if the given GuildMember has mod permissions for the bot
+     * @param guild Guild to check in
+     * @param member GuildMember to check permissions for
+     * @returns whether the member has mod permissions
+     */
+    public isMod(guild: Guild, member: string | GuildMember): Promise<boolean> {
+        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        return this.findById(guild.id).then(iGuild => {
+            return iGuild.mods.some(role => GuildService.hasRole(guildMember, role))
+                || this.isAdmin(guild, guildMember);
+        });
+    }
+    
+    /**
+     * Checks to see if the given GuildMember has raid leader permissions for the bot
+     * @param guild Guild to check in
+     * @param member GuildMember to check permissions for
+     * @returns whether the member has raid leader permissions
+     */
+    public isRaidLeader(guild: Guild, member: string | GuildMember): boolean {
+        // TODO: Implement raid leader role check
+        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        if (guildMember.id === '225044370930401280' || guildMember.hasPermission('ADMINISTRATOR')) {
+            return true;
+        };
+        return false;
+    }
+
+    /**
+     * Checks to see if the given GuildMember is a nitro-booster
+     * @param guild Guild to check in
+     * @param member GuildMember to check permissions for
+     * @returns whether the member is a nitro-booster
+     */
+    public isNitroBooster(guild: Guild, member: string | GuildMember): boolean {
+        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        return guildMember.premiumSince ? true : false;
     }
 
     /**

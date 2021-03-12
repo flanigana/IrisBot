@@ -2,12 +2,12 @@ import { Message } from 'discord.js';
 import { inject, injectable, interfaces } from 'inversify';
 import { GuildService } from '../services/guild_service';
 import { TYPES } from '../types';
-import logger from '../../winston';
+import logger from '../utilities/logging';
 import container from '../../inversify.config';
-import { SetupService } from '../services/setup_service/setup_service';
+import { SetupService } from '../setup_service/setup_service';
 import { IGuild } from '../models/guild';
-import { SetupType } from '../services/setup_service/setup_type';
-import { GuildConfigService } from '../services/setup_service/guild_config_service';
+import { SetupType } from '../setup_service/setup_type';
+import { GuildConfigService } from '../setup_service/guild_config_service';
 
 @injectable()
 export class ConfigController {

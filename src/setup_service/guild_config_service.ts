@@ -1,10 +1,10 @@
 import { Message, MessageEmbed } from 'discord.js';
 import { inject, injectable, unmanaged } from 'inversify';
-import { Bot } from '../../bot';
-import { IGuild } from '../../models/guild';
-import { TYPES } from '../../types';
-import { ClientTools } from '../../utilities/client_tools';
-import { GuildService } from '../guild_service';
+import { Bot } from '../bot';
+import { IGuild } from '../models/guild';
+import { TYPES } from '../types';
+import { ClientTools } from '../utilities/client_tools';
+import { GuildService } from '../services/guild_service';
 import { DynamicPage, Page } from './pages/page';
 import { PageSet } from './pages/page_set';
 import { SetupService } from './setup_service';
@@ -22,7 +22,7 @@ export class GuildConfigService extends SetupService<IGuild> {
         @unmanaged() message: Message,
         @unmanaged() template: IGuild
     ) {
-        super(bot, clientTools, message, template);
+        super(bot, clientTools, message, template, true);
         this._GuildService = guildService;
         this._pageSet = this.createPageSet();
     }
@@ -40,13 +40,14 @@ export class GuildConfigService extends SetupService<IGuild> {
             .setTitle('Guild Config Setup');
     }
     
+    // TODO: Add end instructions to finish service
     protected getEndPage(finished?: boolean): MessageEmbed {
         const {prefix, admins, mods} = this._template;
         const embed = this._ClientTools.getStandardEmbed()
             .setTitle('End');
-        this._ClientTools.addFieldToEmbed(embed, 'Prefix', prefix);
-        this._ClientTools.addFieldToEmbed(embed, 'Admin Roles', admins, {default: 'None'});
-        this._ClientTools.addFieldToEmbed(embed, 'Mod Roles', mods, {default: 'None'});
+        this._ClientTools.addFieldToEmbed(embed, 'Prefix', prefix, {inline: true});
+        this._ClientTools.addFieldToEmbed(embed, 'Admin Roles', admins, {default: 'None', inline: true});
+        this._ClientTools.addFieldToEmbed(embed, 'Mod Roles', mods, {default: 'None', inline: true});
         return embed;
     }
     

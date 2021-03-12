@@ -1,16 +1,16 @@
 import { injectable, inject, unmanaged } from 'inversify';
-import { TYPES } from '../../types';
+import { TYPES } from '../types';
 import { Message, MessageEmbed, User, MessageReaction, ReactionCollector, Guild } from 'discord.js';
-import { Template } from '../../models/templates/template';
-import { Bot } from '../../bot';
+import { Template } from '../models/templates/template';
+import { Bot } from '../bot';
 import { PageSet } from './pages/page_set';
-import { ClientTools } from '../../utilities/client_tools';
-import logger from '../../../winston';
+import { ClientTools } from '../utilities/client_tools';
+import logger from '../utilities/logging';
 
 @injectable()
 export abstract class SetupService<E extends Template> {
 
-    private static readonly PAGE_REACTIONS = new Set(['⬅', '➡', '❌']);
+    private readonly _PageReactions = new Set(['⬅', '➡', '❌']);
 
     private readonly _Bot: Bot;
     protected readonly _ClientTools: ClientTools;
@@ -20,17 +20,23 @@ export abstract class SetupService<E extends Template> {
     private _view: Message;
 
     protected _template: Partial<E>;
+    private _updatable: boolean;
 
     public constructor(
         @inject(TYPES.Bot) bot: Bot,
         @inject(TYPES.ClientTools) clientTools: ClientTools,
         @unmanaged() message: Message,
-        @unmanaged() template: Partial<E>
+        @unmanaged() template: Partial<E>,
+        @unmanaged() updatable?: boolean
     ) {
         this._Bot = bot;
         this._ClientTools = clientTools;
         this._Message = message;
         this._template = template;
+        this._updatable = updatable ? updatable : false;
+        if (this._updatable) {
+            this._PageReactions.add('✅');
+        }
     }
 
     protected abstract save(): Promise<boolean>;
@@ -55,7 +61,8 @@ export abstract class SetupService<E extends Template> {
             .setTitle('Setup Service')
             .setDescription('To use this service, send a response in this channel whenever prompted. ' +
             '\nYou can navigate the pages by reacting with ⬅ and ➡. To change pages again, just unreact and react again. ' +
-            '\nTo cancel this setup at any time, react with ❌. Doing this will discard all changes made. ');
+            '\nTo cancel this setup at any time, react with ❌. Doing this will discard all changes made. ' + 
+            `${this._updatable ? '\nTo end this service early and save your changes, react with ✅.' : ''}`);
     }
 
     private getCancelledPage(): MessageEmbed {
@@ -64,8 +71,18 @@ export abstract class SetupService<E extends Template> {
             .setDescription('No changes were saved.');
     }
 
+    private onCompletion(collector: ReactionCollector): Promise<Message> {
+        collector.stop();
+        this._Bot.userUnignore(this.authorId, this.channel.id);
+        this.save();
+        logger.info('Guild:%s|%s - User:%s|%s saved a template:%s', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username, this._template);
+        return this._view.edit(this.getEndPage(true));
+    }
+
     private async processCollection(collector: ReactionCollector, reaction: MessageReaction): Promise<Message> {
         switch (reaction.emoji.name) {
+            case '✅': // end early
+                return this.onCompletion(collector);
             case '❌': // cancel
                 logger.debug('Guild:%s|%s - User:%s|%s cancelled the SetupService.', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username);
                 collector.stop();
@@ -84,11 +101,7 @@ export abstract class SetupService<E extends Template> {
                     });
                 } else {
                     if (this.isFinished) {
-                        collector.stop();
-                        this._Bot.userUnignore(this.authorId, this.channel.id);
-                        this.save();
-                        logger.info('Guild:%s|%s - User:%s|%s saved a template:%s', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username, this._template);
-                        return this._view.edit(this.getEndPage(true));
+                        return this.onCompletion(collector);
                     } else {
                         let embed: MessageEmbed = this.getEndPage(false);
                         return this._view.edit(embed);
@@ -98,7 +111,7 @@ export abstract class SetupService<E extends Template> {
     }
 
     private addReactionCollector(message: Message, responseListener: (res: Message) => void): void {
-        const reactionFilter = (reaction: MessageReaction, user: User) => ((user.id === this.authorId) && SetupService.PAGE_REACTIONS.has(reaction.emoji.name));
+        const reactionFilter = (reaction: MessageReaction, user: User) => ((user.id === this.authorId) && this._PageReactions.has(reaction.emoji.name));
 
         const collector = message.createReactionCollector(reactionFilter, {time: 10*(60*1000)});
 
@@ -152,7 +165,7 @@ export abstract class SetupService<E extends Template> {
             this._view = msg;
             const responseListener = this.attachMessageListener();
             this.addReactionCollector(msg, responseListener);
-            SetupService.PAGE_REACTIONS.forEach((reaction) => {
+            this._PageReactions.forEach((reaction) => {
                 msg.react(reaction);
             });
         });
