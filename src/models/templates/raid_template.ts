@@ -57,8 +57,8 @@ const RaidTemplate = mongoose.model<RaidTemplateDoc>('RaidTemplate', raidTemplat
 
 export { RaidTemplate }
 
-export function getRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
-    let template = {
+export function getRaidBlankTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
+    const template:IRaidTemplate = {
         guildId: undefined,
         name: undefined,
         description: undefined,

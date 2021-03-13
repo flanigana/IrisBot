@@ -9,9 +9,11 @@ import { IRaidTemplate } from '../../models/templates/raid_template';
 import { GuildService } from '../../services/guild_service';
 import { ReactionTracker } from './reaction_tracker';
 import { RaidStatus } from './raid_status';
+import { getDefaultRaidConfig, IRaidConfig } from '../../models/raid_config';
 
 type RaidProperties = {
     template: IRaidTemplate,
+    config: IRaidConfig,
     guild: Guild,
     starter: GuildMember,
     alertChannel: TextChannel,
@@ -72,15 +74,22 @@ export class RaidManager {
      */
     private async buildRaidProperties(message: Message, args: string[]): Promise<RaidProperties> {
         const template = await this._RaidTemplateService.findTemplate(message.guild.id, args[2], false);
+        let config;
+        if (await this._GuildService.raidConfigExistsById(message.guild.id)) {
+            config = await this._GuildService.findRaidConfigById(message.guild.id);
+        } else {
+            config = getDefaultRaidConfig();
+        }
         return {
             template: template,
+            config: config,
             guild: message.guild,
             starter: GuildService.findGuildMember(message.guild, message.author.id),
             alertChannel: RolesAndChannels.getChannel(message.guild, args[3], 'text') as TextChannel,
             raidChannel: RolesAndChannels.getChannel(message.guild, args[4], 'voice') as VoiceChannel,
             raiderRole: RolesAndChannels.getRole(message.guild, args[5]),
             location: args.length > 6 ? args[6] : undefined,
-            remainingTime: 120 * 1000,
+            remainingTime: config.runTime * 1000,
             status: RaidStatus.RUNNING,
             limitedReactions: this.buildLimitedReactions(template),
             nitroEmoji: this._ClientTools.getGuildEmoji('nitrobooster')?.toString(),
@@ -94,17 +103,16 @@ export class RaidManager {
      * @param properties the options object to read raid information from
      * @returns a filtering function returning true on relevant reactions
      */
-    private createReactionFilter({guild, template, limitedReactions, nitroEmoji}: RaidProperties): (reaction: MessageReaction, user: User) => boolean {
-        return ({emoji}: MessageReaction, user: User): boolean => {
+    private createReactionFilter({guild, config, template, limitedReactions, nitroEmoji}: RaidProperties): (reaction: MessageReaction, user: User) => Promise<boolean> {
+        return async ({emoji}: MessageReaction, user: User): Promise<boolean> => {
             if (user.bot) {
                 return false;
             }
-            if ((emoji.name === '✅' || emoji.name === '❌') && this._GuildService.isRaidLeader(guild, user.id)) {
+            if ((emoji.name === '✅' || emoji.name === '❌') && await this._GuildService.isRaidLeader(guild, user.id)) {
                 return true;
             } else if (emoji.toString() === template.primaryReact || limitedReactions.has(emoji.toString())) {
                 return true;
-            } else if (emoji.toString() === nitroEmoji && this._GuildService.isNitroBooster(guild, user.id)){
-                // TODO: check if guild has enabled nitro boosters
+            } else if (emoji.toString() === nitroEmoji && config.allowBooster && this._GuildService.isNitroBooster(guild, user.id)) {
                 return true;
             } else {
                 return false;
@@ -117,9 +125,9 @@ export class RaidManager {
      * @param user user who reacted
      * @param properties the options object to read raid information from
      */
-    private onPrimaryReact(user: User, {guild, raiders, raidLeaders}: RaidProperties): void {
+    private async onPrimaryReact(user: User, {guild, raiders, raidLeaders}: RaidProperties): Promise<void> {
         const guildMember = GuildService.findGuildMember(guild, user.id);
-        if (this._GuildService.isRaidLeader(guild, user.id)) {
+        if (await this._GuildService.isRaidLeader(guild, user.id)) {
             raidLeaders.add(guildMember);
         }
         raiders.add(guildMember);
@@ -220,8 +228,8 @@ export class RaidManager {
         const {guild, raidChannel, raiders} = properties;
         // properties.removed = new Set<string>(raidChannel.members.map(m => m.id));
         const removed = new Set<string>();
-        raidChannel.members.forEach(member => {
-            if (!raiders.has(member)  && !this._GuildService.isRaidLeader(guild, member.id)) {
+        raidChannel.members.forEach(async member => {
+            if (!raiders.has(member)  && !(await this._GuildService.isRaidLeader(guild, member.id))) {
                 removed.add(member.id);
                 if (guild.afkChannel) {
                     member.voice.setChannel(guild.afkChannel, 'Raider failed to react for raid.');
@@ -355,12 +363,13 @@ export class RaidManager {
      * @param message raid message to add reactions to
      * @param reactions Map to read reactions from
      */
-    private addRaidReactions(message: Message, {template, nitroEmoji}: RaidProperties): void {
+    private addRaidReactions(message: Message, {config, template, nitroEmoji}: RaidProperties): void {
         message.react(template.primaryReact);
         template.secondaryReacts.forEach(r => {message.react(r)});
         template.additionalReacts.forEach(r => {message.react(r)});
-        // TODO: check if guild has nitro boosters enabled
-        message.react(nitroEmoji);
+        if (config.allowBooster) {
+            message.react(nitroEmoji);
+        }
         message.react('✅');
         message.react('❌');
     }
@@ -476,8 +485,10 @@ export class RaidManager {
             this.addRaidReactions(raidMessage, raidProperties);
             raidProperties.interval = this.createUpdateInterval(raidProperties);
             this.openRaidChannel(raidProperties);
-            // TODO: change this to send to confirmations channel instead of alertChannel
-            raidProperties.confirmationsMessage = await raidProperties.alertChannel.send(this.createConfirmationsEmbed(raidProperties));
+            if (raidProperties.config.confirmationsChannel) {
+                const confirmChannel = RolesAndChannels.getChannel(message.guild, raidProperties.config.confirmationsChannel, 'text') as TextChannel;
+                raidProperties.confirmationsMessage = await confirmChannel.send(this.createConfirmationsEmbed(raidProperties));
+            }
             this.startReactionCollector(raidProperties);
         });
     }

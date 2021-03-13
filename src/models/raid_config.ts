@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
+import { Template } from './templates/template';
 
-export interface IRaidConfig {
+export interface IRaidConfig extends Template {
+    _id?: string;
     guildId: string;
     raidLeaders: string[];
     runTime: number;
@@ -16,7 +18,7 @@ export interface RaidConfigDoc extends mongoose.Document {
     allowBooster: boolean
 }
 
-const guildSchema = new mongoose.Schema({
+const raidConfigSchema = new mongoose.Schema({
     guildId: {
         type: String,
         required: true
@@ -31,7 +33,7 @@ const guildSchema = new mongoose.Schema({
     }, 
     confirmationsChannel: {
         type: String,
-        required: true
+        required: false
     },
     allowBooster: {
         type: Boolean,
@@ -39,6 +41,18 @@ const guildSchema = new mongoose.Schema({
     }
 });
 
-const RaidConfig = mongoose.model<RaidConfigDoc>('RaidConfig', guildSchema);
+const RaidConfig = mongoose.model<RaidConfigDoc>('RaidConfig', raidConfigSchema);
 
 export { RaidConfig }
+
+export function getDefaultRaidConfig(fields?: Partial<IRaidConfig>) {
+    const config:IRaidConfig = {
+        guildId: undefined,
+        raidLeaders: [],
+        runTime: 300,
+        confirmationsChannel: undefined,
+        allowBooster: false
+    };
+
+    return Object.assign<IRaidConfig, Partial<IRaidConfig>>(config, fields);
+}

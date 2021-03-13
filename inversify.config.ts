@@ -11,15 +11,18 @@ import { MessageDispatcher } from './src/general/message_dispatcher';
 import { SetupService } from './src/setup_service/setup_service';
 import { SetupType } from './src/setup_service/setup_type';
 import { Template } from './src/models/templates/template';
-import { RaidTemplateManager } from './src/setup_service/raid_template_manger';
+import { RaidTemplateManagerService } from './src/setup_service/raid_template_manger_service';
 import { ClientTools } from './src/utilities/client_tools';
 import { IRaidTemplate } from './src/models/templates/raid_template';
 import { RaidController } from './src/raid/raid_controller';
 import { RaidTemplateController } from './src/raid/raid_template_controller';
 import { RaidManager } from './src/raid/raid_manager/raid_manager';
-import { GuildConfigService } from './src/setup_service/guild_config_service';
+import { GuildConfigManagerService } from './src/setup_service/guild_config_manager_service';
 import { IGuild } from './src/models/guild';
 import { ConfigController } from './src/general/config_controller';
+import { RaidConfigRepository } from './src/data_access/repositories/raid_config_repository';
+import { RaidConfigManagerService } from './src/setup_service/raid_config_manager_service';
+import { IRaidConfig } from './src/models/raid_config';
 
 let container = new Container();
 
@@ -29,6 +32,7 @@ container.bind<Client>(TYPES.Client).toConstantValue(new Client());
 // repositories
 container.bind<GuildRepository>(TYPES.GuildRepository).to(GuildRepository).inSingletonScope();
 container.bind<RaidTemplateRepository>(TYPES.RaidTemplateRepository).to(RaidTemplateRepository).inSingletonScope();
+container.bind<RaidConfigRepository>(TYPES.RaidConfigRepository).to(RaidConfigRepository).inSingletonScope();
 
 // services
 container.bind<GuildService>(TYPES.GuildService).to(GuildService).inSingletonScope();
@@ -47,17 +51,19 @@ container.bind<interfaces.Factory<SetupService<Template>>>(TYPES.SetupService).t
     return (type: SetupType, message: Message, template?: Template) => {
         const bot = container.get<Bot>(TYPES.Bot);
         const clientTools = container.get<ClientTools>(TYPES.ClientTools);
+        const guildService = container.get<GuildService>(TYPES.GuildService);
         switch (type) {
             case SetupType.RaidTemplate:
                 const raidTemplateService = container.get<RaidTemplateService>(TYPES.RaidTemplateService);
                 if (template) {
-                    return new RaidTemplateManager(bot, clientTools, raidTemplateService, message, template as IRaidTemplate, true);
+                    return new RaidTemplateManagerService(bot, clientTools, raidTemplateService, message, template as IRaidTemplate, true);
                 } else {
-                    return new RaidTemplateManager(bot, clientTools, raidTemplateService, message);
+                    return new RaidTemplateManagerService(bot, clientTools, raidTemplateService, message);
                 }
             case SetupType.GuildConfig:
-                const guildService = container.get<GuildService>(TYPES.GuildService);
-                return new GuildConfigService(bot, clientTools, guildService, message, template as IGuild);
+                return new GuildConfigManagerService(bot, clientTools, guildService, message, template as IGuild);
+            case SetupType.RaidConfig:
+                return new RaidConfigManagerService(bot, clientTools, guildService, message, template as IRaidConfig);
         }
     }
 });

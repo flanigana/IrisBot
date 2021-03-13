@@ -11,6 +11,8 @@ import logger from '../utilities/logging';
 export abstract class SetupService<E extends Template> {
 
     private readonly _PageReactions = new Set(['⬅', '➡', '❌']);
+    protected readonly _EndPageDescription = 'You\'re almost finished, just look over the information below and react with ➡ one last time to complete the service.';
+    protected readonly _EndPageDefaultFinalDescription = 'The service is complete and you\'re changes have been successfully saved.';
 
     private readonly _Bot: Bot;
     protected readonly _ClientTools: ClientTools;

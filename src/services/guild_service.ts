@@ -3,16 +3,21 @@ import { TYPES } from '../types';
 import { IGuild } from '../models/guild';
 import { Guild, GuildMember } from 'discord.js';
 import { GuildRepository } from '../data_access/repositories/guild_repository';
+import { IRaidConfig } from '../models/raid_config';
+import { RaidConfigRepository } from '../data_access/repositories/raid_config_repository';
 
 @injectable()
 export class GuildService {
 
     private readonly _GuildRepo: GuildRepository;
+    private readonly _RaidConfigRepository: RaidConfigRepository;
 
     public constructor(
-        @inject(TYPES.GuildRepository) guildRepo: GuildRepository
+        @inject(TYPES.GuildRepository) guildRepo: GuildRepository,
+        @inject(TYPES.RaidConfigRepository) raidConfigRepo: RaidConfigRepository
     ) {
         this._GuildRepo = guildRepo;
+        this._RaidConfigRepository = raidConfigRepo;
     }
 
     /**
@@ -70,13 +75,12 @@ export class GuildService {
      * @param member GuildMember to check permissions for
      * @returns whether the member has raid leader permissions
      */
-    public isRaidLeader(guild: Guild, member: string | GuildMember): boolean {
-        // TODO: Implement raid leader role check
+    public isRaidLeader(guild: Guild, member: string | GuildMember): Promise<boolean> {
         const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
-        if (guildMember.id === '225044370930401280' || guildMember.hasPermission('ADMINISTRATOR')) {
-            return true;
-        };
-        return false;
+        return this.findRaidConfigById(guild.id).then(iRaidConfig => {
+            return iRaidConfig.raidLeaders.some(role => GuildService.hasRole(guildMember, role))
+                || this.isAdmin(guild, guildMember);
+        });
     }
 
     /**
@@ -103,6 +107,33 @@ export class GuildService {
      */
     public async findAll(): Promise<IGuild[]> {
         return this._GuildRepo.findAll();
+    }
+
+    /**
+     * Checks whether a RaidConfig template exists for the Guild with the given id
+     * @param id Guild id
+     * @returns whether a RaidConfig template exists
+     */
+    public async raidConfigExistsById(id: string): Promise<boolean> {
+        return this._RaidConfigRepository.existsByGuild(id);
+    }
+
+    /**
+     * Returns the RaidConfig for the Guild with the given id
+     * @param id Guild id
+     * @returns the Guild's RaidConfig
+     */
+    public async findRaidConfigById(id: string): Promise<IRaidConfig> {
+        return this._RaidConfigRepository.findByGuild(id);
+    }
+
+    /**
+     * Saves a RaidConfig to the database
+     * @param config the RaidConfig to save
+     * @returns if the save was successful
+     */
+    public async saveRaidConfig(config: IRaidConfig): Promise<boolean> {
+        return this._RaidConfigRepository.save(config);
     }
 
     /**

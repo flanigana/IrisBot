@@ -43,8 +43,7 @@ export class RaidController {
             templateName = args[2];
         }
 
-        const exists = await this._RaidTemplateService.existsByName(message.guild.id, templateName, false);
-        if (!exists) {
+        if (!(await this._RaidTemplateService.existsByName(message.guild.id, templateName, false))) {
             this.sendTemplateDoesNotExist(message, templateName);
             return false;
         }
@@ -58,8 +57,7 @@ export class RaidController {
 
         const subCommand = args[1].toLowerCase();
         if (!subCommand.match(/list|create/i)) {
-            const exists = await this.checkTemplateExists(message, args);
-            if (!exists) {
+            if (!(await this.checkTemplateExists(message, args))) {
                 return;
             }
         }

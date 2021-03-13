@@ -5,7 +5,7 @@ import { SetupService } from '../setup_service/setup_service';
 import { SetupType } from '../setup_service/setup_type';
 import { Message, MessageEmbed } from 'discord.js';
 import { IRaidTemplate } from '../models/templates/raid_template';
-import { RaidTemplateManager } from '../setup_service/raid_template_manger';
+import { RaidTemplateManagerService } from '../setup_service/raid_template_manger_service';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { ClientTools } from '../utilities/client_tools';
 import { Bot } from '../bot';
@@ -94,26 +94,26 @@ export class RaidTemplateController {
         return this.confirmTemplateDeletion(message, templateName);
     }
 
-    private async editRaidTemplate(message: Message, args: string[]): Promise<RaidTemplateManager> {
+    private async editRaidTemplate(message: Message, args: string[]): Promise<RaidTemplateManagerService> {
         const templateName = args.length >= 3 ? args.slice(2).join(' ') : undefined;
         const template = await this._RaidTemplateService.findTemplate(message.guild.id, templateName, false);
-        logger.debug('Guild:%s|%s - User:%s|%s started RaidTemplateManager in edit mode with RaidTemplate:%s|%s.', message.guild.id, message.guild.name, message.author.id, message.author.username, template._id, template.name);
-        return container.get<interfaces.Factory<SetupService<IRaidTemplate>>>(TYPES.SetupService)(SetupType.RaidTemplate, message, template) as RaidTemplateManager;
+        logger.debug('Guild:%s|%s - User:%s|%s started RaidTemplateManagerService in edit mode with RaidTemplate:%s|%s.', message.guild.id, message.guild.name, message.author.id, message.author.username, template._id, template.name);
+        return container.get<interfaces.Factory<SetupService<IRaidTemplate>>>(TYPES.SetupService)(SetupType.RaidTemplate, message, template) as RaidTemplateManagerService;
     }
 
     private async createRaidTemplateManager(message: Message, args: string[]): Promise<void> {
-        let raidTemplateManager: RaidTemplateManager;
+        let raidTemplateManagerService: RaidTemplateManagerService;
         if (args[1].match(/create/i)) {
             logger.debug('Guild:%s|%s - User:%s|%s started RaidTemplateManager in create mode.', message.guild.id, message.guild.name, message.author.id, message.author.username);
-            raidTemplateManager = container.get<interfaces.Factory<SetupService<IRaidTemplate>>>(TYPES.SetupService)(SetupType.RaidTemplate, message) as RaidTemplateManager;
+            raidTemplateManagerService = container.get<interfaces.Factory<SetupService<IRaidTemplate>>>(TYPES.SetupService)(SetupType.RaidTemplate, message) as RaidTemplateManagerService;
         } else {
-            raidTemplateManager = await this.editRaidTemplate(message, args);
-            if (!raidTemplateManager) {
+            raidTemplateManagerService = await this.editRaidTemplate(message, args);
+            if (!raidTemplateManagerService) {
                 return;
             }
         }
 
-        raidTemplateManager.startService();
+        raidTemplateManagerService.startService();
     }
 
     public handleMessage(message: Message, args: string[]): void {

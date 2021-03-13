@@ -84,7 +84,7 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
             if (!emoji) {
                 return `Error: Invalid emoji format or no emoji with the name, ${res} found!`;
             } else {
-                fields.primaryReact = `${emoji}`;
+                fields.primaryReact = emoji.toString();
                 return 'Successfully updated primary react!';
             }
         }
@@ -118,7 +118,7 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
             if (!emoji) {
                 return `Error: Invalid emoji format or no emoji with the name, ${args[0]} found!`;
             } else {
-                fields.secondaryReacts = `${emoji}`;
+                fields.secondaryReacts = emoji.toString();
                 let num = 0;
                 if (args.length > 1) {
                     num = MessageParser.parseNumber(args[1]);
@@ -148,7 +148,7 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
             const args = MessageParser.parseMessage(res);
             const reacts = args.map((arg: string) => {
                 const emoji = clientTools.getEmoji(arg, guildId);
-                return emoji ? `${emoji}`: undefined;
+                return emoji ? emoji.toString() : undefined;
             }).filter((emoji: string) => emoji !== undefined);
 
             if (reacts.length === 0) {

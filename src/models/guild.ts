@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
+import { Template } from './templates/template';
 
-export interface IGuild {
+export interface IGuild extends Template {
     _id: string;
     name: string;
     owner: string;

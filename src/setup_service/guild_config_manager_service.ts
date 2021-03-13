@@ -11,7 +11,7 @@ import { SetupService } from './setup_service';
 import addGuildConfigPages from './page_sets/guild_config_pages';
 
 @injectable()
-export class GuildConfigService extends SetupService<IGuild> {
+export class GuildConfigManagerService extends SetupService<IGuild> {
 
     private readonly _GuildService: GuildService;
 
@@ -40,11 +40,13 @@ export class GuildConfigService extends SetupService<IGuild> {
             .setTitle('Guild Config Setup');
     }
     
-    // TODO: Add end instructions to finish service
     protected getEndPage(finished?: boolean): MessageEmbed {
         const {prefix, admins, mods} = this._template;
-        const embed = this._ClientTools.getStandardEmbed()
-            .setTitle('End');
+
+        const description = !finished ? this._EndPageDescription : this._EndPageDefaultFinalDescription;
+
+        const embed = this._ClientTools.getStandardEmbed();
+        if (description) {embed.setDescription(description);}
         this._ClientTools.addFieldToEmbed(embed, 'Prefix', prefix, {inline: true});
         this._ClientTools.addFieldToEmbed(embed, 'Admin Roles', admins, {default: 'None', inline: true});
         this._ClientTools.addFieldToEmbed(embed, 'Mod Roles', mods, {default: 'None', inline: true});

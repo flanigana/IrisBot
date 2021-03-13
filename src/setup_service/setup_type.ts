@@ -1,3 +1,3 @@
 export enum SetupType {
-    GuildConfig, RaidTemplate
+    GuildConfig, RaidConfig, RaidTemplate
 }
