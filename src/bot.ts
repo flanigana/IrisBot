@@ -4,7 +4,6 @@ import * as mongoose from 'mongoose';
 import { Client, ClientEvents, Guild, Message } from 'discord.js';
 import { GuildService } from './services/guild_service';
 import { MessageDispatcher } from './general/message_dispatcher';
-import { ClientTools } from './utilities/client_tools';
 
 /**
  * Responsible for the core functionality including:

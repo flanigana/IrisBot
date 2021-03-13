@@ -29,6 +29,7 @@
   "homepage": "https://github.com/flanigana/IrisBot#readme",
   "dependencies": {
     "@types/node": "^14.14.21",
+    "axios": "^0.21.1",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
     "inversify": "^5.0.5",

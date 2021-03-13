@@ -96,6 +96,7 @@ export abstract class SetupService<E extends Template> {
                         return this._view.edit(embed);
                     });
                 }
+                break;
             case '➡': // next page
                 if (this._pageSet.hasNext) {
                     return this._pageSet.getNextPageView().then((embed: MessageEmbed) => {

@@ -21,7 +21,6 @@ export class PageSet<E extends Template> {
         return this._pages[this._position];
     }
 
-    // TODO: Fix going to next page if position is 0 and reaction is back arrow
     public get hasPrevious(): boolean {
         const currentPage = this._pages[this._position];
         if (currentPage instanceof DynamicRepeatedPage) {
