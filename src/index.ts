@@ -23,3 +23,12 @@ import { Bot } from './bot';
     })
 
 })().catch(console.error);
+
+// (async () => {
+//     runTest();
+// })().catch(console.error);
+
+// async function runTest() {
+//     const realmeye = new RealmEyeService();
+//     console.log(await realmeye.getRealmEyeUserData('TRCN'));
+// }
