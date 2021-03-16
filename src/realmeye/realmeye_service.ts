@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import * as cheerio from 'cheerio';
 import { RateLimitRequestService } from '../utilities/rate_limit_request_service';
 import { RealmEyeError } from './realmeye_exception';
-import { Character, CharacterModelInfo, DungeonCompletions, EquipmentSet, GuildData, Item, TableIndexes, UserData } from './realmeye_types';
+import { Character, CharacterModelInfo, ClassList, DungeonCompletions, EquipmentSet, GuildData, Item, StatType, TableIndexes, UserData } from './realmeye_types';
 import { findBestMatch } from '../utilities/string_matcher';
 
 /**
@@ -16,19 +16,27 @@ import { findBestMatch } from '../utilities/string_matcher';
 export class RealmEyeService {
 
     private static readonly _BASE_REALMEYE_URL = 'https://www.realmeye.com';
-    private static readonly DUNGEON_LIST: Set<string> = new Set();
+    private static readonly _DUNGEON_LIST: Set<string> = new Set();
+    private static _CLASS_LIST: ClassList;
 
     private readonly _RequestService: RateLimitRequestService;
 
     public constructor() {
         this._RequestService = new RateLimitRequestService(1, {headers: {'User-Agent': 'IrisBot RotMG Discord Bot'}});
-        if (!RealmEyeService.DUNGEON_LIST.size) {
+        if (!RealmEyeService._DUNGEON_LIST?.size) {
             this.buildDungeonList();
+        }
+        if (!RealmEyeService._CLASS_LIST) {
+            this.buildClassList();
         }
     }
 
     public static get dungeonList(): Set<string> {
-        return RealmEyeService.DUNGEON_LIST;
+        return RealmEyeService._DUNGEON_LIST;
+    }
+
+    public static get classList(): ClassList {
+        return RealmEyeService._CLASS_LIST;
     }
 
     private async buildDungeonList(): Promise<void> {
@@ -37,6 +45,7 @@ export class RealmEyeService {
         if (status !== 200){
             throw new RealmEyeError('Error accessing RealmEye while initializing dungeon list.', {url: url, status: status, statusText: statusText});
         }
+
         const headingSelector = 'h2#realm-dungeons, h2#realm-event-dungeons, h2#oryx-s-castle, h2#mini-dungeons';
         const $ = cheerio.load(data);
         const container = $('.container');
@@ -52,6 +61,61 @@ export class RealmEyeService {
                 RealmEyeService.dungeonList.add(nameData.text());
             });
         }
+    }
+
+    private async buildClassList(): Promise<void> {
+        const url = `${RealmEyeService._BASE_REALMEYE_URL}/wiki/classes`;
+        const { data, status, statusText } = await this._RequestService.get(url);
+        if (status !== 200){
+            throw new RealmEyeError('Error accessing RealmEye while initializing class list.', {url: url, status: status, statusText: statusText});
+        }
+        const $ = cheerio.load(data);
+        const tables = $('div.wiki-page > div.table-responsive > table');
+        const classList: ClassList = {};
+        for (let i=0; i < tables.length; i++) {
+            if (i < tables.length -1) {
+                this.addClassUrlsFromTable($, tables.get(i), classList);
+            } else {
+                this.addClassStatsFromTable($, tables.get(i), classList);
+            }
+        }
+        RealmEyeService._CLASS_LIST = classList;
+    }
+
+    private addClassUrlsFromTable($: any, table: any, classList: ClassList): void {
+        $('td', table).each((i, classCell) => {
+            const classData = $('a', classCell).first();
+            const classLink = `${RealmEyeService._BASE_REALMEYE_URL}${classData.attr()?.href}`;
+            const img = $('img', classData).first();
+            const className = img.attr()?.alt?.toLowerCase();
+            const imgSrc:string = img.attr()?.src;
+            let imageLink;
+            if (imgSrc?.startsWith('//')) {
+                imageLink = imgSrc?.substr(2);
+            } else {
+                imageLink = `${RealmEyeService._BASE_REALMEYE_URL}${imgSrc}`;
+            }
+            classList[className] = {
+                name: className,
+                realmEyeUrl: classLink,
+                imageUrl: imageLink
+            }
+        });
+    }
+
+    private addClassStatsFromTable($: any, table: any, classList: ClassList) {
+        $('tbody > tr', table).each((i, classRow) => {
+            const className = $('th a', classRow).first().text()?.toLowerCase();
+            console.log(className);
+            classList[className].maxStats = {};
+            $('td > div', classRow).each((j, max) => {
+                const maxValue = max.children[0]?.data;
+                if (j < Object.values(StatType).length) {
+                    const stat = Object.values(StatType)[j];
+                    classList[className].maxStats[stat] = parseInt(maxValue);
+                }
+            });
+        });
     }
 
     public async getRealmEyeUserData(ign: string): Promise<UserData> {
@@ -364,7 +428,7 @@ export class RealmEyeService {
             let dungeon;
             if (rowLabel?.match(/.*completed$/i) && !rowLabel?.match(/^quests.*/i)) {
                 const name = rowLabel.replace(' completed', '');
-                dungeon = findBestMatch(name, Array.from(RealmEyeService.DUNGEON_LIST));
+                dungeon = findBestMatch(name, Array.from(RealmEyeService._DUNGEON_LIST));
             }
             if (dungeon) {
                 const total = rowData.get(2)?.children[0]?.data;

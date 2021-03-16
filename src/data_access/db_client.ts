@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 export async function getDatabaseClient(dbHost: string, dbName: string) {
     return new Promise<mongoose.Mongoose>((resolve, reject) => {

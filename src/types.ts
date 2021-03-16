@@ -15,5 +15,6 @@ export const TYPES = {
     RaidTemplateController: Symbol('RaidTemplateController'),
     RaidManager: Symbol('RaidManager'),
     ConfigController: Symbol('ConfigController'),
-    RaidConfigRepository: Symbol('RaidConfigRepository')
+    RaidConfigRepository: Symbol('RaidConfigRepository'),
+    RealmEyeService: Symbol('RealmEyeService')
 };

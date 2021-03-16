@@ -77,7 +77,14 @@ export type CharacterStat = {
 }
 
 export enum StatType {
-    HP, MP, ATT, DEF, SPD, VIT, WIS, DEX
+    HP = 'HP',
+    MP = 'MP',
+    ATT = 'ATT',
+    DEF = 'DEF',
+    SPD = 'SPD',
+    DEX = 'DEX',
+    VIT = 'VIT',
+    WIS = 'WIS'
 }
 
 export type EquipmentSet = {
@@ -101,4 +108,19 @@ export type TableIndexes<T> = {
 export type DungeonCompletions = {
     name: string,
     completions: number
+}
+
+export type ClassList = {
+    [key: string]: ClassInfo
+}
+
+export type ClassInfo = {
+    name: string,
+    realmEyeUrl?: string,
+    imageUrl?: string,
+    maxStats?: ClassStats
+}
+
+export type ClassStats = {
+    [P in StatType as `max${P}`]?: number;
 }

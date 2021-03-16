@@ -23,6 +23,7 @@ import { ConfigController } from './src/general/config_controller';
 import { RaidConfigRepository } from './src/data_access/repositories/raid_config_repository';
 import { RaidConfigManagerService } from './src/setup_service/raid_config_manager_service';
 import { IRaidConfig } from './src/models/raid_config';
+import { RealmEyeService } from './src/realmeye/realmeye_service';
 
 let container = new Container();
 
@@ -40,6 +41,7 @@ container.bind<RaidTemplateService>(TYPES.RaidTemplateService).to(RaidTemplateSe
 container.bind<MessageDispatcher>(TYPES.MessageDispatcher).to(MessageDispatcher).inSingletonScope();
 container.bind<ClientTools>(TYPES.ClientTools).to(ClientTools).inSingletonScope();
 container.bind<RaidManager>(TYPES.RaidManager).to(RaidManager).inSingletonScope();
+container.bind<RealmEyeService>(TYPES.RealmEyeService).to(RealmEyeService).inSingletonScope();
 
 // controllers
 container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
