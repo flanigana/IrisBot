@@ -3,6 +3,7 @@ export type UserData = {
     realmEyeUrl?: string,
     description?: string,
     characters?: Character[],
+    characterCount?: number,
     skins?: number,
     exaltations?: number,
     fame?: number,
@@ -14,10 +15,32 @@ export type UserData = {
     realmEyeGuildUrl?: string,
     guildRank?: string,
     created?: Date,
-    lastSeen?: string
+    lastSeen?: string,
+    server?: string,
+    avgFameChar?: number,
+    avgExpChar?: number,
+    dungeonCompletions?: DungeonCompletions[]
+}
+
+export type GuildData = {
+    name?: string,
+    realmEyeUrl?: string,
+    description?: string,
+    members?: UserData[],
+    memberCount?: number,
+    characterCount?: number,
+    fame?: number,
+    fameRank?: number,
+    exp?: number,
+    expRank?: number,
+    server?: string,
+    serverRank?: number,
+    topCharacters?: Character[]
 }
 
 export type Character = {
+    private?: boolean,
+    owner?: UserData,
     pet?: string,
     model?: CharacterModelInfo,
     class?: string,
@@ -27,7 +50,9 @@ export type Character = {
     place?: number,
     equipment?: EquipmentSet,
     maxedStats?: string,
-    stats?: CharacterStats
+    stats?: CharacterStats,
+    lastSeen?: string,
+    server?: string
 }
 
 export type CharacterModelInfo = {
@@ -69,6 +94,11 @@ export type Item = {
     renderPosition?: string
 }
 
-export type CharacterTableIndexes = {
-    [P in keyof Character]?: number;
+export type TableIndexes<T> = {
+    [P in keyof T]?: number;
+}
+
+export type DungeonCompletions = {
+    name: string,
+    completions: number
 }
