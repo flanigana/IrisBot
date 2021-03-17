@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { GenericRepository } from './generic_repository';
+import { GenericRepository } from './generics/generic_repository';
 import { Guild, GuildDoc, IGuild } from '../../models/guild';
 
 @injectable()

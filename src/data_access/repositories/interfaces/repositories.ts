@@ -1,10 +1,10 @@
-import { Template } from "../../models/templates/template";
+import { DataModel } from "../../../models/interfaces/data_model";
 
-export type Query<IEntity> = {
+export type Query<IEntity extends DataModel> = {
     [P in keyof IEntity]?: IEntity[P] | {$regex: RegExp};
 }
 
-export interface Repository<IEntity extends Template> {
+export interface Repository<IEntity extends DataModel> {
     update(entity: IEntity): Promise<boolean>;
     save(entity: IEntity): Promise<boolean>;
     existsById(id: string): Promise<boolean>;

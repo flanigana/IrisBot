@@ -1,8 +1,8 @@
 import { MessageEmbed } from 'discord.js';
-import { Template } from '../../models/templates/template';
+import { DataModel } from '../../models/interfaces/data_model';
 import { DynamicRepeatedPage, Page } from './page';
 
-export class PageSet<E extends Template> {
+export class PageSet<E extends DataModel> {
     
     private _pages: Page<E>[];
     private _position: number;

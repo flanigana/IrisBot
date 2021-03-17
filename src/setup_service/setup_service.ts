@@ -1,14 +1,14 @@
 import { injectable, inject, unmanaged } from 'inversify';
 import { TYPES } from '../types';
 import { Message, MessageEmbed, User, MessageReaction, ReactionCollector, Guild } from 'discord.js';
-import { Template } from '../models/templates/template';
+import { DataModel } from '../models/interfaces/data_model';
 import { Bot } from '../bot';
 import { PageSet } from './pages/page_set';
 import { ClientTools } from '../utilities/client_tools';
 import logger from '../utilities/logging';
 
 @injectable()
-export abstract class SetupService<E extends Template> {
+export abstract class SetupService<E extends DataModel> {
 
     private readonly _PageReactions = new Set(['⬅', '➡', '❌']);
     protected readonly _EndPageDescription = 'You\'re almost finished, just look over the information below and react with ➡ one last time to complete the service.';

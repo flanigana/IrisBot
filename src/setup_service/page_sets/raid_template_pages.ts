@@ -3,7 +3,7 @@ import { TYPES } from '../../types';
 import { PageSet } from '../pages/page_set';
 import { DynamicPage, DynamicRepeatedPage } from '../pages/page';
 import { MessageParser } from '../../utilities/message_parser';
-import { IRaidTemplate } from '../../models/templates/raid_template';
+import { IRaidTemplate } from '../../models/raid_template';
 import { MessageEmbed } from 'discord.js';
 import { RaidTemplateService } from '../../services/raid_template_service';
 import { ClientTools } from '../../utilities/client_tools';

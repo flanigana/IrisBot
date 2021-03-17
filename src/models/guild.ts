@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import { Template } from './templates/template';
+import { DataModel } from './interfaces/data_model';
 
-export interface IGuild extends Template {
+export interface IGuild extends DataModel {
     _id: string;
     name: string;
     owner: string;

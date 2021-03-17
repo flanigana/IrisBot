@@ -1,7 +1,7 @@
-import { Template } from '../../models/templates/template';
+import { DataModel } from '../../models/interfaces/data_model';
 import { MessageEmbed } from 'discord.js';
 
-export class Page<E extends Template> {
+export class Page<E extends DataModel> {
 
     private readonly _Page: MessageEmbed;
 
@@ -20,7 +20,7 @@ export class Page<E extends Template> {
     }
 }
 
-export class DynamicPage<E extends Template> extends Page<E> {
+export class DynamicPage<E extends DataModel> extends Page<E> {
     protected readonly _PageBuilder: ((fields: Partial<E>) => MessageEmbed) | ((fields: Partial<E>) => Promise<MessageEmbed>);
     protected readonly _Validator: ((fields: Partial<E>, res: string) => string) | ((fields: Partial<E>, res: string) => Promise<string>);
     protected _fields: Partial<E>;
@@ -63,7 +63,7 @@ export class DynamicPage<E extends Template> extends Page<E> {
     }
 }
 
-export class DynamicRepeatedPage<E extends Template> extends DynamicPage<E> {
+export class DynamicRepeatedPage<E extends DataModel> extends DynamicPage<E> {
 
     private readonly _DefaultFields: E;
 

@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import { Template } from './template';
+import { GuildTemplate, GuildTemplateDoc } from './interfaces/guild_template';
 
-export interface IRaidTemplate extends Template {
+export interface IRaidTemplate extends GuildTemplate {
     _id?: string;
     guildId: string;
     name: string;
@@ -11,7 +11,8 @@ export interface IRaidTemplate extends Template {
     secondaryReactLimits: number[];
     additionalReacts: string[];
 }
-export interface RaidTemplateDoc extends mongoose.Document {
+
+export interface RaidTemplateDoc extends GuildTemplateDoc {
     guildId: string;
     name: string;
     description: string;
@@ -49,7 +50,7 @@ const raidTemplateSchema = new mongoose.Schema({
     },
     additionalReacts: {
         type: [String],
-        required: true,
+        required: true
     }
 });
 
@@ -57,7 +58,7 @@ const RaidTemplate = mongoose.model<RaidTemplateDoc>('RaidTemplate', raidTemplat
 
 export { RaidTemplate }
 
-export function getRaidBlankTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
+export function getBlankRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemplate {
     const template:IRaidTemplate = {
         guildId: undefined,
         name: undefined,

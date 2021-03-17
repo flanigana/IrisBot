@@ -5,15 +5,14 @@ import { Client, Message } from 'discord.js';
 import { Bot } from './src/bot';
 import { GuildService } from './src/services/guild_service';
 import { GuildRepository } from './src/data_access/repositories/guild_repository';
-import { RaidTemplateRepository } from './src/data_access/repositories/raid_template_repository';
 import { RaidTemplateService } from './src/services/raid_template_service';
 import { MessageDispatcher } from './src/general/message_dispatcher';
 import { SetupService } from './src/setup_service/setup_service';
 import { SetupType } from './src/setup_service/setup_type';
-import { Template } from './src/models/templates/template';
+import { DataModel } from './src/models/interfaces/data_model';
 import { RaidTemplateManagerService } from './src/setup_service/raid_template_manger_service';
 import { ClientTools } from './src/utilities/client_tools';
-import { IRaidTemplate } from './src/models/templates/raid_template';
+import { IRaidTemplate } from './src/models/raid_template';
 import { RaidController } from './src/raid/raid_controller';
 import { RaidTemplateController } from './src/raid/raid_template_controller';
 import { RaidManager } from './src/raid/raid_manager/raid_manager';
@@ -24,6 +23,9 @@ import { RaidConfigRepository } from './src/data_access/repositories/raid_config
 import { RaidConfigManagerService } from './src/setup_service/raid_config_manager_service';
 import { IRaidConfig } from './src/models/raid_config';
 import { RealmEyeService } from './src/realmeye/realmeye_service';
+import { RaidTemplateRepository } from './src/data_access/repositories/raid_template_repository';
+import { VerificationTemplateRepository } from './src/data_access/repositories/verification_template_repository';
+import { VerificationTemplateService } from './src/services/verification_template_service';
 
 let container = new Container();
 
@@ -34,6 +36,7 @@ container.bind<Client>(TYPES.Client).toConstantValue(new Client());
 container.bind<GuildRepository>(TYPES.GuildRepository).to(GuildRepository).inSingletonScope();
 container.bind<RaidTemplateRepository>(TYPES.RaidTemplateRepository).to(RaidTemplateRepository).inSingletonScope();
 container.bind<RaidConfigRepository>(TYPES.RaidConfigRepository).to(RaidConfigRepository).inSingletonScope();
+container.bind<VerificationTemplateRepository>(TYPES.VerificationTemplateRepository).to(VerificationTemplateRepository).inSingletonScope();
 
 // services
 container.bind<GuildService>(TYPES.GuildService).to(GuildService).inSingletonScope();
@@ -42,6 +45,7 @@ container.bind<MessageDispatcher>(TYPES.MessageDispatcher).to(MessageDispatcher)
 container.bind<ClientTools>(TYPES.ClientTools).to(ClientTools).inSingletonScope();
 container.bind<RaidManager>(TYPES.RaidManager).to(RaidManager).inSingletonScope();
 container.bind<RealmEyeService>(TYPES.RealmEyeService).to(RealmEyeService).inSingletonScope();
+container.bind<VerificationTemplateService>(TYPES.VerificationTemplateService).to(VerificationTemplateService).inSingletonScope();
 
 // controllers
 container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
@@ -49,8 +53,8 @@ container.bind<RaidTemplateController>(TYPES.RaidTemplateController).to(RaidTemp
 container.bind<ConfigController>(TYPES.ConfigController).to(ConfigController).inSingletonScope();
 
 // factories
-container.bind<interfaces.Factory<SetupService<Template>>>(TYPES.SetupService).toFactory<SetupService<Template>>(() => {
-    return (type: SetupType, message: Message, template?: Template) => {
+container.bind<interfaces.Factory<SetupService<DataModel>>>(TYPES.SetupService).toFactory<SetupService<DataModel>>(() => {
+    return (type: SetupType, message: Message, template?: DataModel) => {
         const bot = container.get<Bot>(TYPES.Bot);
         const clientTools = container.get<ClientTools>(TYPES.ClientTools);
         const guildService = container.get<GuildService>(TYPES.GuildService);

@@ -2,7 +2,7 @@ import { injectable, inject, unmanaged } from 'inversify';
 import { TYPES } from '../types';
 import { SetupService } from './setup_service';
 import { Bot } from '../bot';
-import { IRaidTemplate, getRaidBlankTemplate } from '../models/templates/raid_template';
+import { IRaidTemplate, getBlankRaidTemplate } from '../models/raid_template';
 import { Message, MessageEmbed } from 'discord.js';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { Page, DynamicPage } from './pages/page';
@@ -20,7 +20,7 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
         @inject(TYPES.ClientTools) clientTools: ClientTools,
         @inject(TYPES.RaidTemplateService) raidTemplateService: RaidTemplateService,
         @unmanaged() message: Message,
-        @unmanaged() template = getRaidBlankTemplate({guildId: message.guild.id}),
+        @unmanaged() template = getBlankRaidTemplate({guildId: message.guild.id}),
         @unmanaged() updatable = false
     ) {
         super(bot, clientTools, message, template, updatable);

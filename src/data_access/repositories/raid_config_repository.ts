@@ -1,9 +1,10 @@
 import { injectable } from "inversify";
 import { IRaidConfig, RaidConfig, RaidConfigDoc } from "../../models/raid_config";
-import { GenericRepository } from "./generic_repository";
+import { GenericRepository } from "./generics/generic_repository";
 
 @injectable()
 export class RaidConfigRepository extends GenericRepository<IRaidConfig, RaidConfigDoc> {
+
     public constructor() {
         super(RaidConfig);
     }

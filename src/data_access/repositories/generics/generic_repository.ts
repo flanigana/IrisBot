@@ -1,15 +1,15 @@
-import { Repository, Query } from './repositories';
-import { injectable, unmanaged } from 'inversify';
+import { Repository, Query } from '../interfaces/repositories';
 import { Document, Model } from 'mongoose';
-import { Template } from '../../models/templates/template';
+import { DataModel } from '../../../models/interfaces/data_model';
+import { injectable, unmanaged } from 'inversify';
 
 @injectable()
-export abstract class GenericRepository<IEntity extends Template, EntityDoc extends Document> implements Repository<IEntity> {
+export abstract class GenericRepository<IEntity extends DataModel, EntityDoc extends Document> implements Repository<IEntity> {
 
     protected readonly Model: Model<any>
 
     public constructor(
-        @unmanaged() model: Model<any>
+        @unmanaged() model: Model<EntityDoc>
     ) {
         this.Model = model;
     }

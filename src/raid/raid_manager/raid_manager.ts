@@ -5,7 +5,7 @@ import { ClientTools } from '../../utilities/client_tools';
 import { RolesAndChannels } from '../../utilities/role_and_channel_finder';
 import logger from '../../utilities/logging';
 import { RaidTemplateService } from '../../services/raid_template_service';
-import { IRaidTemplate } from '../../models/templates/raid_template';
+import { IRaidTemplate } from '../../models/raid_template';
 import { GuildService } from '../../services/guild_service';
 import { ReactionTracker } from './reaction_tracker';
 import { RaidStatus } from './raid_status';

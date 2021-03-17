@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import { Template } from './templates/template';
+import { DataModel } from './interfaces/data_model';
 
-export interface IRaidConfig extends Template {
+export interface IRaidConfig extends DataModel {
     _id?: string;
     guildId: string;
     raidLeaders: string[];

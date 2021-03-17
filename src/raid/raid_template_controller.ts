@@ -4,7 +4,7 @@ import { TYPES } from '../types';
 import { SetupService } from '../setup_service/setup_service';
 import { SetupType } from '../setup_service/setup_type';
 import { Message, MessageEmbed } from 'discord.js';
-import { IRaidTemplate } from '../models/templates/raid_template';
+import { IRaidTemplate } from '../models/raid_template';
 import { RaidTemplateManagerService } from '../setup_service/raid_template_manger_service';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { ClientTools } from '../utilities/client_tools';
