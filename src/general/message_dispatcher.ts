@@ -6,6 +6,7 @@ import { IGuild } from '../models/guild';
 import { GuildService } from '../services/guild_service';
 import { RaidController } from '../raid/raid_controller';
 import { ConfigController } from './config_controller';
+import { VerificationController } from '../verification/verification_controller';
 
 /**
  * Responsible for processing and redirecting messages to the service dealing with their respective command and origin
@@ -15,19 +16,22 @@ export class MessageDispatcher {
 
     private readonly _Client: Client;
     private readonly _GuildService: GuildService;
-    private readonly _RaidController: RaidController;
     private readonly _ConfigController: ConfigController;
+    private readonly _VerificationController: VerificationController;
+    private readonly _RaidController: RaidController;
 
     public constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.GuildService) guildService: GuildService,
+        @inject(TYPES.ConfigController) configController: ConfigController,
+        @inject(TYPES.VerificationController) verificationController: VerificationController,
         @inject(TYPES.RaidController) raidController: RaidController,
-        @inject(TYPES.ConfigController) configController: ConfigController
     ) {
         this._Client = client;
         this._GuildService = guildService;
-        this._RaidController = raidController;
         this._ConfigController = configController;
+        this._VerificationController = verificationController;
+        this._RaidController = raidController;
     }
 
     /**
@@ -53,11 +57,14 @@ export class MessageDispatcher {
         let args = this.parseGuildCommand(guild, message.content);
 
         switch (args[0].toLowerCase()) {
-            case 'raid':
-                this._RaidController.handleMessage(message, args);
-                break;
             case 'config':
                 this._ConfigController.handleMessage(message, args);
+                break;
+            case 'verification':
+                this._VerificationController.handleMessage(message, args);
+                break;
+            case 'raid':
+                this._RaidController.handleMessage(message, args);
                 break;
         }
     }

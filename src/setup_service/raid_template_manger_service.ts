@@ -55,14 +55,11 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
     public getEndPage(finished?: boolean): MessageEmbed {
         const {name, description, primaryReact, secondaryReacts, secondaryReactLimits, additionalReacts} = this._template;
         
-        const embedDescription = !finished ? this._EndPageDescription : '';
+        const embedDescription = !finished ? this._EndPageDescription : 'The template has been saved and is ready to use!';
         
         const embed: MessageEmbed = this._ClientTools.getStandardEmbed()
             .setTitle('End');
-        if (description) {embed.setDescription(embedDescription);}
-        if (finished) {
-            this._ClientTools.addFieldToEmbed(embed, 'Complete', 'The template has been saved and is ready to use!');
-        }
+        if (embedDescription) {embed.setDescription(embedDescription);}
         this._ClientTools.addFieldToEmbed(embed, 'Name', name, {default: 'Unset'});
         this._ClientTools.addFieldToEmbed(embed, 'Description', description, {default: 'Unset'});
         this._ClientTools.addFieldToEmbed(embed, 'Primary React', primaryReact, {inline: true, default: 'Unset'});

@@ -8,7 +8,7 @@ import { ClientTools } from '../../utilities/client_tools';
 import logger from '../../utilities/logging';
 
 export enum SetupType {
-    GuildConfig, RaidConfig, RaidTemplate
+    GuildConfig, RaidConfig, RaidTemplate, VerificationTemplate
 }
 
 @injectable()

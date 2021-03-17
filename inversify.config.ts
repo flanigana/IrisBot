@@ -25,6 +25,10 @@ import { RealmEyeService } from './src/realmeye/realmeye_service';
 import { RaidTemplateRepository } from './src/data_access/repositories/raid_template_repository';
 import { VerificationTemplateRepository } from './src/data_access/repositories/verification_template_repository';
 import { VerificationTemplateService } from './src/services/verification_template_service';
+import { VerificationTemplateManagerService } from './src/setup_service/verification_template_manager_service';
+import { IVerificationTemplate } from './src/models/verification_template';
+import { VerificationController } from './src/verification/verification_controller';
+import { VerificationTemplateController } from './src/verification/verification_template_controller';
 
 let container = new Container();
 
@@ -47,9 +51,11 @@ container.bind<RealmEyeService>(TYPES.RealmEyeService).to(RealmEyeService).inSin
 container.bind<VerificationTemplateService>(TYPES.VerificationTemplateService).to(VerificationTemplateService).inSingletonScope();
 
 // controllers
-container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
-container.bind<RaidTemplateController>(TYPES.RaidTemplateController).to(RaidTemplateController).inSingletonScope();
 container.bind<ConfigController>(TYPES.ConfigController).to(ConfigController).inSingletonScope();
+container.bind<VerificationController>(TYPES.VerificationController).to(VerificationController).inSingletonScope();
+container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
+container.bind<VerificationTemplateController>(TYPES.VerificationTemplateController).to(VerificationTemplateController).inSingletonScope();
+container.bind<RaidTemplateController>(TYPES.RaidTemplateController).to(RaidTemplateController).inSingletonScope();
 
 // factories
 container.bind<interfaces.Factory<SetupService<DataModel>>>(TYPES.SetupService).toFactory<SetupService<DataModel>>(() => {
@@ -64,6 +70,13 @@ container.bind<interfaces.Factory<SetupService<DataModel>>>(TYPES.SetupService).
                     return new RaidTemplateManagerService(bot, clientTools, raidTemplateService, message, template as IRaidTemplate, true);
                 } else {
                     return new RaidTemplateManagerService(bot, clientTools, raidTemplateService, message);
+                }
+            case SetupType.VerificationTemplate:
+                const verificationTemplateService = container.get<VerificationTemplateService>(TYPES.VerificationTemplateService);
+                if (template) {
+                    return new VerificationTemplateManagerService(bot, clientTools, verificationTemplateService, message, template as IVerificationTemplate, true);
+                } else {
+                    return new VerificationTemplateManagerService(bot, clientTools, verificationTemplateService, message);
                 }
             case SetupType.GuildConfig:
                 return new GuildConfigManagerService(bot, clientTools, guildService, message, template as IGuild);
