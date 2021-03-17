@@ -1,6 +1,6 @@
 import { injectable, inject, unmanaged } from 'inversify';
 import { TYPES } from '../types';
-import { SetupService } from './setup_service';
+import { SetupService } from './generics/setup_service';
 import { Bot } from '../bot';
 import { IRaidTemplate, getBlankRaidTemplate } from '../models/raid_template';
 import { Message, MessageEmbed } from 'discord.js';

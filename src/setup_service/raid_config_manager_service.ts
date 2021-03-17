@@ -9,7 +9,7 @@ import { ClientTools } from "../utilities/client_tools";
 import { DynamicPage, Page } from "./pages/page";
 import { PageSet } from "./pages/page_set";
 import addRaidConfigPages from "./page_sets/raid_config_pages";
-import { SetupService } from "./setup_service";
+import { SetupService } from "./generics/setup_service";
 
 @injectable()
 export class RaidConfigManagerService extends SetupService<IRaidConfig> {

@@ -7,7 +7,7 @@ import { ClientTools } from '../utilities/client_tools';
 import { GuildService } from '../services/guild_service';
 import { DynamicPage, Page } from './pages/page';
 import { PageSet } from './pages/page_set';
-import { SetupService } from './setup_service';
+import { SetupService } from './generics/setup_service';
 import addGuildConfigPages from './page_sets/guild_config_pages';
 
 @injectable()

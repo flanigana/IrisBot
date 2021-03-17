@@ -1,11 +1,15 @@
 import { injectable, inject, unmanaged } from 'inversify';
-import { TYPES } from '../types';
+import { TYPES } from '../../types';
 import { Message, MessageEmbed, User, MessageReaction, ReactionCollector, Guild } from 'discord.js';
-import { DataModel } from '../models/interfaces/data_model';
-import { Bot } from '../bot';
-import { PageSet } from './pages/page_set';
-import { ClientTools } from '../utilities/client_tools';
-import logger from '../utilities/logging';
+import { DataModel } from '../../models/interfaces/data_model';
+import { Bot } from '../../bot';
+import { PageSet } from '../pages/page_set';
+import { ClientTools } from '../../utilities/client_tools';
+import logger from '../../utilities/logging';
+
+export enum SetupType {
+    GuildConfig, RaidConfig, RaidTemplate
+}
 
 @injectable()
 export abstract class SetupService<E extends DataModel> {

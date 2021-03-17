@@ -2,7 +2,7 @@ import { MessageEmbed } from "discord.js";
 import { injectable } from "inversify";
 import { IVerificationTemplate } from "../models/verification_template";
 import { PageSet } from "./pages/page_set";
-import { SetupService } from "./setup_service";
+import { SetupService } from "./generics/setup_service";
 
 @injectable()
 export class VerificationTemplateManagerService extends SetupService<IVerificationTemplate> {

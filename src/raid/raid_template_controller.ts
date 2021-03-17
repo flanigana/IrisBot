@@ -1,8 +1,7 @@
 import { inject, injectable, interfaces } from 'inversify';
 import container from '../../inversify.config';
 import { TYPES } from '../types';
-import { SetupService } from '../setup_service/setup_service';
-import { SetupType } from '../setup_service/setup_type';
+import { SetupService, SetupType } from '../setup_service/generics/setup_service';
 import { Message, MessageEmbed } from 'discord.js';
 import { IRaidTemplate } from '../models/raid_template';
 import { RaidTemplateManagerService } from '../setup_service/raid_template_manger_service';
