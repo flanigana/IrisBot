@@ -45,7 +45,7 @@ const RaidConfig = mongoose.model<RaidConfigDoc>('RaidConfig', raidConfigSchema)
 
 export { RaidConfig }
 
-export function getDefaultRaidConfig(fields?: Partial<IRaidConfig>) {
+export function getDefaultRaidConfig(fields?: Partial<IRaidConfig>): IRaidConfig {
     const config:IRaidConfig = {
         guildId: undefined,
         raidLeaders: [],
@@ -54,5 +54,5 @@ export function getDefaultRaidConfig(fields?: Partial<IRaidConfig>) {
         allowBooster: false
     };
 
-    return Object.assign<IRaidConfig, Partial<IRaidConfig>>(config, fields);
+    return Object.assign(config, fields);
 }

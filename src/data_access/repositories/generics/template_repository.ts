@@ -5,7 +5,7 @@ import { GuildTemplate, GuildTemplateDoc } from '../../../models/interfaces/guil
 import { Model } from 'mongoose';
 
 @injectable()
-export class TemplateRepository<IEntity extends GuildTemplate, Doc extends GuildTemplateDoc>
+export abstract class TemplateRepository<IEntity extends GuildTemplate, Doc extends GuildTemplateDoc>
     extends GenericRepository<IEntity, Doc> {
     
     public constructor(

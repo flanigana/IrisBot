@@ -8,6 +8,5 @@ const defaultOptions: Fuse.IFuseOptions<string> = {
 export function findBestMatch(val: string, list: string[], options?: Fuse.IFuseOptions<string>): string {
     options = Object.assign({}, defaultOptions, options);
     const res = new Fuse(list, options).search(val);
-    // console.log(res);
     return res.length > 0 ? res[0].item : undefined;
 }

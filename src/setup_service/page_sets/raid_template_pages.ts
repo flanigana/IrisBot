@@ -13,9 +13,9 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
     const clientTools = container.get<ClientTools>(TYPES.ClientTools);
     const availableEmojiList = clientTools.createClientEmojisList(guildId);
 
-    function existingTemplateNames(): Promise<string[]> {
+    function getExistingTemplateNames(): Promise<string[]> {
         return raidTemplateService.findTemplatesByGuildId(guildId).then((templates: IRaidTemplate[]) => {
-            return templates.map((t: IRaidTemplate) => t.name);
+            return templates.filter(t => t._id != template._id).map(t => t.name);
         });
     }
 
@@ -23,15 +23,15 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
     pageSet.addPage(new DynamicPage(
         {name: template.name},
         async (fields: Partial<IRaidTemplate>): Promise<MessageEmbed> => {
-            const existingTemplates = await existingTemplateNames();
+            const existingTemplates = await getExistingTemplateNames();
             const embed = clientTools.getStandardEmbed()
                 .setTitle('Set Name')
                 .setDescription('Respond with the name you would like to use for this raid template. It cannot be the same name as an existing template. ' +
                 '\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!');
             clientTools.addFieldToEmbed(embed, 'Example', '\`Void\`');
-            clientTools.addFieldToEmbed(embed, 'Template Name', fields.name, {inline: true, default: 'Unset'});
-            clientTools.addFieldToEmbed(embed, 'Existing Template Names', existingTemplates, {inline: true});
-            return Promise.resolve(embed);
+            clientTools.addFieldToEmbed(embed, 'Template Name', fields.name, {default: 'Unset', inline: true});
+            clientTools.addFieldToEmbed(embed, 'Existing Template Names', existingTemplates, {default: 'None', inline: true});
+            return embed;
         },
         async (fields: Partial<IRaidTemplate>, res: string): Promise<string> => {
             res = res.replace(/[^\w\d ]/g, '');

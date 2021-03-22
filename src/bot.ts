@@ -4,6 +4,7 @@ import * as mongoose from 'mongoose';
 import { Client, ClientEvents, Guild, Message } from 'discord.js';
 import { GuildService } from './services/guild_service';
 import { MessageDispatcher } from './general/message_dispatcher';
+import { RealmEyeService } from './realmeye/realmeye_service';
 
 /**
  * Responsible for the core functionality including:
@@ -15,8 +16,9 @@ import { MessageDispatcher } from './general/message_dispatcher';
 export class Bot {
     private readonly _Client: Client;
     private readonly _Token: string;
-    private readonly _GuildService: GuildService;
     private readonly _MessageDispatcher: MessageDispatcher;
+    private readonly _RealmEyeService: RealmEyeService;
+    private readonly _GuildService: GuildService;
 
     public static readonly PREFIXES = new Set<string>(['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!']);
 
@@ -25,13 +27,15 @@ export class Bot {
     constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.DiscordToken) token: string,
-        @inject(TYPES.GuildService) guildService: GuildService,
-        @inject(TYPES.MessageDispatcher) MessageDispatcher: MessageDispatcher
+        @inject(TYPES.MessageDispatcher) messageDispatcher: MessageDispatcher,
+        @inject(TYPES.RealmEyeService) realmEyeService: RealmEyeService,
+        @inject(TYPES.GuildService) guildService: GuildService
     ) {
         this._Client = client;
         this._Token = token;
+        this._MessageDispatcher = messageDispatcher;
+        this._RealmEyeService = realmEyeService;
         this._GuildService = guildService;
-        this._MessageDispatcher = MessageDispatcher;
 
         this._ignoreList = new Map();
     }

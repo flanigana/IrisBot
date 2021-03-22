@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
-import { IGuild } from '../models/guild';
+import { getBlankGuild, IGuild } from '../models/guild';
 import { Guild, GuildMember } from 'discord.js';
 import { GuildRepository } from '../data_access/repositories/guild_repository';
 import { IRaidConfig } from '../models/raid_config';
@@ -150,6 +150,7 @@ export class GuildService {
                 def[prop] = doc[prop];
             }
         }
+        console.log(def);
         this._GuildRepo.save(def);
     }
 
@@ -158,14 +159,11 @@ export class GuildService {
      * @param guild Discord Guild object to read information from
      */
     private getDefaultGuildDoc(guild: Guild): IGuild {
-        return {
+        return getBlankGuild({
             _id: guild.id,
             name: guild.name,
-            owner: guild.ownerID,
-            prefix: '!',
-            admins: [],
-            mods: []
-        };
+            owner: guild.ownerID
+        });
     }
 
     /**

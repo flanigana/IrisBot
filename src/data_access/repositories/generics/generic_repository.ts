@@ -47,31 +47,19 @@ export abstract class GenericRepository<IEntity extends DataModel, EntityDoc ext
     }
 
     public async findAll(): Promise<IEntity[]> {
-        return this.Model.find().then(res => {
-            return res.map((r) => this._readMapper(r));
-        });
+        return this.Model.find().lean<IEntity[]>();
     }
 
     public async findById(id: string): Promise<IEntity> {
-        return this.Model.findById(id).then(res => {
-            if (res === null) {
-                return null;
-            } else {
-                return this._readMapper(res);
-            }
-        });
+        return this.Model.findById(id).lean<IEntity>();
     }
 
     public async findByQuery(query: Query<IEntity>): Promise<IEntity> {
-        return this.Model.findOne(query as any).then(res => {
-            return this._readMapper(res);
-        });
+        return this.Model.findOne(query as any).lean<IEntity>();
     }
 
     public async findManyByQuery(query: Query<IEntity>): Promise<IEntity[]> {
-        return this.Model.find(query as any).then(res => {
-            return res.map((r) => this._readMapper(r));
-        });
+        return this.Model.find(query as any).lean<IEntity[]>();
     }
 
     public async deleteById(id: string): Promise<boolean> {
@@ -94,10 +82,5 @@ export abstract class GenericRepository<IEntity extends DataModel, EntityDoc ext
 
     public async deleteManyByQuery(query: Query<IEntity>): Promise<number> {
         return this.Model.deleteMany(query as any).then((res) => {return res.deletedCount});
-    }
-
-    private _readMapper(model: EntityDoc): IEntity {
-        const obj: any = model.toJSON();
-        return obj as IEntity;
     }
 }

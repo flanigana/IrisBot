@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IRaidConfig, RaidConfig, RaidConfigDoc } from "../../models/raid_config";
+import { getDefaultRaidConfig, IRaidConfig, RaidConfig, RaidConfigDoc } from "../../models/raid_config";
 import { GenericRepository } from "./generics/generic_repository";
 
 @injectable()

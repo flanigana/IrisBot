@@ -63,6 +63,25 @@ export class DynamicPage<E extends DataModel> extends Page<E> {
     }
 }
 
+export class DynamicConditionalPage<E extends DataModel> extends DynamicPage<E> {
+
+    private readonly _Condition: () => boolean;
+
+    public constructor(
+        condition: () => boolean,
+        fields: Partial<E>,
+        pageBuilder: ((fields: Partial<E>) => MessageEmbed) | ((fields: Partial<E>) => Promise<MessageEmbed>),
+        validator?: ((fields: Partial<E>, res: string) => string) | ((fields: Partial<E>, res: string) => Promise<string>)
+    ) {
+        super(fields, pageBuilder, validator);
+        this._Condition = condition;
+    }
+
+    public conditionMet(): boolean {
+        return this._Condition();
+    }
+}
+
 export class DynamicRepeatedPage<E extends DataModel> extends DynamicPage<E> {
 
     private readonly _DefaultFields: E;

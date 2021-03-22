@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IVerificationTemplate, VerificationTemplate, VerificationTemplateDoc } from "../../models/verification_template";
+import { getBlankVerificationTemplate, IVerificationTemplate, VerificationTemplate, VerificationTemplateDoc } from "../../models/verification_template";
 import { TemplateRepository } from "./generics/template_repository";
 
 @injectable()

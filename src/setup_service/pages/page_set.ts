@@ -1,6 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 import { DataModel } from '../../models/interfaces/data_model';
-import { DynamicRepeatedPage, Page } from './page';
+import { DynamicConditionalPage, DynamicRepeatedPage, Page } from './page';
 
 export class PageSet<E extends DataModel> {
     
@@ -24,29 +24,52 @@ export class PageSet<E extends DataModel> {
     public get hasPrevious(): boolean {
         const currentPage = this._pages[this._position];
         if (currentPage instanceof DynamicRepeatedPage) {
-            const dynamicPage = currentPage as DynamicRepeatedPage<E>;
-            if (dynamicPage.hasPrevious) {
+            if (currentPage.hasPrevious) {
                 return true;
             }
         }
-        if (this._position === 0) {
-            return false;
-        }
-        return true;
+        return this.recursivePageCheck(this._position-1, -1);
     }
 
     public get hasNext(): boolean {
         const currentPage = this._pages[this._position];
         if (currentPage instanceof DynamicRepeatedPage) {
-            const dynamicPage = currentPage as DynamicRepeatedPage<E>;
-            if (dynamicPage.hasNext) {
+            if (currentPage.hasNext) {
                 return true;
             }
         }
-        if (this._position+1 >= this._pages.length) {
+        return this.recursivePageCheck(this._position+1, 1);
+    }
+
+    private recursivePageCheck(pos: number, direction: 1 | -1): boolean {
+        if (pos < 0 || pos >= this._pages.length) {
             return false;
         }
-        return true;
+        const page = this._pages[pos];
+        if (!(page instanceof DynamicConditionalPage)) {
+            return true;
+        }
+        if (page.conditionMet()) {
+            return true;
+        } else {
+            return this.recursivePageCheck(pos + direction, direction);
+        }
+    }
+
+    private recursivePageTurn(direction: 1 | -1): void {
+        if (this._position + direction < 0 || this._position + direction >= this._pages.length) {
+            return;
+        }
+        this._position += direction;
+        const page = this._pages[this._position];
+        if (!(page instanceof DynamicConditionalPage)) {
+            return;
+        }
+        if (page.conditionMet()) {
+            return;
+        } else {
+            this.recursivePageTurn(direction);
+        }
     }
 
     public async getCurrentPageView(): Promise<MessageEmbed> {
@@ -59,30 +82,24 @@ export class PageSet<E extends DataModel> {
     public async getPreviousPageView(): Promise<MessageEmbed> {
         const currentPage = this._pages[this._position];
         if (currentPage instanceof DynamicRepeatedPage) {
-            const dynamicPage = currentPage as DynamicRepeatedPage<E>;
-            if (dynamicPage.hasPrevious) {
-                dynamicPage.previousPage();
+            if (currentPage.hasPrevious) {
+                currentPage.previousPage();
                 return this.getCurrentPageView();
             }
         }
-        if (this.hasPrevious) {
-            --this._position;
-        }
+        this.recursivePageTurn(-1);
         return this.getCurrentPageView();
     }
 
     public async getNextPageView(): Promise<MessageEmbed> {
         const currentPage = this._pages[this._position];
         if (currentPage instanceof DynamicRepeatedPage) {
-            const dynamicPage = currentPage as DynamicRepeatedPage<E>;
-            if (dynamicPage.hasNext) {
-                dynamicPage.nextPage();
+            if (currentPage.hasNext) {
+                currentPage.nextPage();
                 return this.getCurrentPageView();
             }
         }
-        if (this.hasNext) {
-            ++this._position;
-        }
+        this.recursivePageTurn(1);
         return this.getCurrentPageView();
     }
 

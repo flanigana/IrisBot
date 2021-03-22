@@ -13,6 +13,7 @@ import { findBestMatch } from '../utilities/string_matcher';
  * checks for element existence and data scraping. For now, this is how it is.
  */
 
+@injectable()
 export class RealmEyeService {
 
     private static readonly _BASE_REALMEYE_URL = 'https://www.realmeye.com';
@@ -106,7 +107,6 @@ export class RealmEyeService {
     private addClassStatsFromTable($: any, table: any, classList: ClassList) {
         $('tbody > tr', table).each((i, classRow) => {
             const className = $('th a', classRow).first().text()?.toLowerCase();
-            console.log(className);
             classList[className].maxStats = {};
             $('td > div', classRow).each((j, max) => {
                 const maxValue = max.children[0]?.data;
@@ -476,7 +476,7 @@ export class RealmEyeService {
 
         return Promise.all(promises).then(() => {
             return guildData;
-        })
+        });
     }
 
     private async addTopGuildCharacters(guildLinkName: string, guildData: GuildData): Promise<void> {

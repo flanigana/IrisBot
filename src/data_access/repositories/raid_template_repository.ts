@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { IRaidTemplate, RaidTemplate, RaidTemplateDoc } from "../../models/raid_template";
+import { getBlankRaidTemplate, IRaidTemplate, RaidTemplate, RaidTemplateDoc } from "../../models/raid_template";
 import { TemplateRepository } from "./generics/template_repository";
 
 @injectable()

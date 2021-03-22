@@ -69,5 +69,5 @@ export function getBlankRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemp
         additionalReacts: []
     };
 
-    return Object.assign<IRaidTemplate, Partial<IRaidTemplate>>(template, fields);
+    return Object.assign(template, fields);
 }

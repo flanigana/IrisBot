@@ -68,7 +68,7 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
         }
         this._ClientTools.addFieldToEmbed(embed, 'Additional Reacts', additionalReacts, {default: 'None'});
 
-        if (!finished) {
+        if (!this.isFinished) {
             this._ClientTools.addFieldToEmbed(embed, 'Error', 'Name, description, or Primary React left undefined. These are required.');
         }
         

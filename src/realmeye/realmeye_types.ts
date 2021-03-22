@@ -111,7 +111,7 @@ export type DungeonCompletions = {
 }
 
 export type ClassList = {
-    [key: string]: ClassInfo
+    [key: string]: ClassInfo;
 }
 
 export type ClassInfo = {

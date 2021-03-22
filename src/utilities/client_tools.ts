@@ -40,24 +40,37 @@ export class ClientTools {
      * @param value value for the field
      * @param inline whether or not to make the field inline
      */
-    public addFieldToEmbed(embed: MessageEmbed, name: string, value: string | string[], options?: Partial<FieldOptions>): MessageEmbed {
+    public addFieldToEmbed(embed: MessageEmbed, name: string, value: any, options?: Partial<FieldOptions>): MessageEmbed {
         const opts = Object.assign({
             inline: false,
             default: undefined,
             separator: ', '
         }, options);
         
+        let str = '';
         if (Array.isArray(value)) {
-            value = value.join(opts.separator);
+            str = value.join(opts.separator);
+        } else {
+            str = `${value}`;
         }
-        if (!value || value.trim().length === 0) {
+        if (!str || str.trim().length === 0) {
             if (opts.default) {
-                value = opts.default;
+                str = opts.default;
             } else {
                 return embed;
             }
         }
-        return embed.addField(name, value, opts.inline);
+        return embed.addField(name, str, opts.inline);
+    }
+
+    /**
+     * Adds a separating line break of -'s in the embed to either create a visual break or clear space for a new set of inlines.
+     * @param embed MessageEmbed to add break to
+     */
+    public addLineBreakFieldToEmbed(embed: MessageEmbed): MessageEmbed {
+        embed.addField('--------------------------------------------------------------------------------------------------',
+        '-----------------------------------------------------------------------------------------------');
+        return embed;
     }
 
     /**

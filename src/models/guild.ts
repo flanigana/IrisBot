@@ -49,3 +49,16 @@ const guildSchema = new mongoose.Schema({
 const Guild = mongoose.model<GuildDoc>('Guild', guildSchema);
 
 export { Guild }
+
+export function getBlankGuild(fields?: Partial<IGuild>): IGuild {
+    const guild: IGuild = {
+        _id: undefined,
+        name: undefined,
+        owner: undefined,
+        prefix: '!',
+        admins: [],
+        mods: []
+    };
+
+    return Object.assign(guild, fields);
+}

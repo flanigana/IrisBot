@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { type } from 'node:os';
 import { GuildTemplate, GuildTemplateDoc } from './interfaces/guild_template';
 
 export interface IVerificationTemplate extends GuildTemplate {
@@ -7,26 +8,41 @@ export interface IVerificationTemplate extends GuildTemplate {
     name: string;
     verificationChannel: string;
     logChannel: string;
+    guildVerification: boolean;
+    guildName: string;
+    guildRoles: GuildRoles;
     verifiedRoles: string[];
     removeRoles: string[];
     fame: number;
     rank: number;
-    dungeonRequirements: string[];
     requireHidden: boolean;
+    dungeonRequirements: DungeonRequirements;
 }
 
-export interface VerificationTemplateDoc extends GuildTemplateDoc {
+export type GuildRoles = {
+    setRoles: boolean,
+    founderRole: string,
+    leaderRole: string,
+    officerRole: string,
+    memberRole: string,
+    initiateRole: string
+}
+
+export type DungeonRequirements = {
+    [key: string]: number;
+}
+
+export function dungeonRequirementsToStringArray(requirements: DungeonRequirements): string[] {
+    const dungeons = [];
+    for (const key in requirements) {
+        const val = requirements[key];
+        dungeons.push(`${key}: ${val}`);
+    }
+    return dungeons;
+}
+
+export interface VerificationTemplateDoc extends GuildTemplateDoc, IVerificationTemplate {
     _id?: string;
-    guildId: string;
-    name: string;
-    verificationChannel: string;
-    logChannel: string;
-    verifiedRoles: string[];
-    removeRoles: string[];
-    fame: number;
-    rank: number;
-    dungeonRequirements: string[];
-    requireHidden: boolean;
 }
 
 const verificationTemplateSchema = new mongoose.Schema({
@@ -46,13 +62,30 @@ const verificationTemplateSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    guildVerification: {
+        type: Boolean,
+        required: true
+    },
+    guildName: {
+        type: String
+    },
+    guildRoles: {
+        setRoles: Boolean,
+        founderRole: String,
+        leaderRole: String,
+        officerRole: String,
+        memberRole: String,
+        initiateRole: String,
+        default: {
+            setRoles: false
+        }
+    },
     verifiedRoles: {
         type: [String],
         required: true
     },
     removeRoles: {
-        type: [String],
-        required: true
+        type: [String]
     },
     fame: {
         type: Number,
@@ -64,13 +97,13 @@ const verificationTemplateSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    dungeonRequirements: {
-        type: [String],
-        required: true
-    },
     requireHidden: {
         type: Boolean,
         required: true
+    },
+    dungeonRequirements: {
+        type: Map,
+        of: Number
     }
 });
 
@@ -84,13 +117,23 @@ export function getBlankVerificationTemplate(fields?: Partial<IVerificationTempl
         name: undefined,
         verificationChannel: undefined,
         logChannel: undefined,
+        guildVerification: false,
+        guildName: undefined,
+        guildRoles: {
+            setRoles: false,
+            founderRole: undefined,
+            leaderRole: undefined,
+            officerRole: undefined,
+            memberRole: undefined,
+            initiateRole: undefined
+        },
         verifiedRoles: [],
         removeRoles: [],
         fame: 0,
         rank: 0,
-        dungeonRequirements: [],
-        requireHidden: false
+        requireHidden: false,
+        dungeonRequirements: {}
     };
 
-    return Object.assign<IVerificationTemplate, Partial<IVerificationTemplate>>(template, fields);
+    return Object.assign(template, fields);
 }
