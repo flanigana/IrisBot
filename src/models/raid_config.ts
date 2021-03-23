@@ -2,20 +2,10 @@ import * as mongoose from 'mongoose';
 import { DataModel } from './interfaces/data_model';
 
 export interface IRaidConfig extends DataModel {
-    _id?: string;
-    guildId: string;
     raidLeaders: string[];
     runTime: number;
     confirmationsChannel: string;
     allowBooster: boolean;
-}
-
-export interface RaidConfigDoc extends mongoose.Document {
-    guildId: string;
-    raidLeaders: string[];
-    runTime: number;
-    confirmationsChannel: string;
-    allowBooster: boolean
 }
 
 const raidConfigSchema = new mongoose.Schema({
@@ -41,7 +31,7 @@ const raidConfigSchema = new mongoose.Schema({
     }
 });
 
-const RaidConfig = mongoose.model<RaidConfigDoc>('RaidConfig', raidConfigSchema);
+const RaidConfig = mongoose.model('RaidConfig', raidConfigSchema);
 
 export { RaidConfig }
 

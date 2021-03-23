@@ -2,16 +2,6 @@ import * as mongoose from 'mongoose';
 import { DataModel } from './interfaces/data_model';
 
 export interface IGuild extends DataModel {
-    _id: string;
-    name: string;
-    owner: string;
-    prefix: string;
-    admins: string[];
-    mods: string[];
-}
-
-export interface GuildDoc extends mongoose.Document {
-    _id: string;
     name: string;
     owner: string;
     prefix: string;
@@ -20,7 +10,7 @@ export interface GuildDoc extends mongoose.Document {
 }
 
 const guildSchema = new mongoose.Schema({
-    _id: {
+    guildId: {
         type: String,
         required: true
     },
@@ -46,13 +36,13 @@ const guildSchema = new mongoose.Schema({
     }
 });
 
-const Guild = mongoose.model<GuildDoc>('Guild', guildSchema);
+const Guild = mongoose.model('Guild', guildSchema);
 
 export { Guild }
 
 export function getBlankGuild(fields?: Partial<IGuild>): IGuild {
     const guild: IGuild = {
-        _id: undefined,
+        guildId: undefined,
         name: undefined,
         owner: undefined,
         prefix: '!',

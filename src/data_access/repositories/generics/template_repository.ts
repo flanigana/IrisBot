@@ -1,15 +1,15 @@
 import { injectable } from 'inversify';
 import { Query } from '../interfaces/repositories';
 import { GenericRepository } from './generic_repository';
-import { GuildTemplate, GuildTemplateDoc } from '../../../models/interfaces/guild_template';
+import { GuildTemplate } from '../../../models/interfaces/guild_template';
 import { Model } from 'mongoose';
 
 @injectable()
-export abstract class TemplateRepository<IEntity extends GuildTemplate, Doc extends GuildTemplateDoc>
-    extends GenericRepository<IEntity, Doc> {
+export abstract class TemplateRepository<IEntity extends GuildTemplate>
+    extends GenericRepository<IEntity> {
     
     public constructor(
-        model: Model<Doc>
+        model: Model<any>
     ) {
         super(model);
     }

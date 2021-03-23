@@ -4,20 +4,18 @@ import { DataModel } from '../../../models/interfaces/data_model';
 import { injectable, unmanaged } from 'inversify';
 
 @injectable()
-export abstract class GenericRepository<IEntity extends DataModel, EntityDoc extends Document> implements Repository<IEntity> {
+export abstract class GenericRepository<IEntity extends DataModel> implements Repository<IEntity> {
 
     protected readonly Model: Model<any>
 
     public constructor(
-        @unmanaged() model: Model<EntityDoc>
+        @unmanaged() model: Model<any>
     ) {
         this.Model = model;
     }
 
     public async update(entity: IEntity): Promise<boolean> {
-        const id = entity._id;
-        delete entity._id;
-        return this.Model.updateOne({_id: id}, entity, {upsert: true}).then(res => {
+        return this.Model.updateOne({_id: entity._id}, entity, {upsert: true}).then(res => {
             if (res.ok !== 1) {
                 return false;
             }
@@ -26,7 +24,7 @@ export abstract class GenericRepository<IEntity extends DataModel, EntityDoc ext
     }
 
     public async save(entity: IEntity): Promise<boolean> {
-        if (entity._id && entity._id !== '') {
+        if (entity._id) {
             return this.update(entity);
         } else {
             return this.Model.create(entity).then(res => {

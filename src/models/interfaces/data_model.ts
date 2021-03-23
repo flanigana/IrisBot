@@ -1,3 +1,6 @@
+import { ObjectId } from "mongoose";
+
 export interface DataModel {
-    _id?: string
+    _id?: ObjectId;
+    guildId: string;
 }

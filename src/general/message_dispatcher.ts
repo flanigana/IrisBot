@@ -49,8 +49,7 @@ export class MessageDispatcher {
      * @param message the received Message
      */
     public async handleGuildMessage(message: Message) {
-        await this._GuildService.validateGuildDoc(message.guild);
-        const guild = await this._GuildService.findById(message.guild.id);
+        const guild = await this._GuildService.safeFindGuild(message.guild);
         if (!message.content.startsWith(guild.prefix)) {
             return;
         }

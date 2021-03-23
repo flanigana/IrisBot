@@ -29,7 +29,7 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
     }
 
     protected get isFinished(): boolean {
-        const {name, verificationChannel, verifiedRoles, guildVerification, guildName, guildRoles} = this._template;
+        const {name, verificationChannel, verifiedRoles, guildVerification, guildName} = this._template;
         if (!name) {
             return false;
         }

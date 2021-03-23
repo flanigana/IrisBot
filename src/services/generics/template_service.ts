@@ -1,14 +1,14 @@
 import { injectable, unmanaged } from "inversify";
 import { TemplateRepository } from "../../data_access/repositories/generics/template_repository";
-import { GuildTemplate, GuildTemplateDoc } from "../../models/interfaces/guild_template";
+import { GuildTemplate } from "../../models/interfaces/guild_template";
 
 @injectable()
 export class TemplateService<T extends GuildTemplate> {
 
-    protected readonly _TemplateRepo: TemplateRepository<T, GuildTemplateDoc>;
+    protected readonly _TemplateRepo: TemplateRepository<T>;
 
     public constructor(
-        @unmanaged() templateRepo: TemplateRepository<T, GuildTemplateDoc>
+        @unmanaged() templateRepo: TemplateRepository<T>
     ) {
         this._TemplateRepo = templateRepo;
     }

@@ -1,10 +1,7 @@
 import * as mongoose from 'mongoose';
-import { type } from 'node:os';
-import { GuildTemplate, GuildTemplateDoc } from './interfaces/guild_template';
+import { GuildTemplate } from './interfaces/guild_template';
 
 export interface IVerificationTemplate extends GuildTemplate {
-    _id?: string;
-    guildId: string;
     name: string;
     verificationChannel: string;
     logChannel: string;
@@ -39,10 +36,6 @@ export function dungeonRequirementsToStringArray(requirements: DungeonRequiremen
         dungeons.push(`${key}: ${val}`);
     }
     return dungeons;
-}
-
-export interface VerificationTemplateDoc extends GuildTemplateDoc, IVerificationTemplate {
-    _id?: string;
 }
 
 const verificationTemplateSchema = new mongoose.Schema({
@@ -107,7 +100,7 @@ const verificationTemplateSchema = new mongoose.Schema({
     }
 });
 
-const VerificationTemplate = mongoose.model<VerificationTemplateDoc>('VerificationTemplate', verificationTemplateSchema);
+const VerificationTemplate = mongoose.model('VerificationTemplate', verificationTemplateSchema);
 
 export { VerificationTemplate }
 
