@@ -99,7 +99,7 @@ export class GuildService {
      * @param id Guild id
      */
     public async findById(id: string): Promise<IGuild> {
-        return this._GuildRepo.findByGuild(id);
+        return this._GuildRepo.findByGuildId(id);
     }
 
     /**
@@ -115,7 +115,7 @@ export class GuildService {
      * @returns whether a RaidConfig template exists
      */
     public async raidConfigExistsById(id: string): Promise<boolean> {
-        return this._RaidConfigRepository.existsByGuild(id);
+        return this._RaidConfigRepository.existsByGuildId(id);
     }
 
     /**
@@ -124,7 +124,7 @@ export class GuildService {
      * @returns the Guild's RaidConfig
      */
     public async findRaidConfigById(id: string): Promise<IRaidConfig> {
-        return this._RaidConfigRepository.findByGuild(id);
+        return this._RaidConfigRepository.findByGuildId(id);
     }
 
     /**
@@ -141,8 +141,8 @@ export class GuildService {
      * @param guild Discord Guild object to read information from
      */
     public async safeFindGuild(guild: Guild): Promise<IGuild> {
-        if (await this._GuildRepo.existsByGuild(guild.id)) {
-            return this._GuildRepo.findByGuild(guild.id);
+        if (await this._GuildRepo.existsByGuildId(guild.id)) {
+            return this._GuildRepo.findByGuildId(guild.id);
         } else {
             const iGuild = this.getDefaultGuildDoc(guild);
             await this._GuildRepo.save(iGuild);
@@ -167,7 +167,7 @@ export class GuildService {
      * @param guild Discord Guild object to read information from
      */
     private async getUpdatedGuildDoc(guild: Guild): Promise<IGuild> {
-        return this._GuildRepo.findByGuild(guild.id).then((iguild) => {
+        return this._GuildRepo.findByGuildId(guild.id).then((iguild) => {
             iguild.name = guild.name;
             iguild.owner = guild.ownerID;
             return iguild;
@@ -179,7 +179,7 @@ export class GuildService {
      * @param guild Discord Guild object to read information from
      */
     public async saveDiscordGuild(guild: Guild): Promise<boolean> {
-        return this._GuildRepo.existsByGuild(guild.id).then(async (exists) => {
+        return this._GuildRepo.existsByGuildId(guild.id).then(async (exists) => {
             let guildDoc;
             if (!exists) { // create Guild in database if it does not exist
                 guildDoc = this.getDefaultGuildDoc(guild);

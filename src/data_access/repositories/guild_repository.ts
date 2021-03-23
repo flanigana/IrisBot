@@ -10,11 +10,11 @@ export class GuildRepository
         super(Guild);
     }
 
-    public async existsByGuild(guildId: string): Promise<boolean> {
+    public async existsByGuildId(guildId: string): Promise<boolean> {
         return this.existsByQuery({guildId: guildId});
     }
 
-    public async findByGuild(guildId: string): Promise<IGuild> {
+    public async findByGuildId(guildId: string): Promise<IGuild> {
         return this.findByQuery({guildId: guildId});
     }
 }

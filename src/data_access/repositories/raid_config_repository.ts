@@ -9,11 +9,11 @@ export class RaidConfigRepository extends GenericRepository<IRaidConfig> {
         super(RaidConfig);
     }
 
-    public async existsByGuild(guildId: string): Promise<boolean> {
+    public async existsByGuildId(guildId: string): Promise<boolean> {
         return this.existsByQuery({guildId: guildId});
     }
 
-    public async findByGuild(guildId: string): Promise<IRaidConfig> {
+    public async findByGuildId(guildId: string): Promise<IRaidConfig> {
         return this.findByQuery({guildId: guildId});
     }
 }
