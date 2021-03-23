@@ -30,13 +30,13 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
 
     protected get isFinished(): boolean {
         const {name, description, primaryReact} = this._template;
-        if (!name || name === '') {
+        if (!name) {
             return false;
         }
-        if (!description || description === '') {
+        if (!description) {
             return false;
         }
-        if (!primaryReact || primaryReact === '') {
+        if (!primaryReact || !primaryReact.react) {
             return false;
         }
         return true;
@@ -53,7 +53,7 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
     
     // TODO: Add command to use template after creation
     public getEndPage(finished?: boolean): MessageEmbed {
-        const {name, description, primaryReact, secondaryReacts, secondaryReactLimits, additionalReacts} = this._template;
+        const {name, description, primaryReact, secondaryReacts, additionalReacts} = this._template;
         
         const embedDescription = !finished ? this._EndPageDescription : 'The template has been saved and is ready to use!';
         
@@ -62,11 +62,12 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
         if (embedDescription) {embed.setDescription(embedDescription);}
         this._ClientTools.addFieldToEmbed(embed, 'Name', name, {default: 'Unset'});
         this._ClientTools.addFieldToEmbed(embed, 'Description', description, {default: 'Unset'});
-        this._ClientTools.addFieldToEmbed(embed, 'Primary React', primaryReact, {inline: true, default: 'Unset'});
-        for (let i=0; i<secondaryReacts.length; i++) {
-            this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${secondaryReacts[i]}: ${secondaryReactLimits[i]}`, {inline: true});
+        this._ClientTools.addLineBreakFieldToEmbed(embed);
+        this._ClientTools.addFieldToEmbed(embed, 'Primary React', primaryReact.react, {inline: true, default: 'Unset'});
+        for (const sec of secondaryReacts) {
+            this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${sec.react}: ${sec.limit}`, {inline: true});
         }
-        this._ClientTools.addFieldToEmbed(embed, 'Additional Reacts', additionalReacts, {default: 'None'});
+        this._ClientTools.addFieldToEmbed(embed, 'Additional Reacts', additionalReacts.map(r => r.react), {default: 'None'});
 
         if (!this.isFinished) {
             this._ClientTools.addFieldToEmbed(embed, 'Error', 'Name, description, or Primary React left undefined. These are required.');

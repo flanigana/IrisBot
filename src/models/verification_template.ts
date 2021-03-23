@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { GuildTemplate } from './interfaces/guild_template';
+import { GuildTemplate } from './interfaces/data_model';
 
 export interface IVerificationTemplate extends GuildTemplate {
     name: string;

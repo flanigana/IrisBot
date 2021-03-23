@@ -1,4 +1,5 @@
 import { GuildMember } from "discord.js";
+import { RaidReact } from "../../models/raid_template";
 
 export class ReactionTracker {
 
@@ -6,9 +7,9 @@ export class ReactionTracker {
     private _limit: number;
     private readonly _Reactors: Set<GuildMember>;
 
-    public constructor(react: string, limit?: number) {
-        this._react = react;
-        this._limit = limit;
+    public constructor(react: RaidReact) {
+        this._react = react.react;
+        this._limit = react.limit ? react.limit : 0;
         this._Reactors = new Set<GuildMember>();
     }
 

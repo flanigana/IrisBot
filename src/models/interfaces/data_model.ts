@@ -1,6 +1,10 @@
-import { ObjectId } from "mongoose";
+import { ObjectID } from 'mongodb';
 
 export interface DataModel {
-    _id?: ObjectId;
+    _id?: ObjectID;
     guildId: string;
+}
+
+export interface GuildTemplate extends DataModel {
+    name: string
 }

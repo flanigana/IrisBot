@@ -20,12 +20,12 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
 
     function getExistingTemplateNames(): Promise<string[]> {
         return verificationTemplateService.findTemplatesByGuildId(guild.id).then((templates: IVerificationTemplate[]) => {
-            return templates.filter(t => t._id != template._id).map(t => t.name);
+            return templates.filter(t => !t._id.equals(template._id)).map(t => t.name);
         });
     }
     function getUsedVerificationChannels(): Promise<string[]> {
         return verificationTemplateService.findTemplatesByGuildId(guild.id).then((templates: IVerificationTemplate[]) => {
-            return templates.filter(t => t._id != template._id).map(t => t.verificationChannel);
+            return templates.filter(t => !t._id.equals(template._id)).map(t => t.verificationChannel);
         });
     }
 
@@ -40,19 +40,18 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
                 '\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!');
             clientTools.addFieldToEmbed(embed, 'Example', '\`General\`');
             clientTools.addFieldToEmbed(embed, 'Template Name', fields.name, {default: 'Unset', inline: true});
-            clientTools.addFieldToEmbed(embed, 'Existing Template Names', existingTemplates, {default: 'None', inline: true});
+            clientTools.addFieldToEmbed(embed, 'Other Template Names', existingTemplates, {default: 'None', inline: true});
             return embed;
         },
         async (fields: Partial<IVerificationTemplate>, res: string): Promise<string> => {
             res = res.replace(/[^\w\d ]/g, '');
-            return verificationTemplateService.existsByName(guild.id, res, false).then((exists) => {
-                if (exists) {
-                    return `Error: Template with the name ${res} already exists!`;
-                } else {
-                    fields.name = res;
-                    return 'Successfully updated template name!';
-                }
-            });
+            const existingTemplates = await getExistingTemplateNames();
+            if (existingTemplates.includes(res)) {
+                return `Error: Template with the name ${res} already exists!`;
+            } else {
+                fields.name = res;
+                return 'Successfully updated template name!';
+            }
         }
     ));
 
@@ -327,7 +326,7 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
             let dungeon = '';
             for (const arg of args) {
                 const num = parseInt(arg);
-                if (!isNaN(num)) {
+                if (!isNaN(num)) { // is num
                     if (!dungeon) {
                         return 'Error: Unexpected input formatting. Please look at the example and try again.';
                     }

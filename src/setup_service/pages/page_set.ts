@@ -1,6 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 import { DataModel } from '../../models/interfaces/data_model';
-import { DynamicConditionalPage, DynamicRepeatedPage, Page } from './page';
+import { DynamicConditionalPage, Page } from './page';
 
 export class PageSet<E extends DataModel> {
     
@@ -22,22 +22,10 @@ export class PageSet<E extends DataModel> {
     }
 
     public get hasPrevious(): boolean {
-        const currentPage = this._pages[this._position];
-        if (currentPage instanceof DynamicRepeatedPage) {
-            if (currentPage.hasPrevious) {
-                return true;
-            }
-        }
         return this.recursivePageCheck(this._position-1, -1);
     }
 
     public get hasNext(): boolean {
-        const currentPage = this._pages[this._position];
-        if (currentPage instanceof DynamicRepeatedPage) {
-            if (currentPage.hasNext) {
-                return true;
-            }
-        }
         return this.recursivePageCheck(this._position+1, 1);
     }
 
@@ -80,25 +68,11 @@ export class PageSet<E extends DataModel> {
     }
 
     public async getPreviousPageView(): Promise<MessageEmbed> {
-        const currentPage = this._pages[this._position];
-        if (currentPage instanceof DynamicRepeatedPage) {
-            if (currentPage.hasPrevious) {
-                currentPage.previousPage();
-                return this.getCurrentPageView();
-            }
-        }
         this.recursivePageTurn(-1);
         return this.getCurrentPageView();
     }
 
     public async getNextPageView(): Promise<MessageEmbed> {
-        const currentPage = this._pages[this._position];
-        if (currentPage instanceof DynamicRepeatedPage) {
-            if (currentPage.hasNext) {
-                currentPage.nextPage();
-                return this.getCurrentPageView();
-            }
-        }
         this.recursivePageTurn(1);
         return this.getCurrentPageView();
     }

@@ -1,6 +1,6 @@
 import { injectable, unmanaged } from "inversify";
 import { TemplateRepository } from "../../data_access/repositories/generics/template_repository";
-import { GuildTemplate } from "../../models/interfaces/guild_template";
+import { GuildTemplate } from "../../models/interfaces/data_model";
 
 @injectable()
 export class TemplateService<T extends GuildTemplate> {

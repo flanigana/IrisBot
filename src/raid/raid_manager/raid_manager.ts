@@ -56,12 +56,10 @@ export class RaidManager {
      * @param template the template to pull react information from 
      * @returns A Map of emoji names to a set of members who have confirmed their reaction with that emoji
      */
-    private buildLimitedReactions({secondaryReacts, secondaryReactLimits}: IRaidTemplate): Map<string, ReactionTracker> {
+    private buildLimitedReactions({secondaryReacts}: IRaidTemplate): Map<string, ReactionTracker> {
         const reacts = new Map<string, ReactionTracker>();
-        for (let i=0; i<secondaryReacts.length; i++) {
-            const react = secondaryReacts[i];
-            const limit = secondaryReactLimits[i];
-            reacts.set(react, new ReactionTracker(react, limit));
+        for (const react of secondaryReacts) {
+            reacts.set(react.react, new ReactionTracker(react));
         }
         return reacts;
     }
@@ -110,7 +108,7 @@ export class RaidManager {
             }
             if ((emoji.name === '✅' || emoji.name === '❌') && await this._GuildService.isRaidLeader(guild, user.id)) {
                 return true;
-            } else if (emoji.toString() === template.primaryReact || limitedReactions.has(emoji.toString())) {
+            } else if (emoji.toString() === template.primaryReact.react || limitedReactions.has(emoji.toString())) {
                 return true;
             } else if (emoji.toString() === nitroEmoji && config.allowBooster && this._GuildService.isNitroBooster(guild, user.id)) {
                 return true;
@@ -207,7 +205,7 @@ export class RaidManager {
             }
             properties.stoppedBy = GuildService.findGuildMember(properties.guild, user.id);
             collector.stop();
-        } else if (emoji.toString() === properties.template.primaryReact) {
+        } else if (emoji.toString() === properties.template.primaryReact.react) {
             this.onPrimaryReact(user, properties);
         } else if (properties.limitedReactions.has(emoji.toString())) {
             this.onSecondaryReact(emoji, user, properties);
@@ -364,9 +362,9 @@ export class RaidManager {
      * @param reactions Map to read reactions from
      */
     private addRaidReactions(message: Message, {config, template, nitroEmoji}: RaidProperties): void {
-        message.react(template.primaryReact);
-        template.secondaryReacts.forEach(r => {message.react(r)});
-        template.additionalReacts.forEach(r => {message.react(r)});
+        message.react(template.primaryReact.react);
+        template.secondaryReacts.forEach(r => {message.react(r.react)});
+        template.additionalReacts.forEach(r => {message.react(r.react)});
         if (config.allowBooster) {
             message.react(nitroEmoji);
         }

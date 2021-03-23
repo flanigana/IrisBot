@@ -1,13 +1,25 @@
 import * as mongoose from 'mongoose';
-import { GuildTemplate } from './interfaces/guild_template';
+import { GuildTemplate } from './interfaces/data_model';
 
 export interface IRaidTemplate extends GuildTemplate {
     name: string;
     description: string;
-    primaryReact: string;
-    secondaryReacts: string[];
-    secondaryReactLimits: number[];
-    additionalReacts: string[];
+    primaryReact: RaidReact;
+    secondaryReacts: RaidReact[];
+    additionalReacts: RaidReact[];
+}
+
+export type RaidReact = {
+    react: string;
+    limit?: number;
+}
+
+export function raidReactsToStringArray(reacts: RaidReact[]): string[] {
+    const arr = [];
+    for (const react of reacts) {
+        arr.push(`${react.react}: ${react.limit ? react.limit : 0}`);
+    }
+    return arr;
 }
 
 const raidTemplateSchema = new mongoose.Schema({
@@ -24,20 +36,24 @@ const raidTemplateSchema = new mongoose.Schema({
         required: true
     },
     primaryReact: {
-        type: String,
+        type: {
+            react: String
+        },
         required: true
     },
     secondaryReacts: {
-        type: [String],
+        type: [{
+            react: String,
+            limit: Number,
+            _id: false
+        }],
         required: true
     },
-    secondaryReactLimits: {
-        type: [Number],
-        required: true,
-        min: 0
-    },
     additionalReacts: {
-        type: [String],
+        type: [{
+            react: String,
+            _id: false
+        }],
         required: true
     }
 });
@@ -51,9 +67,10 @@ export function getBlankRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemp
         guildId: undefined,
         name: undefined,
         description: undefined,
-        primaryReact: undefined,
+        primaryReact: {
+            react: undefined
+        },
         secondaryReacts: [],
-        secondaryReactLimits: [],
         additionalReacts: []
     };
 

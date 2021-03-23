@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { Query } from '../interfaces/repositories';
 import { GenericRepository } from './generic_repository';
-import { GuildTemplate } from '../../../models/interfaces/guild_template';
 import { Model } from 'mongoose';
+import { GuildTemplate } from '../../../models/interfaces/data_model';
 
 @injectable()
 export abstract class TemplateRepository<IEntity extends GuildTemplate>

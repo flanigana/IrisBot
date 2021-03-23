@@ -7,7 +7,7 @@ import { ClientTools } from '../utilities/client_tools';
 import { Bot } from '../bot';
 import logger from '../utilities/logging';
 import { TemplateService } from '../services/generics/template_service';
-import { GuildTemplate } from '../models/interfaces/guild_template';
+import { GuildTemplate } from '../models/interfaces/data_model';
 
 @injectable()
 export class TemplateController<T extends GuildTemplate> {
