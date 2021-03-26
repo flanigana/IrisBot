@@ -4,33 +4,31 @@ import { Client, Message } from 'discord.js';
 import { MessageParser } from '../utilities/message_parser';
 import { IGuild } from '../models/guild';
 import { GuildService } from '../services/guild_service';
-import { RaidController } from '../raid/raid_controller';
+import { RaidController } from './raid_controller';
 import { ConfigController } from './config_controller';
 import { VerificationController } from '../verification/verification_controller';
+import { VerificationTemplateController } from './template_controllers/verification_template_controller';
 
 /**
- * Responsible for processing and redirecting messages to the service dealing with their respective command and origin
+ * Responsible for redirecting messages to the controller dealing with their respective command and origin
  */
 @injectable()
-export class MessageDispatcher {
+export class MessageController {
 
-    private readonly _Client: Client;
     private readonly _GuildService: GuildService;
     private readonly _ConfigController: ConfigController;
-    private readonly _VerificationController: VerificationController;
+    private readonly _VerificationTemplateController: VerificationTemplateController;
     private readonly _RaidController: RaidController;
 
     public constructor(
-        @inject(TYPES.Client) client: Client,
         @inject(TYPES.GuildService) guildService: GuildService,
         @inject(TYPES.ConfigController) configController: ConfigController,
-        @inject(TYPES.VerificationController) verificationController: VerificationController,
+        @inject(TYPES.VerificationController) verificationTemplateController: VerificationTemplateController,
         @inject(TYPES.RaidController) raidController: RaidController,
     ) {
-        this._Client = client;
         this._GuildService = guildService;
         this._ConfigController = configController;
-        this._VerificationController = verificationController;
+        this._VerificationTemplateController = verificationTemplateController;
         this._RaidController = raidController;
     }
 
@@ -45,7 +43,8 @@ export class MessageDispatcher {
     }
 
     /**
-     * Handles messages received in a server by first checking that it starts with the valid Guild prefix and then dispatching the command to the applicable services
+     * Handles messages received in a server by first checking that it starts with the valid Guild prefix and then dispatching the
+     * command to the applicable controller
      * @param message the received Message
      */
     public async handleGuildMessage(message: Message) {
@@ -60,7 +59,7 @@ export class MessageDispatcher {
                 this._ConfigController.handleMessage(message, args);
                 break;
             case 'verification':
-                this._VerificationController.handleMessage(message, args);
+                this._VerificationTemplateController.handleMessage(message, args);
                 break;
             case 'raid':
                 this._RaidController.handleMessage(message, args);

@@ -14,14 +14,6 @@ export type RaidReact = {
     limit?: number;
 }
 
-export function raidReactsToStringArray(reacts: RaidReact[]): string[] {
-    const arr = [];
-    for (const react of reacts) {
-        arr.push(`${react.react}: ${react.limit ? react.limit : 0}`);
-    }
-    return arr;
-}
-
 const raidTemplateSchema = new mongoose.Schema({
     guildId: {
         type: String,
@@ -75,4 +67,12 @@ export function getBlankRaidTemplate(fields?: Partial<IRaidTemplate>): IRaidTemp
     };
 
     return Object.assign(template, fields);
+}
+
+export function raidReactsToStringArray(reacts: RaidReact[]): string[] {
+    const arr = [];
+    for (const react of reacts) {
+        arr.push(`${react.react}: ${react.limit ? react.limit : 0}`);
+    }
+    return arr;
 }

@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import { DataModel } from './interfaces/data_model';
+import { GuildModel } from './interfaces/data_model';
 
-export interface IRaidConfig extends DataModel {
+export interface IRaidConfig extends GuildModel {
     raidLeaders: string[];
     runTime: number;
     confirmationsChannel: string;

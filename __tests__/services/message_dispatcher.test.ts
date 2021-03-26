@@ -1,4 +1,4 @@
-import { MessageDispatcher } from '../../src/general/message_dispatcher';
+import { MessageController } from '../../src/controllers/message_controller';
 import container from '../../inversify.config';
 import { TYPES } from '../../src/types';
 import { Client, TextChannel, Message, Guild } from 'discord.js';
@@ -6,7 +6,7 @@ import { GuildService } from '../../src/services/guild_service';
 import { IGuild } from '../../src/models/guild';
 
 describe('MessageDispatcher', () => {
-    let messageDispatcher: MessageDispatcher;
+    let messageDispatcher: MessageController;
     let clientMock: Client;
     let guildServiceMock: GuildService;
     let iGuildMock: IGuild;
@@ -28,7 +28,7 @@ describe('MessageDispatcher', () => {
         messageMock.content = '';
         Object.defineProperty(messageMock, 'guild', {get: () => guildMock});
 
-        messageDispatcher = container.get<MessageDispatcher>(TYPES.MessageDispatcher);
+        messageDispatcher = container.get<MessageController>(TYPES.MessageDispatcher);
     });
     beforeEach(() => {
         jest.resetAllMocks();

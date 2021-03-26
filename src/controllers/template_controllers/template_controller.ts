@@ -1,13 +1,13 @@
 import { inject, injectable, interfaces, unmanaged } from 'inversify';
-import container from '../../inversify.config';
-import { TYPES } from '../types';
-import { SetupService, SetupType } from '../setup_service/generics/setup_service';
+import container from '../../../inversify.config';
+import { TYPES } from '../../types';
+import { SetupService, SetupType } from '../../setup_service/generics/setup_service';
 import { Message, MessageEmbed } from 'discord.js';
-import { ClientTools } from '../utilities/client_tools';
-import { Bot } from '../bot';
-import logger from '../utilities/logging';
-import { TemplateService } from '../services/generics/template_service';
-import { GuildTemplate } from '../models/interfaces/data_model';
+import { ClientTools } from '../../utilities/client_tools';
+import { Bot } from '../../bot';
+import logger from '../../utilities/logging';
+import { TemplateService } from '../../services/generics/template_service';
+import { GuildTemplate } from '../../models/interfaces/data_model';
 
 @injectable()
 export class TemplateController<T extends GuildTemplate> {
@@ -117,20 +117,40 @@ export class TemplateController<T extends GuildTemplate> {
         templateManagerService.startService();
     }
 
-    public handleMessage(message: Message, args: string[]): void {
+    protected sendTemplateDoesNotExist(message: Message, templateName: string): void {
+        let embed = this._ClientTools.getStandardEmbed();
+        embed.setTitle('Verification Template Not Found')
+            .setDescription(`A verification template with the name **${templateName}** could not be found.`);
+        message.channel.send(embed);
+    }
+
+    public async handleMessage(message: Message, args: string[]): Promise<void> {
         if (args.length < 2) {
             return;
         }
-        switch (args[1].toLowerCase()) {
-            case 'create':
-            case 'edit':
+        const subCommand = args[1].toLowerCase();
+
+        switch (subCommand) {
+            case 'list':    // <type> list
+                this.listTemplates(message);
+                break;
+            case 'create':  // <type> create
                 this.createTemplateManager(message, args);
                 break;
-            case 'delete':
-                this.deleteTemplate(message, args);
+        }
+        
+        let templateName = args.slice(2).join(' ');
+        if (!(await this._TemplateService.existsByName(message.guild.id, templateName))) {
+            this.sendTemplateDoesNotExist(message, templateName);
+            return;
+        }
+
+        switch (subCommand) {
+            case 'edit':    // <type> edit :templateName
+                this.createTemplateManager(message, args);
                 break;
-            case 'list':
-                this.listTemplates(message);
+            case 'delete':  // <type> delete :templateName
+                this.deleteTemplate(message, args);
                 break;
         }
     }

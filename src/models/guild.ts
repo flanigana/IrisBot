@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import { DataModel } from './interfaces/data_model';
+import { GuildModel } from './interfaces/data_model';
 
-export interface IGuild extends DataModel {
+export interface IGuild extends GuildModel {
     name: string;
     owner: string;
     prefix: string;

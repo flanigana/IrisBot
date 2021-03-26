@@ -1,5 +1,5 @@
 import { GuildMember } from "discord.js";
-import { RaidReact } from "../../models/raid_template";
+import { RaidReact } from "../models/raid_template";
 
 export class ReactionTracker {
 

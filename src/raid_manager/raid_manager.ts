@@ -1,15 +1,15 @@
 import { Collection, Guild, GuildEmoji, GuildMember, Message, MessageEmbed, MessageReaction, ReactionCollector, ReactionEmoji, Role, TextChannel, User, VoiceChannel } from 'discord.js';
 import { inject, injectable } from 'inversify';
-import { TYPES } from '../../types';
-import { ClientTools } from '../../utilities/client_tools';
-import { RolesAndChannels } from '../../utilities/role_and_channel_finder';
-import logger from '../../utilities/logging';
-import { RaidTemplateService } from '../../services/raid_template_service';
-import { IRaidTemplate } from '../../models/raid_template';
-import { GuildService } from '../../services/guild_service';
+import { TYPES } from '../types';
+import { ClientTools } from '../utilities/client_tools';
+import { RolesAndChannels } from '../utilities/role_and_channel_finder';
+import logger from '../utilities/logging';
+import { RaidTemplateService } from '../services/raid_template_service';
+import { IRaidTemplate } from '../models/raid_template';
+import { GuildService } from '../services/guild_service';
 import { ReactionTracker } from './reaction_tracker';
 import { RaidStatus } from './raid_status';
-import { getDefaultRaidConfig, IRaidConfig } from '../../models/raid_config';
+import { getDefaultRaidConfig, IRaidConfig } from '../models/raid_config';
 
 type RaidProperties = {
     template: IRaidTemplate,
@@ -450,6 +450,18 @@ export class RaidManager {
         return true;
     }
 
+    private async verifyTemplate(message: Message, templateName: string): Promise<boolean> {
+        const res = await this._RaidTemplateService.existsByName(message.guild.id, templateName);
+        if (!res) {
+            const embed = this._ClientTools.getStandardEmbed()
+                .setTitle('Error: Invalid Template Name')
+                .setDescription(`${templateName} is not a valid template in this server.`);
+            message.channel.send(embed);
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Verifies that all given arguments are valid for the expected format
      * @param message message sent by user
@@ -457,8 +469,9 @@ export class RaidManager {
      * 'raid start :templateName :alertTextChannel :destVoiceChannel ?:location'
      * @returns whether or not all of the arguments given are valid
      */
-    private verifyArguments(message: Message, args: string[]): boolean {
+    private async verifyArguments(message: Message, args: string[]): Promise<boolean> {
         let passed = true;
+        passed = passed && await this.verifyTemplate(message, args[2]);
         passed = passed && this.verifyChannel(message, args[3], 'text'); 
         passed = passed && this.verifyChannel(message, args[4], 'voice');
         passed = passed && this.verifyRole(message, args[5]);
@@ -472,7 +485,7 @@ export class RaidManager {
      * 'raid start :templateName :alertTextChannel :destVoiceChannel :raiderRole ?:location'
      */
     public async startRaid(message: Message, args: string[]): Promise<void> {
-        if (!this.verifyArguments(message, args)) {
+        if (!(await this.verifyArguments(message, args))) {
             logger.debug('Guild:%s|%s - User:%s|%s failed to start a raid due to invalid arguments.', message.guild.id, message.guild.name, message.author.id, message.author.username);
             return;
         }

@@ -3,7 +3,7 @@ import { TYPES } from './types';
 import * as mongoose from 'mongoose';
 import { Client, ClientEvents, Guild, Message } from 'discord.js';
 import { GuildService } from './services/guild_service';
-import { MessageDispatcher } from './general/message_dispatcher';
+import { MessageController } from './controllers/message_controller';
 import { RealmEyeService } from './realmeye/realmeye_service';
 
 /**
@@ -16,7 +16,7 @@ import { RealmEyeService } from './realmeye/realmeye_service';
 export class Bot {
     private readonly _Client: Client;
     private readonly _Token: string;
-    private readonly _MessageDispatcher: MessageDispatcher;
+    private readonly _MessageDispatcher: MessageController;
     private readonly _RealmEyeService: RealmEyeService;
     private readonly _GuildService: GuildService;
 
@@ -27,7 +27,7 @@ export class Bot {
     constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.DiscordToken) token: string,
-        @inject(TYPES.MessageDispatcher) messageDispatcher: MessageDispatcher,
+        @inject(TYPES.MessageDispatcher) messageDispatcher: MessageController,
         @inject(TYPES.RealmEyeService) realmEyeService: RealmEyeService,
         @inject(TYPES.GuildService) guildService: GuildService
     ) {

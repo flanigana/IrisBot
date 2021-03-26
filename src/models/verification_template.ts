@@ -29,15 +29,6 @@ export type DungeonRequirements = {
     [key: string]: number;
 }
 
-export function dungeonRequirementsToStringArray(requirements: DungeonRequirements): string[] {
-    const dungeons = [];
-    for (const key in requirements) {
-        const val = requirements[key];
-        dungeons.push(`${key}: ${val}`);
-    }
-    return dungeons;
-}
-
 const verificationTemplateSchema = new mongoose.Schema({
     guildId: {
         type: String,
@@ -98,7 +89,7 @@ const verificationTemplateSchema = new mongoose.Schema({
         type: Map,
         of: Number
     }
-});
+}, {minimize: false});
 
 const VerificationTemplate = mongoose.model('VerificationTemplate', verificationTemplateSchema);
 
@@ -129,4 +120,13 @@ export function getBlankVerificationTemplate(fields?: Partial<IVerificationTempl
     };
 
     return Object.assign(template, fields);
+}
+
+export function dungeonRequirementsToStringArray(requirements: DungeonRequirements): string[] {
+    const dungeons = [];
+    for (const key in requirements) {
+        const val = requirements[key];
+        dungeons.push(`${key}: ${val}`);
+    }
+    return dungeons;
 }
