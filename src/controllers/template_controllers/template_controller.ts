@@ -133,10 +133,10 @@ export class TemplateController<T extends GuildTemplate> {
         switch (subCommand) {
             case 'list':    // <type> list
                 this.listTemplates(message);
-                break;
+                return;
             case 'create':  // <type> create
                 this.createTemplateManager(message, args);
-                break;
+                return;
         }
         
         let templateName = args.slice(2).join(' ');
@@ -148,10 +148,10 @@ export class TemplateController<T extends GuildTemplate> {
         switch (subCommand) {
             case 'edit':    // <type> edit :templateName
                 this.createTemplateManager(message, args);
-                break;
+                return;
             case 'delete':  // <type> delete :templateName
                 this.deleteTemplate(message, args);
-                break;
+                return;
         }
     }
 }

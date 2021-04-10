@@ -27,7 +27,6 @@ import { VerificationTemplateRepository } from './src/data_access/repositories/v
 import { VerificationTemplateService } from './src/services/verification_template_service';
 import { VerificationTemplateManagerService } from './src/setup_service/verification_template_manager_service';
 import { IVerificationTemplate } from './src/models/verification_template';
-import { VerificationController } from './src/verification/verification_controller';
 import { VerificationTemplateController } from './src/controllers/template_controllers/verification_template_controller';
 import { UserRepository } from './src/data_access/repositories/user_repository';
 import { VericodeRepository } from './src/data_access/repositories/vericode_repository';
@@ -63,7 +62,6 @@ container.bind<VerificationService>(TYPES.VerificationService).to(VerificationSe
 
 // controllers
 container.bind<ConfigController>(TYPES.ConfigController).to(ConfigController).inSingletonScope();
-container.bind<VerificationController>(TYPES.VerificationController).to(VerificationController).inSingletonScope();
 container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
 container.bind<VerificationTemplateController>(TYPES.VerificationTemplateController).to(VerificationTemplateController).inSingletonScope();
 container.bind<RaidTemplateController>(TYPES.RaidTemplateController).to(RaidTemplateController).inSingletonScope();

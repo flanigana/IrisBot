@@ -1,12 +1,11 @@
-import { injectable, inject, interfaces } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { TYPES } from '../types';
-import { Client, Message } from 'discord.js';
+import { Message } from 'discord.js';
 import { MessageParser } from '../utilities/message_parser';
 import { IGuild } from '../models/guild';
 import { GuildService } from '../services/guild_service';
 import { RaidController } from './raid_controller';
 import { ConfigController } from './config_controller';
-import { VerificationController } from '../verification/verification_controller';
 import { VerificationTemplateController } from './template_controllers/verification_template_controller';
 
 /**
@@ -23,7 +22,7 @@ export class MessageController {
     public constructor(
         @inject(TYPES.GuildService) guildService: GuildService,
         @inject(TYPES.ConfigController) configController: ConfigController,
-        @inject(TYPES.VerificationController) verificationTemplateController: VerificationTemplateController,
+        @inject(TYPES.VerificationTemplateController) verificationTemplateController: VerificationTemplateController,
         @inject(TYPES.RaidController) raidController: RaidController,
     ) {
         this._GuildService = guildService;

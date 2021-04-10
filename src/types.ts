@@ -20,7 +20,6 @@ export const TYPES = {
     VerificationTemplateRepository: Symbol('VerificationTemplateRepository'),
     VerificationTemplateService: Symbol('VerificationTemplateService'),
     VerificationTemplateController: Symbol('VerificationTemplateController'),
-    VerificationController: Symbol('VerificationController'),
     UserRepository: Symbol('UserRepository'),
     VericodeRepository: Symbol('VericodeRepository'),
     VerificationRepository: Symbol('VerificationRepository'),

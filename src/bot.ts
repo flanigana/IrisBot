@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from './types';
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import { Client, ClientEvents, Guild, Message } from 'discord.js';
 import { GuildService } from './services/guild_service';
 import { MessageController } from './controllers/message_controller';
