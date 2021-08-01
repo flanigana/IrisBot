@@ -16,4 +16,12 @@ export class UserRepository extends GenericRepository<IUser> {
     public async findByUserId(userId: string): Promise<IUser> {
         return this.findByQuery({userId: userId});
     }
+
+    public async existsByIgn(ign: string): Promise<boolean> {
+        return this.existsByQuery({ign: ign});
+    }
+
+    public async findByIgn(ign: string): Promise<IUser> {
+        return this.findByQuery({ign: ign});
+    }
 }

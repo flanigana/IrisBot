@@ -2,6 +2,12 @@ import { injectable, inject } from 'inversify';
 import { TYPES } from '../types';
 import { Client, Guild, GuildEmoji, MessageEmbed } from 'discord.js';
 
+export type EmbedField = {
+    name: string,
+    value: any,
+    options?: FieldOptions
+}
+
 type FieldOptions = {
     inline: boolean,
     default: string,
@@ -61,6 +67,18 @@ export class ClientTools {
             }
         }
         return embed.addField(name, str, opts.inline);
+    }
+
+    /**
+     * Adds a list of fields to a MessageEmbed. Uses addFieldToEmbed to check values are not empty and avoid errors.
+     * @param embed MessageEmbed to add fields to
+     * @param fields list of EmbedFields to add to embed
+     */
+    public addFieldsToEmbed(embed: MessageEmbed, ...fields: EmbedField[]): MessageEmbed {
+        for (const field of fields) {
+            embed = this.addFieldToEmbed(embed, field.name, field.value, field.options);
+        }
+        return embed;
     }
 
     /**

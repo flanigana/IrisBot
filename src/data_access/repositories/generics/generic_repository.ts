@@ -1,7 +1,8 @@
 import { Repository, Query } from '../interfaces/repositories';
-import { Document, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { DataModel } from '../../../models/interfaces/data_model';
 import { injectable, unmanaged } from 'inversify';
+import { ObjectID } from 'mongodb';
 
 @injectable()
 export abstract class GenericRepository<IEntity extends DataModel> implements Repository<IEntity> {
@@ -14,29 +15,19 @@ export abstract class GenericRepository<IEntity extends DataModel> implements Re
         this.Model = model;
     }
 
-    public async update(entity: IEntity): Promise<boolean> {
-        return this.Model.updateOne({_id: entity._id}, entity, {upsert: true}).then(res => {
-            if (res.ok !== 1) {
-                return false;
-            }
-            return true;
-        });
+    public async update(entity: IEntity): Promise<IEntity> {
+        return this.Model.updateOne({_id: entity._id}, entity, {upsert: true}).lean<IEntity>();
     }
 
-    public async save(entity: IEntity): Promise<boolean> {
+    public async save(entity: IEntity): Promise<IEntity> {
         if (entity._id) {
             return this.update(entity);
         } else {
-            return this.Model.create(entity).then(res => {
-                if (!res) {
-                    return false;
-                }
-                return true;
-            });
+            return this.Model.create(entity);
         }
     }
 
-    public async existsById(id: string): Promise<boolean> {
+    public async existsById(id: string | ObjectID): Promise<boolean> {
         return this.Model.exists({_id: id});
     }
 
@@ -48,7 +39,7 @@ export abstract class GenericRepository<IEntity extends DataModel> implements Re
         return this.Model.find().lean<IEntity[]>();
     }
 
-    public async findById(id: string): Promise<IEntity> {
+    public async findById(id: string | ObjectID): Promise<IEntity> {
         return this.Model.findById(id).lean<IEntity>();
     }
 
@@ -60,7 +51,7 @@ export abstract class GenericRepository<IEntity extends DataModel> implements Re
         return this.Model.find(query as any).lean<IEntity[]>();
     }
 
-    public async deleteById(id: string): Promise<boolean> {
+    public async deleteById(id: string | ObjectID): Promise<boolean> {
         return this.Model.deleteOne({_id: id}).then((res) => {
             if (res.deletedCount > 0) {
                 return true;

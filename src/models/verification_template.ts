@@ -2,7 +2,6 @@ import * as mongoose from 'mongoose';
 import { GuildTemplate } from './interfaces/data_model';
 
 export interface IVerificationTemplate extends GuildTemplate {
-    name: string;
     verificationChannel: string;
     logChannel: string;
     guildVerification: boolean;

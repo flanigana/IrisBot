@@ -10,14 +10,14 @@ import { RaidConfigRepository } from '../data_access/repositories/raid_config_re
 export class GuildService {
 
     private readonly _GuildRepo: GuildRepository;
-    private readonly _RaidConfigRepository: RaidConfigRepository;
+    private readonly _RaidConfigRepo: RaidConfigRepository;
 
     public constructor(
         @inject(TYPES.GuildRepository) guildRepo: GuildRepository,
         @inject(TYPES.RaidConfigRepository) raidConfigRepo: RaidConfigRepository
     ) {
         this._GuildRepo = guildRepo;
-        this._RaidConfigRepository = raidConfigRepo;
+        this._RaidConfigRepo = raidConfigRepo;
     }
 
     /**
@@ -115,7 +115,7 @@ export class GuildService {
      * @returns whether a RaidConfig template exists
      */
     public async raidConfigExistsById(id: string): Promise<boolean> {
-        return this._RaidConfigRepository.existsByGuildId(id);
+        return this._RaidConfigRepo.existsByGuildId(id);
     }
 
     /**
@@ -124,7 +124,7 @@ export class GuildService {
      * @returns the Guild's RaidConfig
      */
     public async findRaidConfigById(id: string): Promise<IRaidConfig> {
-        return this._RaidConfigRepository.findByGuildId(id);
+        return this._RaidConfigRepo.findByGuildId(id);
     }
 
     /**
@@ -132,8 +132,8 @@ export class GuildService {
      * @param config the RaidConfig to save
      * @returns if the save was successful
      */
-    public async saveRaidConfig(config: IRaidConfig): Promise<boolean> {
-        return this._RaidConfigRepository.save(config);
+    public async saveRaidConfig(config: IRaidConfig): Promise<IRaidConfig> {
+        return this._RaidConfigRepo.save(config);
     }
 
     /**
@@ -144,7 +144,7 @@ export class GuildService {
         if (await this._GuildRepo.existsByGuildId(guild.id)) {
             return this._GuildRepo.findByGuildId(guild.id);
         } else {
-            const iGuild = this.getDefaultGuildDoc(guild);
+            const iGuild = this.getDefaultGuild(guild);
             await this._GuildRepo.save(iGuild);
             return iGuild;
         }
@@ -154,7 +154,7 @@ export class GuildService {
      * Generates the default database document for a given Discord Guild
      * @param guild Discord Guild object to read information from
      */
-    private getDefaultGuildDoc(guild: Guild): IGuild {
+    private getDefaultGuild(guild: Guild): IGuild {
         return getBlankGuild({
             guildId: guild.id,
             name: guild.name,
@@ -166,7 +166,7 @@ export class GuildService {
      * Generates an updated database document for a given Discord Guild
      * @param guild Discord Guild object to read information from
      */
-    private async getUpdatedGuildDoc(guild: Guild): Promise<IGuild> {
+    private async getUpdatedGuild(guild: Guild): Promise<IGuild> {
         return this._GuildRepo.findByGuildId(guild.id).then((iguild) => {
             iguild.name = guild.name;
             iguild.owner = guild.ownerID;
@@ -178,13 +178,13 @@ export class GuildService {
      * Creates or updates the given Guild in the database when changes occur to the Discord Guild object
      * @param guild Discord Guild object to read information from
      */
-    public async saveDiscordGuild(guild: Guild): Promise<boolean> {
+    public async saveDiscordGuild(guild: Guild): Promise<IGuild> {
         return this._GuildRepo.existsByGuildId(guild.id).then(async (exists) => {
             let guildDoc;
             if (!exists) { // create Guild in database if it does not exist
-                guildDoc = this.getDefaultGuildDoc(guild);
+                guildDoc = this.getDefaultGuild(guild);
             } else { // update Guild in database
-                guildDoc = await this.getUpdatedGuildDoc(guild);
+                guildDoc = await this.getUpdatedGuild(guild);
             }
             return this._GuildRepo.save(guildDoc);
         });
@@ -194,7 +194,7 @@ export class GuildService {
      * Updates the given Guild in the database when database-specific attributes have been changed
      * @param guild Guild object used to update existing entry in the database
      */
-    public async save(guild: IGuild): Promise<boolean> {
+    public async save(guild: IGuild): Promise<IGuild> {
         return this._GuildRepo.save(guild);
     }
 }

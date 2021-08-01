@@ -15,3 +15,11 @@ const vericodeSchema = new mongoose.Schema({
 const Vericode = mongoose.model('Vericode', vericodeSchema);
 
 export { Vericode }
+
+export function getBlankVericode(fields?: Partial<IVericode>): IVericode {
+    const vericode: IVericode = {
+        userId: undefined,
+    };
+
+    return Object.assign(vericode, fields);
+}

@@ -5,7 +5,7 @@ import { SetupService, SetupType } from '../../setup_service/generics/setup_serv
 import { Message, MessageEmbed } from 'discord.js';
 import { ClientTools } from '../../utilities/client_tools';
 import { Bot } from '../../bot';
-import logger from '../../utilities/logging';
+import Logger from '../../utilities/logging';
 import { TemplateService } from '../../services/generics/template_service';
 import { GuildTemplate } from '../../models/interfaces/data_model';
 
@@ -76,7 +76,6 @@ export class TemplateController<T extends GuildTemplate> {
 
                     const confirmRegEx = new RegExp(/^y.*/i);
                     if (confirmRegEx.test(res.content)) {
-                        logger.info('Guild:%s|%s - Template "%s" was deleted by User:%s|%s.', message.guild.id, message.guild.name, templateName, message.author.id, message.author.username);
                         return this._TemplateService.deleteTemplate(message.guild.id, templateName, false).then(() => {
                             return msg.edit(this.createDeletionConfirmation(templateName, true));
                         });
@@ -97,15 +96,13 @@ export class TemplateController<T extends GuildTemplate> {
 
     protected async editTemplate(message: Message, args: string[]): Promise<SetupService<T>> {
         const templateName = args.length >= 3 ? args.slice(2).join(' ') : undefined;
-        const template = await this._TemplateService.findTemplate(message.guild.id, templateName, false);
-        logger.debug('Guild:%s|%s - User:%s|%s started TemplateManagerService in edit mode with Template:%s|%s.', message.guild.id, message.guild.name, message.author.id, message.author.username, template._id, template.name);
+        const template = await this._TemplateService.findTemplateByGuildIdAndName(message.guild.id, templateName, false);
         return container.get<interfaces.Factory<SetupService<T>>>(TYPES.SetupService)(this._SetupType, message, template) as SetupService<T>;
     }
 
     protected async createTemplateManager(message: Message, args: string[]): Promise<void> {
         let templateManagerService: SetupService<T>;
         if (args[1].match(/create/i)) {
-            logger.debug('Guild:%s|%s - User:%s|%s started TemplateManager in create mode.', message.guild.id, message.guild.name, message.author.id, message.author.username);
             templateManagerService = container.get<interfaces.Factory<SetupService<T>>>(TYPES.SetupService)(this._SetupType, message) as SetupService<T>;
         } else {
             templateManagerService = await this.editTemplate(message, args);

@@ -42,7 +42,7 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
         return true;
     }
 
-    public save(): Promise<boolean> {
+    public save(): Promise<IRaidTemplate> {
         return this._RaidTemplateService.save(this._template as IRaidTemplate);
     }
 

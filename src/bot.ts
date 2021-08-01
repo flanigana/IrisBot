@@ -22,7 +22,7 @@ export class Bot {
 
     public static readonly PREFIXES = new Set<string>(['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!']);
 
-    private _ignoreList: Map<string, Set<string>>; // used to isolate users using the template service
+    private readonly _IgnoreList: Map<string, Set<string>>; // used to isolate users using the template service
 
     constructor(
         @inject(TYPES.Client) client: Client,
@@ -37,7 +37,7 @@ export class Bot {
         this._RealmEyeService = realmEyeService;
         this._GuildService = guildService;
 
-        this._ignoreList = new Map();
+        this._IgnoreList = new Map();
     }
 
     /**
@@ -47,10 +47,10 @@ export class Bot {
      * @param channelId id of channel to ignore user in
      */
     public userIgnore(userId: string, channelId: string): void {
-        if (!this._ignoreList.has(userId)) {
-            this._ignoreList.set(userId, new Set([channelId]));
+        if (!this._IgnoreList.has(userId)) {
+            this._IgnoreList.set(userId, new Set([channelId]));
         } else {
-            this._ignoreList.get(userId).add(channelId);
+            this._IgnoreList.get(userId).add(channelId);
         }
     }
 
@@ -60,10 +60,10 @@ export class Bot {
      * @param channelId id of channel to unignore user in
      */
     public userUnignore(userId: string, channelId: string): void {
-        if (!this._ignoreList.has(userId) || !this._ignoreList.get(userId).has(channelId)) {
+        if (!this._IgnoreList.has(userId) || !this._IgnoreList.get(userId).has(channelId)) {
             return;
         }
-        this._ignoreList.get(userId).delete(channelId);
+        this._IgnoreList.get(userId).delete(channelId);
     }
 
     /**
@@ -99,10 +99,29 @@ export class Bot {
     }
 
     /**
-     * Starts the general run operations for the bot
-     * @param login whether to log the client in. Defaults to true, can be set to false for testing
+     * Creates an interval to keep an uptime status on the bot
      */
-    public listen(login = true): Promise<string> {
+    private startUptimePresence(): void {
+        this._Client.user.setActivity('for 00:00:00', {type: 'WATCHING'});
+        const start = Date.now();
+        this._Client.setInterval(() => {
+            let uptimeInSeconds = Math.floor((Date.now() - start) / 1000);
+            let hours = Math.floor(uptimeInSeconds / 3600);
+            uptimeInSeconds -= hours * 3600;
+            const minutes = Math.floor(uptimeInSeconds / 60);
+            uptimeInSeconds -= minutes * 60;
+            const hoursString = `${hours}`.length < 2 ? `0${hours}` : `${hours}`;
+            const minutesString = `${minutes}`.length < 2 ? `0${minutes}` : `${minutes}`;
+            const secondsString = `${uptimeInSeconds}`.length < 2 ? `0${uptimeInSeconds}` : `${uptimeInSeconds}`;
+            this._Client.user.setActivity(`for ${hoursString}:${minutesString}:${secondsString}`, {type: 'WATCHING'});
+        }, 5000);
+    }
+
+    /**
+     * Starts the general run operations for the bot
+     * @param login whether to log the client in. Defaults to true, can be set to false for testing to prevent actual login attempt
+     */
+    public listen(login = true): Promise<void> {
         // on message
         this._Client.on<'message'>('message', async (message: Message) => {
             if (message.author.bot) {
@@ -111,7 +130,7 @@ export class Bot {
             if (message.channel.type === 'text' && !this.startsWithValidPrefix(message.content)) {
                 return;
             }
-            if (this._ignoreList.has(message.author.id) && this._ignoreList.get(message.author.id).has(message.channel.id)) {
+            if (this._IgnoreList.has(message.author.id) && this._IgnoreList.get(message.author.id).has(message.channel.id)) {
                 return;
             }
             this._MessageDispatcher.handleMessage(message);
@@ -128,9 +147,9 @@ export class Bot {
         });
 
         if (login) {
-            return this._Client.login(this._Token);
-        } else { // used for testing only
-            return Promise.resolve('test');
+            return this._Client.login(this._Token).then(() => {
+                return this.startUptimePresence();
+            });
         }
     }
 
@@ -138,7 +157,9 @@ export class Bot {
      * Logs out the Discord Client and closes the connection to the database
      */
     public async logout() {
-        this._Client.destroy();
+        this._Client.user?.setActivity('Offline...').then(() => {
+            this._Client.destroy();
+        });
         await mongoose.disconnect();
     }
 }

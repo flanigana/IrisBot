@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../types';
 import { ClientTools } from '../utilities/client_tools';
 import { RolesAndChannels } from '../utilities/role_and_channel_finder';
-import logger from '../utilities/logging';
+import Logger from '../utilities/logging';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { IRaidTemplate } from '../models/raid_template';
 import { GuildService } from '../services/guild_service';
@@ -71,7 +71,7 @@ export class RaidManager {
      * @returns a RaidProperties object containing information to use during the raid
      */
     private async buildRaidProperties(message: Message, args: string[]): Promise<RaidProperties> {
-        const template = await this._RaidTemplateService.findTemplate(message.guild.id, args[2], false);
+        const template = await this._RaidTemplateService.findTemplateByGuildIdAndName(message.guild.id, args[2], false);
         let config;
         if (await this._GuildService.raidConfigExistsById(message.guild.id)) {
             config = await this._GuildService.findRaidConfigById(message.guild.id);
@@ -406,11 +406,10 @@ export class RaidManager {
      * @returns the Message object sent
      */
     private async sendNotifMessage({template, starter, alertChannel, raidChannel}: RaidProperties): Promise<Message> {
-        logger.debug('Sending notification message for %s\'s %s afk check', starter.displayName, template.name);
         const messageContent = `@here \`${template.name}\` started by ${starter.displayName} in ${raidChannel.name}!`;
         return alertChannel.send(messageContent).then(notifMessage => {
             return notifMessage;
-        }).catch(logger.error);
+        });
     }
     
     /**
@@ -486,7 +485,6 @@ export class RaidManager {
      */
     public async startRaid(message: Message, args: string[]): Promise<void> {
         if (!(await this.verifyArguments(message, args))) {
-            logger.debug('Guild:%s|%s - User:%s|%s failed to start a raid due to invalid arguments.', message.guild.id, message.guild.name, message.author.id, message.author.username);
             return;
         }
         const raidProperties = await this.buildRaidProperties(message, args);

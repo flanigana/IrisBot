@@ -1,4 +1,6 @@
 import { injectable, unmanaged } from "inversify";
+import { ObjectID } from "mongodb";
+import { ObjectId } from "mongoose";
 import { TemplateRepository } from "../../data_access/repositories/generics/template_repository";
 import { GuildTemplate } from "../../models/interfaces/data_model";
 
@@ -28,7 +30,7 @@ export class TemplateService<T extends GuildTemplate> {
      * @param guildId id of the template-owning Guild
      * @param templateName name of the template to find
      */
-    public async findTemplate(guildId: string, templateName: string, caseSensitive = true): Promise<T> {
+    public async findTemplateByGuildIdAndName(guildId: string, templateName: string, caseSensitive = true): Promise<T> {
         return this._TemplateRepo.findTemplate(guildId, templateName, caseSensitive);
     }
     
@@ -42,10 +44,26 @@ export class TemplateService<T extends GuildTemplate> {
     }
 
     /**
+     * Checks whether a template with the given id exists
+     * @param templateId Template id to search for
+     */
+    public async existsById(templateId: ObjectID): Promise<boolean> {
+        return this._TemplateRepo.existsById(templateId);
+    }
+
+    /**
+     * Returns a Template with the given id
+     * @param templateId Template id to search for 
+     */
+    public async findById(templateId: ObjectID): Promise<T> {
+        return this._TemplateRepo.findById(templateId);
+    }
+
+    /**
      * Creates or updates the given Template in the database
      * @param template Template to save
      */
-    public async save(template: T): Promise<boolean> {
+    public async save(template: T): Promise<T> {
         return this._TemplateRepo.save(template);
     }
 

@@ -32,7 +32,7 @@ export class RaidConfigManagerService extends SetupService<IRaidConfig> {
         return true;
     }
 
-    protected save(): Promise<boolean> {
+    protected save(): Promise<IRaidConfig> {
         return this._GuildService.saveRaidConfig(this._template as IRaidConfig);
     }
     protected getEndPage(finished?: boolean): MessageEmbed {

@@ -33,6 +33,10 @@ import { VericodeRepository } from './src/data_access/repositories/vericode_repo
 import { VerificationRepository } from './src/data_access/repositories/verification_repository';
 import { UserService } from './src/services/user_service';
 import { VerificationService } from './src/services/verification_service';
+import { VerificationController } from './src/controllers/verification_controller';
+import { VerificationManager } from './src/verification/verification_manager';
+import { VerificationMessenger } from './src/verification/verification_messenger';
+import { VericodeService } from './src/services/vericode_service';
 
 let container = new Container();
 
@@ -53,15 +57,21 @@ container.bind<VerificationRepository>(TYPES.VerificationRepository).to(Verifica
 container.bind<GuildService>(TYPES.GuildService).to(GuildService).inSingletonScope();
 container.bind<RaidTemplateService>(TYPES.RaidTemplateService).to(RaidTemplateService).inSingletonScope();
 container.bind<MessageController>(TYPES.MessageDispatcher).to(MessageController).inSingletonScope();
-container.bind<ClientTools>(TYPES.ClientTools).to(ClientTools).inSingletonScope();
+container.bind<VerificationManager>(TYPES.VerificationManager).to(VerificationManager).inSingletonScope();
 container.bind<RaidManager>(TYPES.RaidManager).to(RaidManager).inSingletonScope();
 container.bind<RealmEyeService>(TYPES.RealmEyeService).to(RealmEyeService).inSingletonScope();
 container.bind<VerificationTemplateService>(TYPES.VerificationTemplateService).to(VerificationTemplateService).inSingletonScope();
 container.bind<UserService>(TYPES.UserService).to(UserService).inSingletonScope();
 container.bind<VerificationService>(TYPES.VerificationService).to(VerificationService).inSingletonScope();
+container.bind<VericodeService>(TYPES.VericodeService).to(VericodeService).inSingletonScope();
+
+// utilities
+container.bind<ClientTools>(TYPES.ClientTools).to(ClientTools).inSingletonScope();
+container.bind<VerificationMessenger>(TYPES.VerificationMessenger).to(VerificationMessenger).inSingletonScope();
 
 // controllers
 container.bind<ConfigController>(TYPES.ConfigController).to(ConfigController).inSingletonScope();
+container.bind<VerificationController>(TYPES.VerificationController).to(VerificationController).inSingletonScope();
 container.bind<RaidController>(TYPES.RaidController).to(RaidController).inSingletonScope();
 container.bind<VerificationTemplateController>(TYPES.VerificationTemplateController).to(VerificationTemplateController).inSingletonScope();
 container.bind<RaidTemplateController>(TYPES.RaidTemplateController).to(RaidTemplateController).inSingletonScope();

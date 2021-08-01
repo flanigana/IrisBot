@@ -31,7 +31,7 @@ export class GuildConfigManagerService extends SetupService<IGuild> {
         return true;
     }
 
-    protected save(): Promise<boolean> {
+    protected save(): Promise<IGuild> {
         return this._GuildService.save(this._template as IGuild);
     }
     

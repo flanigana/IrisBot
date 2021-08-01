@@ -47,7 +47,7 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
         return true;
     }
 
-    protected save(): Promise<boolean> {
+    protected save(): Promise<IVerificationTemplate> {
         return this._VerificationTemplateService.save(this._template as IVerificationTemplate);
     }
 

@@ -36,3 +36,13 @@ const verificationSchema = new mongoose.Schema({
 const Verification = mongoose.model('Verification', verificationSchema);
 
 export { Verification }
+
+export function getBlankVerification(fields?: Partial<IVerification>): IVerification {
+    const verification: IVerification = {
+        templateId: undefined,
+        userId: undefined,
+        status: undefined
+    };
+
+    return Object.assign(verification, fields);
+}

@@ -8,4 +8,12 @@ export class VerificationTemplateRepository extends TemplateRepository<IVerifica
     public constructor() {
         super(VerificationTemplate);
     }
+
+    public async existsByVerificationChannelId(channelId: string): Promise<boolean> {
+        return this.existsByQuery({verificationChannel: channelId});
+    }
+
+    public async findByVerificationChannelId(channelId: string): Promise<IVerificationTemplate> {
+        return this.findByQuery({verificationChannel: channelId});
+    }
 }

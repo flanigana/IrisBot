@@ -5,8 +5,8 @@ export type Query<IEntity extends DataModel> = {
 }
 
 export interface Repository<IEntity extends DataModel> {
-    update(entity: IEntity): Promise<boolean>;
-    save(entity: IEntity): Promise<boolean>;
+    update(entity: IEntity): Promise<IEntity>;
+    save(entity: IEntity): Promise<IEntity>;
     existsById(id: string): Promise<boolean>;
     existsByQuery(query: Query<IEntity>): Promise<boolean>;
     findById(id: string): Promise<IEntity>;

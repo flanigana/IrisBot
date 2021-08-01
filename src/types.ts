@@ -24,5 +24,9 @@ export const TYPES = {
     VericodeRepository: Symbol('VericodeRepository'),
     VerificationRepository: Symbol('VerificationRepository'),
     UserService: Symbol('UserService'),
-    VerificationService: Symbol('VerificationService')
+    VerificationService: Symbol('VerificationService'),
+    VericodeService: Symbol('VericodeService'),
+    VerificationManager: Symbol('VerificationManager'),
+    VerificationController: Symbol('VerificationController'),
+    VerificationMessenger: Symbol('VerificationMessenger')
 };

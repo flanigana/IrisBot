@@ -6,7 +6,8 @@ import { IGuild } from '../models/guild';
 import { GuildService } from '../services/guild_service';
 import { RaidController } from './raid_controller';
 import { ConfigController } from './config_controller';
-import { VerificationTemplateController } from './template_controllers/verification_template_controller';
+import { VerificationController } from './verification_controller';
+import Logger from '../utilities/logging';
 
 /**
  * Responsible for redirecting messages to the controller dealing with their respective command and origin
@@ -16,18 +17,18 @@ export class MessageController {
 
     private readonly _GuildService: GuildService;
     private readonly _ConfigController: ConfigController;
-    private readonly _VerificationTemplateController: VerificationTemplateController;
+    private readonly _VerificationController: VerificationController;
     private readonly _RaidController: RaidController;
 
     public constructor(
         @inject(TYPES.GuildService) guildService: GuildService,
         @inject(TYPES.ConfigController) configController: ConfigController,
-        @inject(TYPES.VerificationTemplateController) verificationTemplateController: VerificationTemplateController,
+        @inject(TYPES.VerificationController) verificationController: VerificationController,
         @inject(TYPES.RaidController) raidController: RaidController,
     ) {
         this._GuildService = guildService;
         this._ConfigController = configController;
-        this._VerificationTemplateController = verificationTemplateController;
+        this._VerificationController = verificationController;
         this._RaidController = raidController;
     }
 
@@ -51,18 +52,35 @@ export class MessageController {
         if (!message.content.startsWith(guild.prefix)) {
             return;
         }
-        let args = this.parseGuildCommand(guild, message.content);
+        const args = this.parseGuildCommand(guild, message.content);
+        const command = args[0].toLowerCase();
 
-        switch (args[0].toLowerCase()) {
+        switch (command) {
             case 'config':
                 this._ConfigController.handleMessage(message, args);
                 break;
             case 'verification':
-                this._VerificationTemplateController.handleMessage(message, args);
+            case 'verify':
+                this._VerificationController.handleMessage(message, args);
                 break;
             case 'raid':
                 this._RaidController.handleMessage(message, args);
                 break;
+        }
+    }
+
+    /**
+     * Handles direct messages received from users by dispatching the command to the applicable controller
+     * @param message the recieved Message
+     */
+    public handleDirectMessage(message: Message): void {
+        const args = MessageParser.parseMessage(message.content.substr(1));
+        const command = args[0].toLowerCase();
+
+        switch (command) {
+            case 'verify':
+            case 'updateign':
+                this._VerificationController.handleMessage(message, args);
         }
     }
 
@@ -73,9 +91,12 @@ export class MessageController {
     public handleMessage(message: Message): void {
         switch (message.channel.type) {
             case 'text':
+                Logger.debug('Guild message received', {guild: message.guild, user: message.author});
                 this.handleGuildMessage(message);
                 break;
             case 'dm':
+                Logger.debug('Direct message received', {user: message.author});
+                this.handleDirectMessage(message);
                 break;
         }
     }

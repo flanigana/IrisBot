@@ -2,7 +2,6 @@ import * as mongoose from 'mongoose';
 import { GuildTemplate } from './interfaces/data_model';
 
 export interface IRaidTemplate extends GuildTemplate {
-    name: string;
     description: string;
     primaryReact: RaidReact;
     secondaryReacts: RaidReact[];

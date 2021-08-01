@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 import { inject, injectable, interfaces } from 'inversify';
 import { GuildService } from '../services/guild_service';
 import { TYPES } from '../types';
-import logger from '../utilities/logging';
+import Logger from '../utilities/logging';
 import container from '../../inversify.config';
 import { SetupService, SetupType } from '../setup_service/generics/setup_service';
 import { IGuild } from '../models/guild';
@@ -21,13 +21,20 @@ export class ConfigController {
         this._GuildService = guildService;
     }
 
+    /**
+     * Starts a SetupService for Guild basic configuration
+     * @param message message sent by User
+     */
     private async createGuildConfigService(message: Message): Promise<void> {
         const template = await this._GuildService.findById(message.guild.id);
-        logger.debug('Guild:%s|%s - User:%s|%s started GuildConfigService.', message.guild.id, message.guild.name, message.author.id, message.author.username);
         const service = container.get<interfaces.Factory<SetupService<IGuild>>>(TYPES.SetupService)(SetupType.GuildConfig, message, template) as GuildConfigManagerService;
         service.startService();
     }
 
+    /**
+     * Starts a SetupService for Guild raid configuration
+     * @param message message sent by User
+     */
     private async createRaidConfigService(message: Message): Promise<void> {
         const guildId = message.guild.id;
         let template;
@@ -45,10 +52,10 @@ export class ConfigController {
             return;
         }
         switch (args[1].toLowerCase()) {
-            case 'general': // config general
+            case 'general':     // config general
                 this.createGuildConfigService(message);
                 break;
-            case 'raid': // config raid
+            case 'raid':        // config raid
                 this.createRaidConfigService(message);
                 break;
         }

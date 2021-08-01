@@ -16,4 +16,8 @@ export class VericodeRepository extends GenericRepository<IVericode> {
     public async findByUserId(userId: string): Promise<IVericode> {
         return this.findByQuery({userId: userId});
     }
+
+    public async deleteByUserId(userId: string): Promise<boolean> {
+        return this.deleteByQuery({userId: userId});
+    }
 }

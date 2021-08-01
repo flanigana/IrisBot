@@ -5,7 +5,7 @@ import { DataModel } from '../../models/interfaces/data_model';
 import { Bot } from '../../bot';
 import { PageSet } from '../pages/page_set';
 import { ClientTools } from '../../utilities/client_tools';
-import logger from '../../utilities/logging';
+import Logger from '../../utilities/logging';
 
 export enum SetupType {
     GuildConfig, RaidConfig, RaidTemplate, VerificationTemplate
@@ -16,7 +16,7 @@ export abstract class SetupService<E extends DataModel> {
 
     private readonly _PageReactions = new Set(['⬅', '➡', '❌']);
     protected readonly _EndPageDescription = 'You\'re almost finished, just look over the information below and react with ➡ one last time to complete the service.';
-    protected readonly _EndPageDefaultFinalDescription = 'The service is complete and you\'re changes have been successfully saved.';
+    protected readonly _EndPageDefaultFinalDescription = 'The service is complete and your changes have been successfully saved.';
 
     private readonly _Bot: Bot;
     protected readonly _ClientTools: ClientTools;
@@ -45,7 +45,7 @@ export abstract class SetupService<E extends DataModel> {
         }
     }
 
-    protected abstract save(): Promise<boolean>;
+    protected abstract save(): Promise<E>;
     protected abstract getEndPage(finished?: boolean): MessageEmbed;
     protected abstract createPageSet(): PageSet<E>;
     protected abstract get isFinished(): boolean;
@@ -81,7 +81,6 @@ export abstract class SetupService<E extends DataModel> {
         collector.stop();
         this._Bot.userUnignore(this.authorId, this.channel.id);
         this.save();
-        logger.info('Guild:%s|%s - User:%s|%s saved a template:%s', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username, this._template);
         return this._view.edit(this.getEndPage(true));
     }
 
@@ -90,7 +89,6 @@ export abstract class SetupService<E extends DataModel> {
             case '✅': // end early
                 return this.onCompletion(collector);
             case '❌': // cancel
-                logger.debug('Guild:%s|%s - User:%s|%s cancelled the SetupService.', this._Message.guild.id, this._Message.guild.name, this.authorId, this._Message.author.username);
                 collector.stop();
                 this._Bot.userUnignore(this.authorId, this.channel.id);
                 return this._view.edit(this.getCancelledPage());

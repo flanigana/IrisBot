@@ -7,7 +7,7 @@ export module MessageParser {
      * @param message message string to parse
      */
     export function parseMessage(message: string) {
-        return message.match(/("[^"]+",?)|('[^']+',?)|(\S+)/g).map(arg => {return arg.replace(/['"]|,$/g, '')});
+        return message.match(/("[^"]+",?)|('[^']+',?)|(\S+)/g).map(arg => {return arg.replace(/^:|['"]|,$/g, '')});
     }
 
     /**

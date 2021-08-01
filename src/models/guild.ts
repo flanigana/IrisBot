@@ -34,7 +34,7 @@ const guildSchema = new mongoose.Schema({
         type: [String],
         required: true
     }
-});
+}, {timestamps: true});
 
 const Guild = mongoose.model('Guild', guildSchema);
 
