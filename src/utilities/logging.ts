@@ -1,3 +1,4 @@
+import { Channel, Guild, TextChannel, User, VoiceChannel } from 'discord.js';
 import winston from 'winston'
 
 const levels = {
@@ -28,11 +29,28 @@ const format = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.printf((info) => {
         let log = `{"timestamp":"${info.timestamp}","level":"${info.level}","message":"${info.message}"`;
-        if (info.user) {
-            log += `,"user":{"id":"${info.user.id}","username":"${info.user.username}","discriminator":"${info.user.discriminator}"}`;
+        if (info.error && info.error instanceof Error) {
+            const {error} = info;
+            log += `,"error":{"name":"${error.name}","message":"${error.message}","stack":"${error.stack}"}`;
         }
-        if (info.guild) {
-            log += `,"guild":{"id":"${info.guild.id}","name":"${info.guild.name}"}`;
+        if (info.user && info.user instanceof User) {
+            const {user} = info;
+            log += `,"user":{"id":"${user.id}","username":"${user.username}","discriminator":"${user.discriminator}"}`;
+        }
+        if (info.guild && info.guild instanceof Guild) {
+            const {guild} = info;
+            log += `,"guild":{"id":"${guild.id}","name":"${guild.name}"}`;
+        }
+        if (info.template) {
+            const {template} = info;
+            log += `,"template":{"_id":"${template._id}","guildId":"${template.guildId}","name":"${template.name}"}`;
+        }
+        if (info.channel && ((info.channel instanceof TextChannel) || info.channel instanceof VoiceChannel)) {
+            const {channel} = info;
+            log += `,"channel":{"id":"${channel.id}","guildId":"${channel.guild.id}","channelName":"${channel.name}"}`;
+        }
+        if (info.ign) {
+            log += `,"ign":${info.ign}`;
         }
         log += `}`;
         return log;
@@ -49,8 +67,8 @@ const transports = [
         )
     }),
     new winston.transports.File({
-        filename: 'logs/error.log',
-        level: 'error',
+        filename: 'logs/error_and_warn.log',
+        level: 'warn',
     }),
     new winston.transports.File({ filename: 'logs/all.log' })
 ];

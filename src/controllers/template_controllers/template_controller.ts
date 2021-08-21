@@ -37,7 +37,7 @@ export class TemplateController<T extends GuildTemplate> {
             if (templates.length === 0) {
                 embed.setDescription('There are no templates in this server.');
             } else {
-                this._ClientTools.addFieldToEmbed(embed, "Template Names", templates.map(t => t.name), {separator: '\n'});
+                this._ClientTools.addFieldToEmbed(embed, 'Template Names', templates.map(t => t.name), {separator: '\n'});
             }
             message.channel.send(embed);
         });
@@ -125,13 +125,13 @@ export class TemplateController<T extends GuildTemplate> {
         if (args.length < 2) {
             return;
         }
-        const subCommand = args[1].toLowerCase();
+        const subCommand = args[1].toUpperCase();
 
         switch (subCommand) {
-            case 'list':    // <type> list
+            case 'LIST':    // <type> list
                 this.listTemplates(message);
                 return;
-            case 'create':  // <type> create
+            case 'CREATE':  // <type> create
                 this.createTemplateManager(message, args);
                 return;
         }
@@ -143,10 +143,10 @@ export class TemplateController<T extends GuildTemplate> {
         }
 
         switch (subCommand) {
-            case 'edit':    // <type> edit :templateName
+            case 'EDIT':    // <type> edit :templateName
                 this.createTemplateManager(message, args);
                 return;
-            case 'delete':  // <type> delete :templateName
+            case 'DELETE':  // <type> delete :templateName
                 this.deleteTemplate(message, args);
                 return;
         }

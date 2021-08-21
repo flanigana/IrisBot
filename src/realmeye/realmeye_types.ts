@@ -1,4 +1,4 @@
-export type UserData = {
+export type RealmEyeUserData = {
     name?: string,
     realmEyeUrl?: string,
     description?: string,
@@ -19,14 +19,14 @@ export type UserData = {
     server?: string,
     avgFameChar?: number,
     avgExpChar?: number,
-    dungeonCompletions?: DungeonCompletions[]
+    dungeonCompletions?: DungeonCompletions
 }
 
 export type GuildData = {
     name?: string,
     realmEyeUrl?: string,
     description?: string,
-    members?: UserData[],
+    members?: RealmEyeUserData[],
     memberCount?: number,
     characterCount?: number,
     fame?: number,
@@ -40,7 +40,7 @@ export type GuildData = {
 
 export type Character = {
     private?: boolean,
-    owner?: UserData,
+    owner?: RealmEyeUserData,
     pet?: string,
     model?: CharacterModelInfo,
     class?: string,
@@ -106,8 +106,7 @@ export type TableIndexes<T> = {
 }
 
 export type DungeonCompletions = {
-    name: string,
-    completions: number
+    [key: string]: number;
 }
 
 export type ClassList = {

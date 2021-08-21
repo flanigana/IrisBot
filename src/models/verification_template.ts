@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { DungeonCompletions } from '../realmeye/realmeye_types';
 import { GuildTemplate } from './interfaces/data_model';
 
 export interface IVerificationTemplate extends GuildTemplate {
@@ -12,7 +13,7 @@ export interface IVerificationTemplate extends GuildTemplate {
     fame: number;
     rank: number;
     requireHidden: boolean;
-    dungeonRequirements: DungeonRequirements;
+    dungeonRequirements: DungeonCompletions;
 }
 
 export type GuildRoles = {
@@ -22,10 +23,6 @@ export type GuildRoles = {
     officerRole: string,
     memberRole: string,
     initiateRole: string
-}
-
-export type DungeonRequirements = {
-    [key: string]: number;
 }
 
 const verificationTemplateSchema = new mongoose.Schema({
@@ -121,7 +118,7 @@ export function getBlankVerificationTemplate(fields?: Partial<IVerificationTempl
     return Object.assign(template, fields);
 }
 
-export function dungeonRequirementsToStringArray(requirements: DungeonRequirements): string[] {
+export function dungeonRequirementsToStringArray(requirements: DungeonCompletions): string[] {
     const dungeons = [];
     for (const key in requirements) {
         const val = requirements[key];

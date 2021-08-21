@@ -23,16 +23,16 @@ export class RaidController {
             return;
         }
 
-        const subCommand = args[1].toLowerCase();
+        const subCommand = args[1].toUpperCase();
 
         switch (subCommand) {
-            case 'list':    // raid list
-            case 'create':  // raid create
-            case 'edit':    // raid edit :templateName
-            case 'delete':  // raid delete :templateName
+            case 'LIST':    // raid list
+            case 'CREATE':  // raid create
+            case 'EDIT':    // raid edit :templateName
+            case 'DELETE':  // raid delete :templateName
                 this._RaidTemplateController.handleMessage(message, args);
                 break;
-            case 'start':   // raid start :templateName :alertTextChannel :destVoiceChannel ?:location
+            case 'START':   // raid start :templateName :alertTextChannel :destVoiceChannel ?:location
                 this._RaidManager.startRaid(message, args);
                 break;
         }

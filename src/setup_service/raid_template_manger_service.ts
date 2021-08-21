@@ -60,10 +60,12 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
         const embed: MessageEmbed = this._ClientTools.getStandardEmbed()
             .setTitle('End');
         if (embedDescription) {embed.setDescription(embedDescription);}
-        this._ClientTools.addFieldToEmbed(embed, 'Name', name, {default: 'Unset'});
-        this._ClientTools.addFieldToEmbed(embed, 'Description', description, {default: 'Unset'});
-        this._ClientTools.addLineBreakFieldToEmbed(embed);
-        this._ClientTools.addFieldToEmbed(embed, 'Primary React', primaryReact.react, {inline: true, default: 'Unset'});
+        this._ClientTools.addFieldsToEmbed(embed,
+            {name: 'Name', value: name, options: {default: 'Unset'}},
+            {name: 'Description', value: description, options: {default: 'Unset'}},
+            ClientTools.LINE_BREAK_FIELD,
+            {name: 'Primary React', value: primaryReact.react, options: {inline: true, default: 'Unset'}}
+        );
         for (const sec of secondaryReacts) {
             this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${sec.react}: ${sec.limit}`, {inline: true});
         }

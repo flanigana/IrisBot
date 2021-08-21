@@ -53,17 +53,19 @@ export class MessageController {
             return;
         }
         const args = this.parseGuildCommand(guild, message.content);
-        const command = args[0].toLowerCase();
+        const command = args[0].toUpperCase();
 
         switch (command) {
-            case 'config':
+            case 'CONFIG':
                 this._ConfigController.handleMessage(message, args);
                 break;
-            case 'verification':
-            case 'verify':
+            case 'VERIFICATION':
+            case 'VERIFY':
+            case 'MANUALVERIFY':
+            case 'MANUALUNVERIFY':
                 this._VerificationController.handleMessage(message, args);
                 break;
-            case 'raid':
+            case 'RAID':
                 this._RaidController.handleMessage(message, args);
                 break;
         }
@@ -75,11 +77,11 @@ export class MessageController {
      */
     public handleDirectMessage(message: Message): void {
         const args = MessageParser.parseMessage(message.content.substr(1));
-        const command = args[0].toLowerCase();
+        const command = args[0].toUpperCase();
 
         switch (command) {
-            case 'verify':
-            case 'updateign':
+            case 'VERIFY':
+            case 'UPDATEIGN':
                 this._VerificationController.handleMessage(message, args);
         }
     }

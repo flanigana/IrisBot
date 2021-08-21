@@ -51,11 +51,11 @@ export class ConfigController {
         if (args.length < 2) {
             return;
         }
-        switch (args[1].toLowerCase()) {
-            case 'general':     // config general
+        switch (args[1].toUpperCase()) {
+            case 'GENERAL':     // config general
                 this.createGuildConfigService(message);
                 break;
-            case 'raid':        // config raid
+            case 'RAID':        // config raid
                 this.createRaidConfigService(message);
                 break;
         }

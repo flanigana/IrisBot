@@ -1,16 +1,17 @@
 import { Guild, Channel, Role } from 'discord.js';
+import { StringUtils } from './string_utils';
 
 /**
  * Module with functions used to retrieve Channel and Role objects within a Discord Guild
  */
-export module RolesAndChannels {
+export abstract class RolesAndChannels {
 
     /**
      * Returns a Channel of a Guild given its id and optionally its type
      * @param guild Discord Guild containing the Channel
      * @param channelId id of the Channel
      */
-    export function getChannelById(guild: Guild, channelId: string, type?: 'text' | 'voice'): Channel  {
+    public static getChannelById(guild: Guild, channelId: string, type?: 'text' | 'voice'): Channel  {
         let channel = guild.channels.cache.get(channelId);
         return channel.type === type ? channel : undefined;
     };
@@ -20,7 +21,7 @@ export module RolesAndChannels {
      * @param guild Discord Guild containing the Role
      * @param roleId id of the Role
      */
-    export function getRoleById(guild: Guild, roleId: string): Role {
+    public static getRoleById(guild: Guild, roleId: string): Role {
         return guild.roles.cache.get(roleId);
     };
     
@@ -30,9 +31,9 @@ export module RolesAndChannels {
      * @param channelName name of the Channel
      * @param type the type of the Channel
      */
-    export function getChannelByName(guild: Guild, channelName: string, type?: 'text' | 'voice'): Channel {
+    public static getChannelByName(guild: Guild, channelName: string, type?: 'text' | 'voice'): Channel {
         return guild.channels.cache.find((channel) => {
-            if (channel.name.toLowerCase() !== channelName.toLowerCase()) {
+            if (StringUtils.equalsIgnoreCase(channel.name, channelName)) {
                 return false;
             }
             if (type && channel.type !== type) {
@@ -47,8 +48,8 @@ export module RolesAndChannels {
      * @param guild Discord Guild containing the Role
      * @param roleName name of the Role
      */
-    export function getRoleByName(guild: Guild, roleName: string): Role {
-        return guild.roles.cache.find((role) => (role.name.toLowerCase() === roleName.toLowerCase()));
+    public static getRoleByName(guild: Guild, roleName: string): Role {
+        return guild.roles.cache.find(role => StringUtils.equalsIgnoreCase(role.name, roleName));
     };
     
     /**
@@ -57,12 +58,12 @@ export module RolesAndChannels {
      * @param channel identifier for the Channel
      * @param type the type of the Channel
      */
-    export function getChannel(guild: Guild, channel: string, type?: 'text' | 'voice'): Channel {
+    public static getChannel(guild: Guild, channel: string, type?: 'text' | 'voice'): Channel {
         const channelRegex = new RegExp(/(<#\d*>)/g);
         if (channelRegex.test(channel)) {
-            return getChannelById(guild, channel.replace(/^<#|>$/g, ''), type);
+            return this.getChannelById(guild, channel.replace(/^<#|>$/g, ''), type);
         } else {
-            return getChannelByName(guild, channel, type);
+            return this.getChannelByName(guild, channel, type);
         }
     };
     
@@ -71,14 +72,32 @@ export module RolesAndChannels {
      * @param guild Discord Guild containing the Role
      * @param role identifier for the Role
      */
-    export function getRole(guild: Guild, role: string): Role {
+    public static getRole(guild: Guild, role: string): Role {
         const roleRegex = new RegExp(/(<@&\d*>)/g);
         if (roleRegex.test(role)) {
-            return getRoleById(guild, role.replace(/^<@&|>$/g, ''));
+            return this.getRoleById(guild, role.replace(/^<@&|>$/g, ''));
         } else {
-            return getRoleByName(guild, role);
+            return this.getRoleByName(guild, role);
         }
     };
+
+    /**
+     * Returns an array of Roles of a Guild given either their <@&id> forms or their names
+     * If the role is not found, it is not added to the array. Because of this, array length
+     * can be shorter than the original length of the given array.
+     * @param guild Discord Guild containing the Role
+     * @param role array of identifiers for the Roles
+     */
+    public static getRoles(guild: Guild, ...roles: string[]): Role[] {
+        const foundRoles: Role[] = [];
+        roles.forEach(r => {
+            const foundRole = this.getRole(guild, r);
+            if (foundRole) {
+                foundRoles.push(foundRole);
+            }
+        });
+        return foundRoles;
+    }
 
     /**
      * Creates a merged list of Roles or Channels from an original list and a new list of arguments.
@@ -91,7 +110,7 @@ export module RolesAndChannels {
      * @param type whether the arguments expected are of type 'role' or 'channel'
      * @returns a merged or new list depending on the arguments contained
      */
-    export function getUpdatedList(guild: Guild, orig: string[], args: string[], type: 'role' | 'channel'): string[] {
+    public static getUpdatedList(guild: Guild, orig: string[], args: string[], type: 'role' | 'channel'): string[] {
         const origList = new Set<string>(orig);
         const newOnly = new Set<string>();
         let reset = true;
@@ -107,9 +126,9 @@ export module RolesAndChannels {
                 arg = arg.substr(1);
             }
             if (type === 'role') {
-                arg = getRole(guild, arg)?.toString();
+                arg = this.getRole(guild, arg)?.toString();
             } else {
-                arg = getChannel(guild, arg)?.toString();
+                arg = this.getChannel(guild, arg)?.toString();
             }
             if (arg) {
                 if (mode === '-') {

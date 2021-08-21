@@ -5,6 +5,7 @@ import { Guild, GuildMember } from 'discord.js';
 import { GuildRepository } from '../data_access/repositories/guild_repository';
 import { IRaidConfig } from '../models/raid_config';
 import { RaidConfigRepository } from '../data_access/repositories/raid_config_repository';
+import { ClientTools } from '../utilities/client_tools';
 
 @injectable()
 export class GuildService {
@@ -18,15 +19,6 @@ export class GuildService {
     ) {
         this._GuildRepo = guildRepo;
         this._RaidConfigRepo = raidConfigRepo;
-    }
-
-    /**
-     * Finds the GuildMember with the given id in the given Guild
-     * @param guild Guild to search for member in
-     * @param memberId id of the member to search for
-     */
-    public static findGuildMember(guild: Guild, memberId: string): GuildMember {
-        return guild.members.cache.find(m => (m.id === memberId));
     }
 
     /**
@@ -46,7 +38,7 @@ export class GuildService {
      * @returns whether the member has admin permissions
      */
     public isAdmin(guild: Guild, member: string | GuildMember): Promise<boolean> {
-        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
         if (guildMember.id === '225044370930401280' || guildMember.hasPermission('ADMINISTRATOR')) {
             return Promise.resolve(true);
         }
@@ -62,7 +54,7 @@ export class GuildService {
      * @returns whether the member has mod permissions
      */
     public isMod(guild: Guild, member: string | GuildMember): Promise<boolean> {
-        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
         return this.findById(guild.id).then(iGuild => {
             return iGuild.mods.some(role => GuildService.hasRole(guildMember, role))
                 || this.isAdmin(guild, guildMember);
@@ -76,7 +68,7 @@ export class GuildService {
      * @returns whether the member has raid leader permissions
      */
     public isRaidLeader(guild: Guild, member: string | GuildMember): Promise<boolean> {
-        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
         return this.findRaidConfigById(guild.id).then(iRaidConfig => {
             return iRaidConfig.raidLeaders.some(role => GuildService.hasRole(guildMember, role))
                 || this.isAdmin(guild, guildMember);
@@ -90,16 +82,29 @@ export class GuildService {
      * @returns whether the member is a nitro-booster
      */
     public isNitroBooster(guild: Guild, member: string | GuildMember): boolean {
-        const guildMember = typeof member === 'string' ? GuildService.findGuildMember(guild, member) : member;
+        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
         return guildMember.premiumSince ? true : false;
     }
 
     /**
      * Returns the database document information for the Guild with the given id
-     * @param id Guild id
+     * @param guildId Guild id
      */
-    public async findById(id: string): Promise<IGuild> {
-        return this._GuildRepo.findByGuildId(id);
+    public async findById(guildId: string): Promise<IGuild> {
+        return this._GuildRepo.findByGuildId(guildId);
+    }
+
+    /**
+     * Returns the display name of the Guild in Discords given an id
+     * @param guildId Guild id
+     */
+    public async findGuildName(guildId: string): Promise<string> {
+        if (!this._GuildRepo.existsByGuildId(guildId)) {
+            return;
+        }
+        return this._GuildRepo.findByGuildId(guildId).then(g => {
+            return g.name;
+        });
     }
 
     /**
@@ -111,20 +116,20 @@ export class GuildService {
 
     /**
      * Checks whether a RaidConfig template exists for the Guild with the given id
-     * @param id Guild id
+     * @param guildID Guild id
      * @returns whether a RaidConfig template exists
      */
-    public async raidConfigExistsById(id: string): Promise<boolean> {
-        return this._RaidConfigRepo.existsByGuildId(id);
+    public async raidConfigExistsById(guildID: string): Promise<boolean> {
+        return this._RaidConfigRepo.existsByGuildId(guildID);
     }
 
     /**
      * Returns the RaidConfig for the Guild with the given id
-     * @param id Guild id
+     * @param guildId Guild id
      * @returns the Guild's RaidConfig
      */
-    public async findRaidConfigById(id: string): Promise<IRaidConfig> {
-        return this._RaidConfigRepo.findByGuildId(id);
+    public async findRaidConfigById(guildId: string): Promise<IRaidConfig> {
+        return this._RaidConfigRepo.findByGuildId(guildId);
     }
 
     /**

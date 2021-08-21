@@ -1,9 +1,9 @@
 import { injectable } from 'inversify';
 import * as cheerio from 'cheerio';
 import { RateLimitRequestService } from '../utilities/rate_limit_request_service';
-import { RealmEyeError } from './realmeye_exception';
-import { Character, CharacterModelInfo, ClassList, DungeonCompletions, EquipmentSet, GuildData, Item, StatType, TableIndexes, UserData } from './realmeye_types';
-import { findBestMatch } from '../utilities/string_matcher';
+import { RealmEyeError } from './realmeye_error';
+import { Character, CharacterModelInfo, ClassList, DungeonCompletions, EquipmentSet, GuildData, Item, StatType, TableIndexes, RealmEyeUserData } from './realmeye_types';
+import { StringUtils } from '../utilities/string_utils';
 
 /**
  * Cheerio NOTE: Any method having a parameter type of 'any' is due to Cheerio not exposing
@@ -88,7 +88,7 @@ export class RealmEyeService {
             const classData = $('a', classCell).first();
             const classLink = `${RealmEyeService._BASE_REALMEYE_URL}${classData.attr()?.href}`;
             const img = $('img', classData).first();
-            const className = img.attr()?.alt?.toLowerCase();
+            const className = img.attr()?.alt?.toUpperCase();
             const imgSrc:string = img.attr()?.src;
             let imageLink;
             if (imgSrc?.startsWith('//')) {
@@ -106,7 +106,7 @@ export class RealmEyeService {
 
     private addClassStatsFromTable($: any, table: any, classList: ClassList) {
         $('tbody > tr', table).each((i, classRow) => {
-            const className = $('th a', classRow).first().text()?.toLowerCase();
+            const className = $('th a', classRow).first().text()?.toUpperCase();
             classList[className].maxStats = {};
             $('td > div', classRow).each((j, max) => {
                 const maxValue = max.children[0]?.data;
@@ -118,7 +118,7 @@ export class RealmEyeService {
         });
     }
 
-    public async getRealmEyeUserData(ign: string): Promise<UserData> {
+    public async getRealmEyeUserData(ign: string): Promise<RealmEyeUserData> {
         const baseUrl = `${RealmEyeService._BASE_REALMEYE_URL}/player`;
         const url = `${baseUrl}/${ign}`;
         const { data, status, statusText } = await this._RequestService.get(url);
@@ -135,7 +135,7 @@ export class RealmEyeService {
 
         const name = $('div h1 .entity-name', container).text();
 
-        const userData:UserData = {
+        const userData:RealmEyeUserData = {
             name: name,
             realmEyeUrl: `${baseUrl}/${name}`
         }
@@ -162,59 +162,59 @@ export class RealmEyeService {
         return description;
     }
 
-    private addUserTableInfo($: any, container: any, userData: UserData): void {
+    private addUserTableInfo($: any, container: any, userData: RealmEyeUserData): void {
         const summaryTable = $('div table.summary', container);
         $('tr', summaryTable).each((i, e) => {
             const td = $('td', e);
             const rowTitle = td.first().text();
             const data = td.get(1);
             let num;
-            switch (rowTitle.toLowerCase()) {
-                case 'characters':
+            switch (rowTitle.toUpperCase()) {
+                case 'CHARACTERS':
                     num = data.children[0]?.data;
                     userData.characterCount = num ? parseInt(num) : num;
                     break;
-                case 'skins':
+                case 'SKINS':
                     num = $('span', data).first().text();
                     userData.skins = num ? parseInt(num) : num;
                     break;
-                case 'exaltations':
+                case 'EXALTATIONS':
                     num = $('span', data).first().text();
                     userData.exaltations = num ? parseInt(num) : num;
                     break;
-                case 'fame':
+                case 'FAME':
                     num = $('span', data).first().text();
                     userData.fame = num ? parseInt(num) : num;
                     break;
-                case 'exp':
+                case 'EXP':
                     num = $('span', data).first().text();
                     userData.exp = num ? parseInt(num) : num;
                     break;
-                case 'rank':
+                case 'RANK':
                     const starContainer = $('.star-container', data).first();
                     num = starContainer.text();
                     userData.rank = num ? parseInt(num) : num;
                     const star: string = $('.star', starContainer).first().attr()?.class?.match(/(star-.*)/)[1];
                     userData.star = star?.substr(star?.indexOf('-')+1);
                     break;
-                case 'account fame':
+                case 'ACCOUNT FAME':
                     num = $('span', data).first().text();
                     userData.accountFame = num ? parseInt(num) : num;
                     break;
-                case 'guild':
+                case 'GUILD':
                     const guild = $('a', data).first();
                     if (guild.length) {
                         userData.guild = guild.text();
                         userData.realmEyeGuildUrl = `${RealmEyeService._BASE_REALMEYE_URL}${guild.attr().href}`;
                     }
                     break;
-                case 'guild rank':
+                case 'GUILD RANK':
                     userData.guildRank = data.children[0].data;
                     break;
-                case 'created':
+                case 'CREATED':
                     userData.created = data.children[0].data;
                     break;
-                case 'last seen':
+                case 'LAST SEEN':
                     let lastSeen = data.children[0].data;
                     if (!lastSeen) {
                         lastSeen = data.children[0]?.children[0]?.data + data.children[1]?.data;
@@ -318,41 +318,41 @@ export class RealmEyeService {
             if (!heading) {
                 return;
             }
-            switch (heading.toLowerCase()) {
-                case 'name':
+            switch (heading.toUpperCase()) {
+                case 'NAME':
                     if (type === 'guild') {
                         indexes.model = i-1;
                     }
                     indexes.owner = i;
-                case 'class':
+                case 'CLASS':
                     if (type === 'user') {
                         indexes.pet = i-2;
                         indexes.model = i-1;
                     }
                     indexes.class = i;
                     break;
-                case 'l':
+                case 'L':
                     indexes.level = i;
                     break;
-                case 'fame':
+                case 'FAME':
                     indexes.fame = i;
                     break;
-                case 'exp':
+                case 'EXP':
                     indexes.exp = i;
                     break;
-                case 'pl.':
+                case 'PL.':
                     indexes.place = i;
                     break;
-                case 'equipment':
+                case 'EQUIPMENT':
                     indexes.equipment = i;
                     break;
-                case 'stats':
+                case 'STATS':
                     indexes.stats = i;
                     break;
-                case 'last seen':
+                case 'LAST SEEN':
                     indexes.lastSeen = i;
                     break;
-                case 'srv.':
+                case 'SRV.':
                     indexes.server = i;
                     break;
             }
@@ -411,14 +411,14 @@ export class RealmEyeService {
         return equipmentSet;
     }
 
-    private async addDungeonCompletions(ign: string, userData: UserData): Promise<void> {
+    private async addDungeonCompletions(ign: string, userData: RealmEyeUserData): Promise<void> {
         const url = `${RealmEyeService._BASE_REALMEYE_URL}/graveyard-summary-of-player/${ign}`;
         const { data, status } = await this._RequestService.get(url);
         if (status !== 200) {
             return;
         }
 
-        const completions: DungeonCompletions[] = [];
+        const completions: DungeonCompletions = {};
 
         const $ = cheerio.load(data);
         const completionsTable = $('table.main-achievements');
@@ -428,20 +428,12 @@ export class RealmEyeService {
             let dungeon;
             if (rowLabel?.match(/.*completed$/i) && !rowLabel?.match(/^quests.*/i)) {
                 const name = rowLabel.replace(' completed', '');
-                dungeon = findBestMatch(name, Array.from(RealmEyeService._DUNGEON_LIST));
+                dungeon = StringUtils.findBestMatch(name, Array.from(RealmEyeService._DUNGEON_LIST));
             }
             if (dungeon) {
                 const total = rowData.get(2)?.children[0]?.data;
                 const num = total ? parseInt(total) : 0;
-                // checks for cases like Lair of Draconis having two rows (easy & hard)
-                if (completions.length && completions[completions.length-1].name === dungeon) {
-                    completions[completions.length-1].completions += num;
-                } else {
-                    completions.push({
-                        name: dungeon,
-                        completions: num
-                    });
-                }
+                completions[dungeon] = num;
             }
         });
         userData.dungeonCompletions = completions;
@@ -498,28 +490,28 @@ export class RealmEyeService {
             const rowTitle = td.first().text();
             const data = td.get(1);
             let num;
-            switch (rowTitle.toLowerCase()) {
-                case 'members':
+            switch (rowTitle.toUpperCase()) {
+                case 'MEMBERS':
                     num = data.children[0]?.data;
                     guildData.memberCount = num ? parseInt(num) : num;
                     break;
-                case 'characters':
+                case 'CHARACTERS':
                     num = data.children[0]?.data;
                     guildData.characterCount = num ? parseInt(num) : num;
                     break;
-                case 'fame':
+                case 'FAME':
                     const fame = $('span', data).first()?.text();
                     guildData.fame = fame ? parseInt(fame) : fame;
                     num = $('a', data).first()?.text();
                     guildData.fameRank = num ? parseInt(num) : num;
                     break;
-                case 'exp':
+                case 'EXP':
                     const exp = $('span', data).first()?.text();
                     guildData.exp = exp ? parseInt(exp) : exp;
                     num = $('a', data).first()?.text();
                     guildData.expRank = num ? parseInt(num) : num;
                     break;
-                case 'most active on':
+                case 'MOST ACTIVE ON':
                     guildData.server = $('a', data).first().text();
                     num = data.children[1]?.data?.replace(' (', '');
                     guildData.serverRank = num ? parseInt(num) : num;
@@ -535,15 +527,15 @@ export class RealmEyeService {
         }
         
         const memberTableIndexes = this.buildMemberTableIndexes($, membersTable);
-        const members: UserData[] = [];
+        const members: RealmEyeUserData[] = [];
         $('tbody > tr', membersTable).each((i, memberRow) => {
             members.push(this.buildMember($, memberRow, memberTableIndexes));
         });
         guildData.members = members;
     }
 
-    private buildMember($: any, memberRow: any, indexes: TableIndexes<UserData>): UserData {
-        const member: UserData = {};
+    private buildMember($: any, memberRow: any, indexes: TableIndexes<RealmEyeUserData>): RealmEyeUserData {
+        const member: RealmEyeUserData = {};
         $('td', memberRow).each((j, memberData) => {
             let num;
             switch (j) {
@@ -608,43 +600,43 @@ export class RealmEyeService {
         return member;
     }
 
-    private buildMemberTableIndexes($: any, membersTable: any): TableIndexes<UserData> {
-        const indexes: TableIndexes<UserData> = {};
+    private buildMemberTableIndexes($: any, membersTable: any): TableIndexes<RealmEyeUserData> {
+        const indexes: TableIndexes<RealmEyeUserData> = {};
         $('thead th', membersTable).each((i, e) => {
             let heading: string = e.children[0]?.data;
             heading = heading || e.children[0]?.children[0]?.data; 
             if (!heading) {
                 return;
             }
-            switch (heading.toLowerCase()) {
-                case 'name':
+            switch (heading.toUpperCase()) {
+                case 'NAME':
                     indexes.name = i;
                     break;
-                case 'guild rank':
+                case 'GUILD RANK':
                     indexes.guildRank = i;
                     break;
-                case 'fame':
+                case 'FAME':
                     indexes.fame = i;
                     break;
-                case 'exp':
+                case 'EXP':
                     indexes.exp = i;
                     break;
-                case 'rank':
+                case 'RANK':
                     indexes.rank = i;
                     break;
-                case 'c':
+                case 'C':
                     indexes.characterCount = i;
                     break;
-                case 'last seen':
+                case 'LAST SEEN':
                     indexes.lastSeen = i;
                     break;
-                case 'srv.':
+                case 'SRV.':
                     indexes.server = i;
                     break;
-                case 'af/c':
+                case 'AF/C':
                     indexes.avgFameChar = i;
                     break;
-                case 'ae/c':
+                case 'AE/C':
                     indexes.avgExpChar = i;
                     break;
             }

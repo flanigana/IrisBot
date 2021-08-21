@@ -82,7 +82,7 @@ export class RaidManager {
             template: template,
             config: config,
             guild: message.guild,
-            starter: GuildService.findGuildMember(message.guild, message.author.id),
+            starter: ClientTools.findGuildMember(message.guild, message.author.id),
             alertChannel: RolesAndChannels.getChannel(message.guild, args[3], 'text') as TextChannel,
             raidChannel: RolesAndChannels.getChannel(message.guild, args[4], 'voice') as VoiceChannel,
             raiderRole: RolesAndChannels.getRole(message.guild, args[5]),
@@ -124,7 +124,7 @@ export class RaidManager {
      * @param properties the options object to read raid information from
      */
     private async onPrimaryReact(user: User, {guild, raiders, raidLeaders}: RaidProperties): Promise<void> {
-        const guildMember = GuildService.findGuildMember(guild, user.id);
+        const guildMember = ClientTools.findGuildMember(guild, user.id);
         if (await this._GuildService.isRaidLeader(guild, user.id)) {
             raidLeaders.add(guildMember);
         }
@@ -171,7 +171,7 @@ export class RaidManager {
     private onSecondaryReact(emoji: GuildEmoji | ReactionEmoji, user: User, properties: RaidProperties): void {
         const { guild, location, limitedReactions, confirmationsMessage } = properties;
         const tracker = limitedReactions.get(emoji.toString());
-        const guildMember = GuildService.findGuildMember(guild, user.id);
+        const guildMember = ClientTools.findGuildMember(guild, user.id);
         if (!tracker.has(guildMember)) {
             this.confirmReaction(emoji, user).then(confirmed => {
                 if (confirmed && !limitedReactions.get(emoji.toString()).atMaxSize) {
@@ -203,7 +203,7 @@ export class RaidManager {
             if (emoji.name === '❌') {
                 properties.status = RaidStatus.CANCELLED;
             }
-            properties.stoppedBy = GuildService.findGuildMember(properties.guild, user.id);
+            properties.stoppedBy = ClientTools.findGuildMember(properties.guild, user.id);
             collector.stop();
         } else if (emoji.toString() === properties.template.primaryReact.react) {
             this.onPrimaryReact(user, properties);

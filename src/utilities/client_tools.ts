@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../types';
-import { Client, Guild, GuildEmoji, MessageEmbed } from 'discord.js';
+import { Client, Guild, GuildEmoji, GuildMember, MessageEmbed, MessageEmbedOptions } from 'discord.js';
 
 export type EmbedField = {
     name: string,
@@ -9,9 +9,9 @@ export type EmbedField = {
 }
 
 type FieldOptions = {
-    inline: boolean,
-    default: string,
-    separator: string
+    inline?: boolean,
+    default?: string,
+    separator?: string
 }
 @injectable()
 export class ClientTools {
@@ -19,12 +19,44 @@ export class ClientTools {
     private readonly _BotGuilds = new Set(['710578568211464192', '708761992705474680', '711504382394630194', '711491483588493313']);
     private readonly _EmojiTypes = ['Portal', 'Key', 'Class', 'Ability'];
 
+    public static readonly LINE_BREAK_FIELD: EmbedField = {
+        name: '--------------------------------------------------------------------------------------------------',
+        value: '-----------------------------------------------------------------------------------------------'
+    };
+
     private readonly _Client: Client;
     
     public constructor(
         @inject(TYPES.Client) client: Client
     ) {
         this._Client = client;
+    }
+
+    /**
+     * Returns the Discord Guild with the given id
+     * @param guildId id of Guild
+     */
+    public findGuild(guildId: string): Guild {
+        return this._Client.guilds.cache.find(g => (g.id === guildId));
+    }
+
+    /**
+     * Finds the GuildMember with the given id in the Guild with the given id
+     * @param guildId id of Guild to serach for member in
+     * @param memberId id of the user to search for
+     * @returns 
+     */
+    public findGuildMember(guildId: string, memberId: string): GuildMember {
+        return this.findGuild(guildId)?.members.cache.find(m => (m.id === memberId));
+    }
+    
+    /**
+     * Finds the GuildMember with the given id in the given Guild
+     * @param guild Guild to search for member in
+     * @param memberId id of the user to search for
+     */
+    public static findGuildMember(guild: Guild, memberId: string): GuildMember {
+        return guild.members.cache.find(m => (m.id === memberId));
     }
 
     /**
@@ -36,8 +68,6 @@ export class ClientTools {
         .setFooter("Iris Bot", this._Client.user.avatarURL())
         .setTimestamp();
     }
-
-    
 
     /**
      * Adds a field to a MessageEmbed. Checks that the value is not empty first to avoid errors.
@@ -68,15 +98,15 @@ export class ClientTools {
         }
         return embed.addField(name, str, opts.inline);
     }
-
+    
     /**
-     * Adds a list of fields to a MessageEmbed. Uses addFieldToEmbed to check values are not empty and avoid errors.
-     * @param embed MessageEmbed to add fields to
+     * Adds the given EmbedFields to a MessageEmbed. Checks that the value is not empty first to avoid errors.
+     * @param embed MessageEmbed to add field to
      * @param fields list of EmbedFields to add to embed
      */
     public addFieldsToEmbed(embed: MessageEmbed, ...fields: EmbedField[]): MessageEmbed {
-        for (const field of fields) {
-            embed = this.addFieldToEmbed(embed, field.name, field.value, field.options);
+        for (const {name, value, options} of fields) {
+            this.addFieldToEmbed(embed, name, value, options);
         }
         return embed;
     }
@@ -86,8 +116,7 @@ export class ClientTools {
      * @param embed MessageEmbed to add break to
      */
     public addLineBreakFieldToEmbed(embed: MessageEmbed): MessageEmbed {
-        embed.addField('--------------------------------------------------------------------------------------------------',
-        '-----------------------------------------------------------------------------------------------');
+        this.addFieldsToEmbed(embed, ClientTools.LINE_BREAK_FIELD);
         return embed;
     }
 

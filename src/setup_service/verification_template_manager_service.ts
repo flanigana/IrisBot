@@ -64,30 +64,36 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
         const embed = this._ClientTools.getStandardEmbed()
             .setTitle('End of Verification Template');
         if (embedDescription) {embed.setDescription(embedDescription);}
-        this._ClientTools.addFieldToEmbed(embed, 'Name', name, {default: 'Unset', inline: true});
-        this._ClientTools.addFieldToEmbed(embed, 'Verification Channel', verificationChannel, {default: 'Unset', inline: true});
-        this._ClientTools.addFieldToEmbed(embed, 'Log Channel', logChannel, {default: 'Unset', inline: true});
-        this._ClientTools.addLineBreakFieldToEmbed(embed);
+        this._ClientTools.addFieldsToEmbed(embed,
+            {name: 'Name', value: name, options: {default: 'Unset', inline: true}},
+            {name: 'Verification Channel', value:verificationChannel, options: {default: 'Unset', inline: true}},
+            {name: 'Log Channel', value: logChannel, options: {default: 'Unset', inline: true}},
+            ClientTools.LINE_BREAK_FIELD
+        );
         if (this._template.guildVerification) {
             this._ClientTools.addFieldToEmbed(embed, 'Guild Name', this._template.guildName, {inline: true});
             if (this._template.guildRoles?.setRoles) {
                 const {founderRole, leaderRole, officerRole, memberRole, initiateRole} = this._template.guildRoles;
-                this._ClientTools.addFieldToEmbed(embed, 'Founder Role', founderRole, {default: 'Unset', inline: true});
-                this._ClientTools.addFieldToEmbed(embed, 'Leader Role', leaderRole, {default: 'Unset', inline: true});
-                this._ClientTools.addFieldToEmbed(embed, 'Officer Role', officerRole, {default: 'Unset', inline: true});
-                this._ClientTools.addFieldToEmbed(embed, 'Member Role', memberRole, {default: 'Unset', inline: true});
-                this._ClientTools.addFieldToEmbed(embed, 'Initiate Role', initiateRole, {default: 'Unset', inline: true});
+                this._ClientTools.addFieldsToEmbed(embed,
+                    {name: 'Founder Role', value: founderRole, options: {default: 'Unset', inline: true}},
+                    {name: 'Leader Role', value: leaderRole, options: {default: 'Unset', inline: true}},
+                    {name: 'Officer Role', value: officerRole, options: {default: 'Unset', inline: true}},
+                    {name: 'Member Role', value: memberRole, options: {default: 'Unset', inline: true}},
+                    {name: 'Initiate Role', value: initiateRole, options: {default: 'Unset', inline: true}}
+                );
             }
             this._ClientTools.addLineBreakFieldToEmbed(embed);
         }
-        this._ClientTools.addFieldToEmbed(embed, 'Verified Roles to Give', verifiedRoles, {default: 'None', inline: true});
-        this._ClientTools.addFieldToEmbed(embed, 'Roles to Remove Upon Verification', removeRoles, {default: 'None', inline: true});
-        this._ClientTools.addLineBreakFieldToEmbed(embed);
-        this._ClientTools.addFieldToEmbed(embed, 'Fame Requirement', fame, {inline: true});
-        this._ClientTools.addFieldToEmbed(embed, 'Rank Requirement', rank, {inline: true});
-        this._ClientTools.addFieldToEmbed(embed, 'Require Hidden Location?', requireHidden ? 'Yes' : 'No', {inline: true});
-        this._ClientTools.addLineBreakFieldToEmbed(embed);
-        this._ClientTools.addFieldToEmbed(embed, 'Dungeon Requirements', dungeonRequirementsToStringArray(dungeonRequirements), {default:'None', separator: '\n'});
+        this._ClientTools.addFieldsToEmbed(embed,
+            {name: 'Verified Roles to Give', value: verifiedRoles, options: {default: 'None', inline: true}},
+            {name: 'Roles to Remove Upon Verification', value: removeRoles, options: {default: 'None', inline: true}},
+            ClientTools.LINE_BREAK_FIELD,
+            {name: 'Fame Requirement', value: fame, options: {inline: true}},
+            {name: 'Rank Requirement', value: rank, options: {inline: true}},
+            {name: 'Require Hidden Location?', value: requireHidden ? 'Yes' : 'No', options: {inline: true}},
+            ClientTools.LINE_BREAK_FIELD,
+            {name: 'Dungeon Requirements', value: dungeonRequirementsToStringArray(dungeonRequirements), options: {default:'None', separator: '\n'}}
+        );
 
         if (!this.isFinished) {
             this._ClientTools.addFieldToEmbed(embed, 'Error', 'Name, Verification Channel, and at least one Verified Role are all required.');

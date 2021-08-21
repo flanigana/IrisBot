@@ -26,11 +26,16 @@ export class VerificationController {
         this._UserService = userService;
     }
 
+    /**
+     * Handles and dispatches verification messages received in a Guild
+     * @param message Message sent in a Guild Channel
+     * @param args Parsed arguments from the Message content
+     */
     public handleGuildMessage(message: Message, args: string[]): void {
-        const command = args[0].toLowerCase();
+        const command = args[0].toUpperCase();
 
         switch (command) {
-            case 'verification':
+            case 'VERIFICATION':
                 this._VerificationTemplateController.handleMessage(message, args);
                 break;
             default:
@@ -39,23 +44,33 @@ export class VerificationController {
         }
     }
 
+    /**
+     * Handles and dispatches verification messages received in a Guild
+     * @param message Message sent in a dm Channel
+     * @param args Parsed arguments from the Message content
+     */
     public async handleDirectMessage(message: Message, args: string[]): Promise<void> {
-        const command = args[0].toLowerCase();
+        const command = args[0].toUpperCase();
 
         switch (command) {
-            case 'verify':
+            case 'VERIFY':
                 if (args.length > 1) {
-                    this._VerificationManager.attemptIgnVerification(message.author, args[1]);
+                    this._VerificationManager.attemptIgnLinking(message.author, args[1]);
                 } else {
-                    this._VerificationMessenger.sendInvalidIgnVerificationCommandToUser(message.author);
+                    this._VerificationMessenger.sendInvalidIgnLinkingCommandToUser(message.author);
                 }
                 break;
-            case 'updateign':
-                this._VerificationManager.beginIgnVerification(message.author, true);
+            case 'UPDATEIGN':
+                this._VerificationManager.beginIgnLinking(message.author, true);
                 break;
         }
     }
 
+    /**
+     * Handles and dispatches all verification messages received
+     * @param message Message receieved
+     * @param args Parsed arguments from the Message content
+     */
     public handleMessage(message: Message, args: string[]): void {
         if (args.length < 1) {
             return;

@@ -19,6 +19,12 @@ export class UserService {
         this._VericodeRepo = vericodeRepo;
     }
 
+    /**
+     * Updates the IGN in the GB for the given Discord User.
+     * If the User does not exist in the DB, it will be created.
+     * @param user User to update IGN for
+     * @param ign New IGN to update to
+     */
     public async updateIgn(user: User, ign: string): Promise<IUser> {
         let iUser = await this.safeFindUser(user);
         if (iUser.ign) {
@@ -29,6 +35,10 @@ export class UserService {
         return this._UserRepo.save(iUser);
     }
 
+    /**
+     * Removes the given Discord Users's IGN in the DB
+     * @param user User to remove IGN for
+     */
     public async removeIgn(user: User): Promise<IUser> {
         if (!(await this.hasVerifiedIgn(user.id))) {
             return;
@@ -41,6 +51,12 @@ export class UserService {
         return this._UserRepo.save(iUser);
     }
 
+    /**
+     * Guarantees the return of a valid IUser associated with the given Discord User.
+     * If the User already exists in DB, return it.
+     * If the User does not exist already, create a new entry in DB and return it.
+     * @param user User to find IUser for
+     */
     public async safeFindUser(user: User): Promise<IUser> {
         if (await this._UserRepo.existsByUserId(user.id)) {
             return this._UserRepo.findByUserId(user.id);
@@ -51,12 +67,21 @@ export class UserService {
         }
     }
 
+    /**
+     * Returns a new IUser object with attributes associated with the given Discord User
+     * @param user User to retrieve information from
+     */
     private getDefaultUser(user: User): IUser {
         return getBlankUser({
             userId: user.id
         });
     }
 
+    /**
+     * Checks whether the given Discord User id has a IUser entry in the DB and whether or not
+     * they have a verified IGN.
+     * @param userId Discord User's id to check for verified IGN in DB
+     */
     public async hasVerifiedIgn(userId: string): Promise<boolean> {
         if (!(await this._UserRepo.existsByUserId(userId))) {
             return false;

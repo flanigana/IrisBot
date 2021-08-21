@@ -1,14 +1,15 @@
 import { Guild, MessageEmbed } from "discord.js";
 import container from "../../../inversify.config";
-import { DungeonRequirements, dungeonRequirementsToStringArray, IVerificationTemplate } from "../../models/verification_template";
-import { RealmEyeError } from "../../realmeye/realmeye_exception";
+import { dungeonRequirementsToStringArray, IVerificationTemplate } from "../../models/verification_template";
+import { RealmEyeError } from "../../realmeye/realmeye_error";
 import { RealmEyeService } from "../../realmeye/realmeye_service";
+import { DungeonCompletions } from "../../realmeye/realmeye_types";
 import { VerificationTemplateService } from "../../services/verification_template_service";
 import { TYPES } from "../../types";
 import { ClientTools } from "../../utilities/client_tools";
 import { MessageParser } from "../../utilities/message_parser";
 import { RolesAndChannels } from "../../utilities/role_and_channel_finder";
-import { findBestMatch } from "../../utilities/string_matcher";
+import { StringUtils } from "../../utilities/string_utils";
 import { DynamicConditionalPage, DynamicPage } from "../pages/page";
 import { PageSet } from "../pages/page_set";
 
@@ -322,7 +323,7 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
                 fields.dungeonRequirements = {};
                 return 'Successfully removed all dungeon requirements.'
             }
-            let dungeons:DungeonRequirements = {};
+            let dungeons:DungeonCompletions = {};
             let dungeon = '';
             for (const arg of args) {
                 const num = parseInt(arg);
@@ -330,7 +331,7 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
                     if (!dungeon) {
                         return 'Error: Unexpected input formatting. Please look at the example and try again.';
                     }
-                    const fullName = findBestMatch(dungeon, Array.from(RealmEyeService.dungeonList));
+                    const fullName = StringUtils.findBestMatch(dungeon, Array.from(RealmEyeService.dungeonList));
                     if (!fullName) {
                         return `Error: ${dungeon} is not a valid dungeon name.`;
                     }

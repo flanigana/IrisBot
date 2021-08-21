@@ -21,7 +21,7 @@ export class TemplateService<T extends GuildTemplate> {
      * @param templateName name of the template to check existence of
      * @param caseSensitive whether to check as case-sensitive search
      */
-    public async existsByName(guildId: string, templateName: string, caseSensitive = true): Promise<boolean> {
+    public async existsByName(guildId: string, templateName: string, caseSensitive = false): Promise<boolean> {
         return this._TemplateRepo.existsByName(guildId, templateName, caseSensitive);
     }
 
@@ -30,7 +30,7 @@ export class TemplateService<T extends GuildTemplate> {
      * @param guildId id of the template-owning Guild
      * @param templateName name of the template to find
      */
-    public async findTemplateByGuildIdAndName(guildId: string, templateName: string, caseSensitive = true): Promise<T> {
+    public async findTemplateByGuildIdAndName(guildId: string, templateName: string, caseSensitive = false): Promise<T> {
         return this._TemplateRepo.findTemplate(guildId, templateName, caseSensitive);
     }
     

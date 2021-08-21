@@ -23,4 +23,18 @@ export module MessageParser {
         const num = parseInt(message);
         return Number.isNaN(num) ? 0 : num;
     }
+
+    /**
+     * Attempts to return the base user id from the given string.
+     * If the string cannot be matched, returns undefined.
+     * @param message user id to parse
+     */
+    export function parseUserId(message: string) {
+        const matcher = message.match(/^<@!(\d*)>$/);
+        return matcher
+            ? matcher[1]
+            : message.match(/\d*/)
+                ? message
+                : undefined;
+    }
 }

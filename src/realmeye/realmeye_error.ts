@@ -1,4 +1,4 @@
-type ErrorInfo = {
+type RealmEyeErrorInfo = {
     status?: number,
     statusText?: string,
     url?: string
@@ -6,24 +6,24 @@ type ErrorInfo = {
 
 export class RealmEyeError extends Error {
 
-    private readonly errorInfo: ErrorInfo;
+    private readonly _ErrorInfo: RealmEyeErrorInfo;
 
-    constructor(message: string, errorInfo?: ErrorInfo) {
+    constructor(message: string, errorInfo?: RealmEyeErrorInfo) {
         super(message);
         Object.setPrototypeOf(this, RealmEyeError.prototype);
         this.name = 'RealmEyeError';
-        this.errorInfo = errorInfo;
+        this._ErrorInfo = errorInfo;
     }
 
     public get status() {
-        return this.errorInfo.status;
+        return this._ErrorInfo.status;
     }
 
     public get statusText() {
-        return this.errorInfo.statusText;
+        return this._ErrorInfo.statusText;
     }
 
     public get url() {
-        return this.errorInfo.url;
+        return this._ErrorInfo.url;
     }
 }

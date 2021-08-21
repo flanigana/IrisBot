@@ -28,10 +28,12 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 .setTitle('Set Name')
                 .setDescription('Respond with the name you would like to use for this raid template. It cannot be the same name as an existing template. ' +
                 '\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!');
-            clientTools.addLineBreakFieldToEmbed(embed);
-            clientTools.addFieldToEmbed(embed, 'Example', '\`Void\`');
-            clientTools.addFieldToEmbed(embed, 'Template Name', fields.name, {default: 'Unset', inline: true});
-            clientTools.addFieldToEmbed(embed, 'Other Template Names', existingTemplates, {default: 'None', inline: true});
+            clientTools.addFieldsToEmbed(embed,
+                ClientTools.LINE_BREAK_FIELD,
+                {name: 'Example', value: '\`Void\`'},
+                {name: 'Template Name', value: fields.name, options: {default: 'Unset', inline: true}},
+                {name: 'Other Template Names', value: existingTemplates, options: {default: 'None', inline: true}}
+            );
             return embed;
         },
         async (fields: Partial<IRaidTemplate>, res: string): Promise<string> => {
@@ -56,10 +58,12 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 '\n\nBelow is a list of emojis available for use.' +
                 '\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as \`<emojiname>\`.');
             clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-            clientTools.addLineBreakFieldToEmbed(embed);
-            clientTools.addFieldToEmbed(embed, 'Example', '\`This will be a Void. Please react with the appropriate class/ability reactions. ' +
-            'We will need at least two <vialkey> reacts before starting.\`');
-            clientTools.addFieldToEmbed(embed, 'Template Description', fields.description, {default: 'Unset'});
+            clientTools.addFieldsToEmbed(embed, 
+                ClientTools.LINE_BREAK_FIELD,
+                {name: 'Example', value: '\`This will be a Void. Please react with the appropriate class/ability reactions. ' +
+                    'We will need at least two <vialkey> reacts before starting.\`'},
+                {name: 'Template Description', value: fields.description, options: {default: 'Unset'}}
+            );
             return embed;
         },
         (fields: Partial<IRaidTemplate>, res: string): string => {
@@ -78,9 +82,11 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 '\n\nBelow is a list of emojis available for use.' +
                 '\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as \`<emojiname>\`.');
             clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-            clientTools.addLineBreakFieldToEmbed(embed);
-            clientTools.addFieldToEmbed(embed, 'Example', '\`<losthallsportal>\`');
-            clientTools.addFieldToEmbed(embed, 'Template Primary React', fields.primaryReact.react, {default: 'Unset'});
+            clientTools.addFieldsToEmbed(embed,
+                ClientTools.LINE_BREAK_FIELD,
+                {name: 'Example', value: '\`<losthallsportal>\`'},
+                {name: 'Template Primary React', value: fields.primaryReact.react, options: {default: 'Unset'}}
+            );
             return embed;
         },
         (fields: Partial<IRaidTemplate>, res: string): string => {
@@ -106,9 +112,11 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 '\n\nBelow is a list of emojis available for use.' +
                 '\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as \`<emojiname>\`.');
             clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-            clientTools.addFieldToEmbed(embed, 'Example', '\`<losthallskey>\` or \`<losthallskey> 3\` or \`<losthallskey> 1 <vialkey> 3\`');
-            clientTools.addFieldToEmbed(embed, 'To Remove All', '\`--ALL\`');
-            clientTools.addFieldToEmbed(embed, 'Secondary Reacts: Limits', raidReactsToStringArray(fields.secondaryReacts), {default: 'None', separator: '\n'});
+            clientTools.addFieldsToEmbed(embed,
+                {name: 'Example', value: '\`<losthallskey>\` or \`<losthallskey> 3\` or \`<losthallskey> 1 <vialkey> 3\`'},
+                {name: 'To Remove All', value: '\`--ALL\`'},
+                {name: 'Secondary Reacts: Limits', value: raidReactsToStringArray(fields.secondaryReacts), options: {default: 'None', separator: '\n'}}
+            );
             return embed;
         },
         (fields: IRaidTemplate, res: string): string => {
@@ -156,9 +164,11 @@ export default function addRaidTemplatePages(pageSet: PageSet<IRaidTemplate>, te
                 '\n\nBelow is a list of emojis available for use.' +
                 '\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as \`<emojiname>\`.');
             clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-            clientTools.addLineBreakFieldToEmbed(embed);
-            clientTools.addFieldToEmbed(embed, 'Example', '\`<warriorclass> <knightclass> <paladinclass> <ogmurability> <marblesealability>\`');
-            clientTools.addFieldToEmbed(embed, 'Template Additional Reacts', fields.additionalReacts.map(r => r.react), {default: 'None'});
+            clientTools.addFieldsToEmbed(embed,
+                ClientTools.LINE_BREAK_FIELD,
+                {name: 'Example', value: '\`<warriorclass> <knightclass> <paladinclass> <ogmurability> <marblesealability>\`'},
+                {name: 'Template Additional Reacts', value: fields.additionalReacts.map(r => r.react), options: {default: 'None'}}
+            );
             return embed;
         },
         (fields: Partial<IRaidTemplate>, res: string): string => {

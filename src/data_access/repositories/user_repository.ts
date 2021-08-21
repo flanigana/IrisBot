@@ -18,10 +18,10 @@ export class UserRepository extends GenericRepository<IUser> {
     }
 
     public async existsByIgn(ign: string): Promise<boolean> {
-        return this.existsByQuery({ign: ign});
+        return this.existsByQuery({ign: {$regex: new RegExp(`^${ign}$`, 'i')}});
     }
 
     public async findByIgn(ign: string): Promise<IUser> {
-        return this.findByQuery({ign: ign});
+        return this.findByQuery({ign: {$regex: new RegExp(`^${ign}$`, 'i')}});
     }
 }
