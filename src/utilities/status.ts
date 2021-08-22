@@ -44,15 +44,15 @@ export class Status<T> {
         return this._status;
     }
 
-    get pending(): boolean {
+    get isPending(): boolean {
         return this._status === 'pending';
     }
 
-    get failed(): boolean {
+    get isFailed(): boolean {
         return this._status === 'failed';
     }
 
-    get passed(): boolean {
+    get isPassed(): boolean {
         return this._status === 'passed';
     }
 
@@ -68,7 +68,7 @@ export class Status<T> {
         if (this._finalized) {
             throw new Error('Illegal Status Modification: Attempting to modify a finalized Status object.');
         }
-        if (!this.failed) {
+        if (!this.isFailed) {
             this._status = 'failed';
         }
         this._failureReasons.push(...failureReason);
@@ -82,7 +82,7 @@ export class Status<T> {
     }
 
     public finalize(): Status<T> {
-        if (this.pending) {
+        if (this.isPending) {
             this._status = 'passed';
         }
         this._finalized = true;
@@ -90,18 +90,34 @@ export class Status<T> {
     }
 
     public merge(attempt: Status<T>): Status<T> {
+        if (!attempt) {
+            this._status = 'failed';
+            this.addFailureReason({failure: 'Undefined Merge', failureMessage: 'The attempted Status merge was undefined.'});
+        }
         if (this._finalized) {
             throw new Error('Illegal Status Modification: Attempting to modify a finalized Status object.');
         }
-        if (this.failed || attempt.failed) {
+        if (this.isFailed || attempt.isFailed) {
             this._status = 'failed';
             this.addFailureReason(...attempt.failureReasons);
-        } else if (this.pending || attempt.pending) {
+        } else if (this.isPending || attempt.isPending) {
             this._status = 'pending';
-        } else if (this.passed && attempt.passed) {
+        } else if (this.isPassed && attempt.isPassed) {
             this._status = 'passed';
         }
         return this;
+    }
+
+    public getFirstFailure(): FailureReason {
+        return this._failureReasons.length > 0
+            ? this._failureReasons[0]
+            : undefined;
+    }
+
+    public getLastFailure(): FailureReason {
+        return this._failureReasons.length > 0
+            ? this._failureReasons[this.failureReasons.length-1]
+            : undefined;
     }
 
     public getFirstPassing(): T {

@@ -4,6 +4,15 @@ import { RateLimitRequestService } from '../utilities/rate_limit_request_service
 import { RealmEyeError } from './realmeye_error';
 import { Character, CharacterModelInfo, ClassList, DungeonCompletions, EquipmentSet, GuildData, Item, StatType, TableIndexes, RealmEyeUserData } from './realmeye_types';
 import { StringUtils } from '../utilities/string_utils';
+import { Status } from '../utilities/status';
+import Logger from '../utilities/logging';
+
+type InitializationSettings = {
+    autoRetry: boolean,
+    waitSecondsBeforeFirstRetry: number,
+    maxAttempts: number,
+    increaseSecondsBetweenFails: number
+}
 
 /**
  * Cheerio NOTE: Any method having a parameter type of 'any' is due to Cheerio not exposing
@@ -11,26 +20,20 @@ import { StringUtils } from '../utilities/string_utils';
  * I've tried looking for simple solutions, but it seems like nothing exists right now that would
  * be a reasonably quick fix. In the future, I'd like to use the correct typings and do safer
  * checks for element existence and data scraping. For now, this is how it is.
+ * 
+ * NOTE of NOTE: Cheerio has been updated and now has proper types. The package needs to be updated and this class needs to be updated.
  */
-
 @injectable()
-export class RealmEyeService {
+export abstract class RealmEyeService {
 
     private static readonly _BASE_REALMEYE_URL = 'https://www.realmeye.com';
+    private static readonly _DUNGEON_LIST_SUB_URL = '/wiki/dungeons';
+
     private static readonly _DUNGEON_LIST: Set<string> = new Set();
     private static _CLASS_LIST: ClassList;
 
-    private readonly _RequestService: RateLimitRequestService;
-
-    public constructor() {
-        this._RequestService = new RateLimitRequestService(1, {headers: {'User-Agent': 'IrisBot RotMG Discord Bot'}});
-        if (!RealmEyeService._DUNGEON_LIST?.size) {
-            this.buildDungeonList();
-        }
-        if (!RealmEyeService._CLASS_LIST) {
-            this.buildClassList();
-        }
-    }
+    private static _RequestService: RateLimitRequestService;
+    private static _successfulInitialization: boolean;
 
     public static get dungeonList(): Set<string> {
         return RealmEyeService._DUNGEON_LIST;
@@ -40,11 +43,114 @@ export class RealmEyeService {
         return RealmEyeService._CLASS_LIST;
     }
 
-    private async buildDungeonList(): Promise<void> {
-        const url = `${RealmEyeService._BASE_REALMEYE_URL}/wiki/dungeons`;
-        const { data, status, statusText } = await this._RequestService.get(url);
-        if (status !== 200){
-            throw new RealmEyeError('Error accessing RealmEye while initializing dungeon list.', {url: url, status: status, statusText: statusText});
+    public static get successfulInitialization(): boolean {
+        return RealmEyeService._successfulInitialization;
+    }
+
+    /**
+     * Attempts to fully initialize the RealmEyeService.
+     * Will retry failed initializations if autoRetry=true up to the given maxAttempt count
+     * @param initializationSettings settings to use for initialization
+     */
+    public static async inititialize(initializationSettings: Partial<InitializationSettings>): Promise<void> {
+        const status = Status.createPending();
+        const promises = [];
+        
+        RealmEyeService._RequestService = new RateLimitRequestService(1, {headers: {'User-Agent': 'IrisBot RotMG Discord Bot'}});
+
+        promises.push(RealmEyeService.attemptInitialization(RealmEyeService.buildDungeonList, initializationSettings).then(s => {
+            status.merge(s);
+        }));
+        promises.push(RealmEyeService.attemptInitialization(RealmEyeService.buildClassList, initializationSettings).then(s => {
+            status.merge(s);
+        }));
+
+        Promise.all(promises).then(() => {
+            status.finalize();
+            RealmEyeService._successfulInitialization = status.isPassed;
+            if (status.isFailed) {
+                Logger.error(`One or more RealmEyeService initializations have failed!`);
+            } else {
+                Logger.info(`RealmEyeService successfully initialized!`);
+            }
+        }).catch(error => {
+            Logger.error('Unexpected error during RealmEyeService initialization', {error: error});
+        });
+    }
+
+    /**
+     * Attempts the given initialization function and will retry based on the settings given.
+     * If autoRetry=false, no retries will be attempted for initialization and it will only try once.
+     * Returns a passing Status if one of the initialization attempts passed, otherwise
+     * returns a failing Status with the FailureReasons from all failed attempts.
+     * @param initializationFunction function to use for initialization
+     * @param initializationSettings settings to use for initialization
+     */
+    private static async attemptInitialization(
+            initializationFunction: () => Promise<Status<any>>,
+            {autoRetry = false, waitSecondsBeforeFirstRetry = 300, maxAttempts = 10, increaseSecondsBetweenFails = 60}: Partial<InitializationSettings>
+        ): Promise<Status<any>> {
+
+        let status = Status.createPending();
+        try {
+            status.merge(await initializationFunction());
+        } catch (error) {
+            if (error instanceof RealmEyeError) {
+                status.addFailureReason({failure: `Initialization Error: ${initializationFunction.name} [RealmEye]`, failureMessage: `${Date.now}: ${error.name}-${error.message}`});
+            } else {
+                status.addFailureReason({failure: `Initialization Error: ${initializationFunction.name} [Other]`, failureMessage: `${Date.now}: ${error.name}-${error.message}`});
+            }
+        }
+
+        if (status.isFailed && autoRetry) {
+            while (status.failureReasons.length < maxAttempts) {
+                Logger.warn(`Failed initialization: ${initializationFunction.name} attempt #${status.failureReasons.length} -- ${status.getLastFailure().failure}: ${status.getLastFailure().failureMessage}\n` +
+                    `\tRetrying in ${waitSecondsBeforeFirstRetry} seconds...`);
+                const retryStatus = await RealmEyeService.createInitializationInterval(initializationFunction, {waitSecondsBeforeFirstRetry: waitSecondsBeforeFirstRetry});
+                if (retryStatus.isPassed) {
+                    status = retryStatus;
+                    break;
+                } else {
+                    status.merge(retryStatus);
+                    waitSecondsBeforeFirstRetry += increaseSecondsBetweenFails;
+                }
+            }
+            if (status.isFailed) {
+                Logger.error(`Failed initialization: ${initializationFunction.name} and reached max attempts of ${maxAttempts}. No more initialization attempts will be made.`)
+            }
+        } else if (!status.isFailed) {
+            Logger.info(`Successful initialization: ${initializationFunction.name}`);
+        }
+
+        return status.finalize();
+    }
+
+    /**
+     * Creates a single-run interval that will attempt the given initialization function after the 
+     * defined wait time (defined in seconds).
+     * Returns the Status of the initialization attempt.
+     * @param initializationFunction function to use for initialization
+     * @param initializationSettings settings to use for initialization
+     */
+    private static async createInitializationInterval(
+            initializationFunction: () => Promise<Status<any>>,
+            {waitSecondsBeforeFirstRetry: waitSeconds = 300}: Partial<InitializationSettings>
+    ): Promise<Status<any>> {
+        return await new Promise(resolve => {
+            const interval = setInterval(async () => {
+                clearInterval(interval);
+                const retryStatus = await RealmEyeService.attemptInitialization(initializationFunction, {autoRetry: false});
+                resolve(retryStatus);
+            }, waitSeconds*1000);
+        });
+    }
+
+    private static async buildDungeonList(): Promise<Status<any>> {
+        const status = Status.createPending();
+        const url = `${RealmEyeService._BASE_REALMEYE_URL}${RealmEyeService._DUNGEON_LIST_SUB_URL}`;
+        const { data, status: reqStatus, statusText } = await RealmEyeService._RequestService.get(url);
+        if (reqStatus !== 200){
+            throw new RealmEyeError('Error accessing RealmEye while initializing dungeon list.', {url: url, status: reqStatus, statusText: statusText});
         }
 
         const headingSelector = 'h2#realm-dungeons, h2#realm-event-dungeons, h2#oryx-s-castle, h2#mini-dungeons';
@@ -62,28 +168,31 @@ export class RealmEyeService {
                 RealmEyeService.dungeonList.add(nameData.text());
             });
         }
+        return status.finalize();
     }
 
-    private async buildClassList(): Promise<void> {
+    private static async buildClassList(): Promise<Status<any>> {
+        const status = Status.createPending();
         const url = `${RealmEyeService._BASE_REALMEYE_URL}/wiki/classes`;
-        const { data, status, statusText } = await this._RequestService.get(url);
-        if (status !== 200){
-            throw new RealmEyeError('Error accessing RealmEye while initializing class list.', {url: url, status: status, statusText: statusText});
+        const { data, status: reqStatus, statusText } = await RealmEyeService._RequestService.get(url);
+        if (reqStatus !== 200){
+            throw new RealmEyeError('Error accessing RealmEye while initializing class list.', {url: url, status: reqStatus, statusText: statusText});
         }
         const $ = cheerio.load(data);
         const tables = $('div.wiki-page > div.table-responsive > table');
         const classList: ClassList = {};
         for (let i=0; i < tables.length; i++) {
             if (i < tables.length -1) {
-                this.addClassUrlsFromTable($, tables.get(i), classList);
+                RealmEyeService.addClassUrlsFromTable($, tables.get(i), classList);
             } else {
-                this.addClassStatsFromTable($, tables.get(i), classList);
+                RealmEyeService.addClassStatsFromTable($, tables.get(i), classList);
             }
         }
         RealmEyeService._CLASS_LIST = classList;
+        return status.finalize();
     }
 
-    private addClassUrlsFromTable($: any, table: any, classList: ClassList): void {
+    private static addClassUrlsFromTable($: any, table: any, classList: ClassList): void {
         $('td', table).each((i, classCell) => {
             const classData = $('a', classCell).first();
             const classLink = `${RealmEyeService._BASE_REALMEYE_URL}${classData.attr()?.href}`;
@@ -104,7 +213,7 @@ export class RealmEyeService {
         });
     }
 
-    private addClassStatsFromTable($: any, table: any, classList: ClassList) {
+    private static addClassStatsFromTable($: any, table: any, classList: ClassList) {
         $('tbody > tr', table).each((i, classRow) => {
             const className = $('th a', classRow).first().text()?.toUpperCase();
             classList[className].maxStats = {};
@@ -118,10 +227,10 @@ export class RealmEyeService {
         });
     }
 
-    public async getRealmEyeUserData(ign: string): Promise<RealmEyeUserData> {
+    public static async getRealmEyeUserData(ign: string): Promise<RealmEyeUserData> {
         const baseUrl = `${RealmEyeService._BASE_REALMEYE_URL}/player`;
         const url = `${baseUrl}/${ign}`;
-        const { data, status, statusText } = await this._RequestService.get(url);
+        const { data, status, statusText } = await RealmEyeService._RequestService.get(url);
         if (status !== 200) {
             throw new RealmEyeError(`Encountered a ${status} error when attempting to access RealmEye.`, {url: url, status: status, statusText: statusText});
         }
@@ -141,18 +250,18 @@ export class RealmEyeService {
         }
 
         const promises = [];
-        promises.push(this.addDungeonCompletions(ign, userData));
+        promises.push(RealmEyeService.addDungeonCompletions(ign, userData));
 
-        userData.description = this.buildDescription($, container);
-        this.addUserTableInfo($, container, userData);
-        userData.characters = this.buildCharacterData($, container, 'user');
+        userData.description = RealmEyeService.buildDescription($, container);
+        RealmEyeService.addUserTableInfo($, container, userData);
+        userData.characters = RealmEyeService.buildCharacterData($, container, 'user');
 
         return Promise.all(promises).then(() => {
             return userData;
         });
     }
 
-    private buildDescription($: any, container: any): string {
+    private static buildDescription($: any, container: any): string {
         const userDescription = $('.description', container).first();
         let description = '';
         $('.description-line', userDescription).each((i, line) => {
@@ -162,7 +271,7 @@ export class RealmEyeService {
         return description;
     }
 
-    private addUserTableInfo($: any, container: any, userData: RealmEyeUserData): void {
+    private static addUserTableInfo($: any, container: any, userData: RealmEyeUserData): void {
         const summaryTable = $('div table.summary', container);
         $('tr', summaryTable).each((i, e) => {
             const td = $('td', e);
@@ -225,7 +334,7 @@ export class RealmEyeService {
         });
     }
 
-    private buildCharacterData($: any, container: any, type: 'user'|'guild'): Character[] {
+    private static buildCharacterData($: any, container: any, type: 'user'|'guild'): Character[] {
         if ($('.col-md-12 > h3', container)[0]?.children[0]?.data?.match(/characters are hidden/i)) {
             return;
         }
@@ -234,15 +343,15 @@ export class RealmEyeService {
             return;
         }
         
-        const characterTableIndexes = this.buildCharacterTableIndexes($, charactersTable, type);
+        const characterTableIndexes = RealmEyeService.buildCharacterTableIndexes($, charactersTable, type);
         const characters: Character[] = [];
         $('tbody > tr', charactersTable).each((i, charRow) => {
-            characters.push(this.buildCharacter($, charRow, characterTableIndexes));
+            characters.push(RealmEyeService.buildCharacter($, charRow, characterTableIndexes));
         });
         return characters;
     }
 
-    private buildCharacter($: any, charRow: any, indexes: TableIndexes<Character>): Character {
+    private static buildCharacter($: any, charRow: any, indexes: TableIndexes<Character>): Character {
         const character: Character = {};
         $('td', charRow).each((j, charData) => {
             switch (j) {
@@ -260,7 +369,7 @@ export class RealmEyeService {
                     break;
                 case indexes.model:
                     const modelAttr = $('.character', charData).first().attr();
-                    character.model = this.buildCharacterModelInfo(modelAttr);
+                    character.model = RealmEyeService.buildCharacterModelInfo(modelAttr);
                     break;
                 case indexes.class:
                     character.class = charData.children[0]?.data;
@@ -282,7 +391,7 @@ export class RealmEyeService {
                     character.place = place ? parseInt(place) : 0;
                     break;
                 case indexes.equipment:
-                    character.equipment = this.buildCharacterEquipmentSet($, charData);
+                    character.equipment = RealmEyeService.buildCharacterEquipmentSet($, charData);
                     break;
                 case indexes.stats:
                     // TODO: use stats below to check specific maxed stats once RealmEye has the information available again
@@ -310,7 +419,7 @@ export class RealmEyeService {
         return character;
     }
 
-    private buildCharacterTableIndexes($: any, charactersTable: any, type: 'user'|'guild'): TableIndexes<Character> {
+    private static buildCharacterTableIndexes($: any, charactersTable: any, type: 'user'|'guild'): TableIndexes<Character> {
         const indexes: TableIndexes<Character> = {};
         $('thead th', charactersTable).each((i, e) => {
             let heading: string = e.children[0]?.data;
@@ -360,7 +469,7 @@ export class RealmEyeService {
         return indexes;
     }
 
-    private buildCharacterModelInfo(modelData: any): CharacterModelInfo {
+    private static buildCharacterModelInfo(modelData: any): CharacterModelInfo {
         if (!modelData) {
             return undefined;
         }
@@ -377,7 +486,7 @@ export class RealmEyeService {
         return modelInfo;
     }
 
-    private buildCharacterEquipmentSet($: any, charData: any): EquipmentSet {
+    private static buildCharacterEquipmentSet($: any, charData: any): EquipmentSet {
         const equipmentSet: EquipmentSet = {};
         const items = $('span.item-wrapper', charData);
         items.each((i, itemData) => {
@@ -411,9 +520,9 @@ export class RealmEyeService {
         return equipmentSet;
     }
 
-    private async addDungeonCompletions(ign: string, userData: RealmEyeUserData): Promise<void> {
+    private static async addDungeonCompletions(ign: string, userData: RealmEyeUserData): Promise<void> {
         const url = `${RealmEyeService._BASE_REALMEYE_URL}/graveyard-summary-of-player/${ign}`;
-        const { data, status } = await this._RequestService.get(url);
+        const { data, status } = await RealmEyeService._RequestService.get(url);
         if (status !== 200) {
             return;
         }
@@ -439,10 +548,10 @@ export class RealmEyeService {
         userData.dungeonCompletions = completions;
     }
 
-    public async getRealmEyeGuildData(guildName: string): Promise<GuildData> {
+    public static async getRealmEyeGuildData(guildName: string): Promise<GuildData> {
         const guildLinkName = guildName.replace(' ', '%20');
         const url = `${RealmEyeService._BASE_REALMEYE_URL}/guild/${guildLinkName}`;
-        const { data, status, statusText } = await this._RequestService.get(url);
+        const { data, status, statusText } = await RealmEyeService._RequestService.get(url);
         if (status !== 200) {
             throw new RealmEyeError(`Encountered a ${status} error when attempting to access RealmEye.`, {url: url, status: status, statusText: statusText});
         }
@@ -460,30 +569,30 @@ export class RealmEyeService {
         }
 
         const promises = [];
-        promises.push(this.addTopGuildCharacters(guildLinkName, guildData));
+        promises.push(RealmEyeService.addTopGuildCharacters(guildLinkName, guildData));
 
-        guildData.description = this.buildDescription($, container);
-        this.addGuildTableInfo($, container, guildData);
-        this.addGuildMemberData($, container, guildData);
+        guildData.description = RealmEyeService.buildDescription($, container);
+        RealmEyeService.addGuildTableInfo($, container, guildData);
+        RealmEyeService.addGuildMemberData($, container, guildData);
 
         return Promise.all(promises).then(() => {
             return guildData;
         });
     }
 
-    private async addTopGuildCharacters(guildLinkName: string, guildData: GuildData): Promise<void> {
+    private static async addTopGuildCharacters(guildLinkName: string, guildData: GuildData): Promise<void> {
         const url = `${RealmEyeService._BASE_REALMEYE_URL}/top-characters-of-guild/${guildLinkName}`;
-        const { data, status } = await this._RequestService.get(url);
+        const { data, status } = await RealmEyeService._RequestService.get(url);
         if (status !== 200) {
             return;
         }
 
         const $ = cheerio.load(data);
         const container = $('.container');
-        guildData.topCharacters = this.buildCharacterData($, container, 'guild');
+        guildData.topCharacters = RealmEyeService.buildCharacterData($, container, 'guild');
     }
 
-    private addGuildTableInfo($: any, container: any, guildData: GuildData): void {
+    private static addGuildTableInfo($: any, container: any, guildData: GuildData): void {
         const summaryTable = $('div table.summary', container)
         $('tr', summaryTable).each((i, e) => {
             const td = $('td', e);
@@ -520,21 +629,21 @@ export class RealmEyeService {
         });
     }
 
-    private addGuildMemberData($: any, container: any, guildData: GuildData): void {
+    private static addGuildMemberData($: any, container: any, guildData: GuildData): void {
         const membersTable = $('.col-md-12 > .table-responsive > table.table.table-striped.tablesorter', container);
         if (!membersTable.length) {
             return;
         }
         
-        const memberTableIndexes = this.buildMemberTableIndexes($, membersTable);
+        const memberTableIndexes = RealmEyeService.buildMemberTableIndexes($, membersTable);
         const members: RealmEyeUserData[] = [];
         $('tbody > tr', membersTable).each((i, memberRow) => {
-            members.push(this.buildMember($, memberRow, memberTableIndexes));
+            members.push(RealmEyeService.buildMember($, memberRow, memberTableIndexes));
         });
         guildData.members = members;
     }
 
-    private buildMember($: any, memberRow: any, indexes: TableIndexes<RealmEyeUserData>): RealmEyeUserData {
+    private static buildMember($: any, memberRow: any, indexes: TableIndexes<RealmEyeUserData>): RealmEyeUserData {
         const member: RealmEyeUserData = {};
         $('td', memberRow).each((j, memberData) => {
             let num;
@@ -600,7 +709,7 @@ export class RealmEyeService {
         return member;
     }
 
-    private buildMemberTableIndexes($: any, membersTable: any): TableIndexes<RealmEyeUserData> {
+    private static buildMemberTableIndexes($: any, membersTable: any): TableIndexes<RealmEyeUserData> {
         const indexes: TableIndexes<RealmEyeUserData> = {};
         $('thead th', membersTable).each((i, e) => {
             let heading: string = e.children[0]?.data;
@@ -644,3 +753,5 @@ export class RealmEyeService {
         return indexes;
     }
 }
+
+RealmEyeService.inititialize({autoRetry: true, waitSecondsBeforeFirstRetry: 30, maxAttempts: 3, increaseSecondsBetweenFails: 60});

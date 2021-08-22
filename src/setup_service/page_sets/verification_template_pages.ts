@@ -17,7 +17,6 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
         template: Partial<IVerificationTemplate>, guild: Guild): void {
     const verificationTemplateService = container.get<VerificationTemplateService>(TYPES.VerificationTemplateService);
     const clientTools = container.get<ClientTools>(TYPES.ClientTools);
-    const realmEyeService = container.get<RealmEyeService>(TYPES.RealmEyeService);
 
     function getExistingTemplateNames(): Promise<string[]> {
         return verificationTemplateService.findTemplatesByGuildId(guild.id).then((templates: IVerificationTemplate[]) => {
@@ -129,7 +128,7 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
         },
         async (fields: Partial<IVerificationTemplate>, res: string): Promise<string> => {
             try {
-                const guildData = await realmEyeService.getRealmEyeGuildData(res);
+                const guildData = await RealmEyeService.getRealmEyeGuildData(res);
                 fields.guildName = guildData.name;
                 return 'Successfully set guild name!';
             } catch (e) {

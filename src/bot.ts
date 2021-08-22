@@ -17,7 +17,6 @@ export class Bot {
     private readonly _Client: Client;
     private readonly _Token: string;
     private readonly _MessageDispatcher: MessageController;
-    private readonly _RealmEyeService: RealmEyeService;
     private readonly _GuildService: GuildService;
 
     public static readonly PREFIXES = new Set<string>(['!', '-', '.', '+', '?', '$', '>', '/', ';', '*', 's!', '=', 'm!', '!!']);
@@ -28,13 +27,11 @@ export class Bot {
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.DiscordToken) token: string,
         @inject(TYPES.MessageDispatcher) messageDispatcher: MessageController,
-        @inject(TYPES.RealmEyeService) realmEyeService: RealmEyeService,
         @inject(TYPES.GuildService) guildService: GuildService
     ) {
         this._Client = client;
         this._Token = token;
         this._MessageDispatcher = messageDispatcher;
-        this._RealmEyeService = realmEyeService;
         this._GuildService = guildService;
 
         this._IgnoreList = new Map();
@@ -102,7 +99,7 @@ export class Bot {
      * Creates an interval to keep an uptime status on the bot
      */
     private startUptimePresence(): void {
-        this._Client.user.setActivity('for 00:00:00', {type: 'WATCHING'});
+        this._Client.user.setActivity('chat for 00:00:00', {type: 'WATCHING'});
         const start = Date.now();
         this._Client.setInterval(() => {
             let uptimeInSeconds = Math.floor((Date.now() - start) / 1000);
@@ -113,7 +110,7 @@ export class Bot {
             const hoursString = `${hours}`.length < 2 ? `0${hours}` : `${hours}`;
             const minutesString = `${minutes}`.length < 2 ? `0${minutes}` : `${minutes}`;
             const secondsString = `${uptimeInSeconds}`.length < 2 ? `0${uptimeInSeconds}` : `${uptimeInSeconds}`;
-            this._Client.user.setActivity(`for ${hoursString}:${minutesString}:${secondsString}`, {type: 'WATCHING'});
+            this._Client.user.setActivity(`chat for ${hoursString}:${minutesString}:${secondsString}`, {type: 'WATCHING'});
         }, 5000);
     }
 

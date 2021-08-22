@@ -37,7 +37,6 @@ export class VerificationManager {
     private readonly _VericodeService: VericodeService;
     private readonly _VerificationTemplateService: VerificationTemplateService;
     private readonly _VerificationMessenger: VerificationMessenger;
-    private readonly _RealmEyeService: RealmEyeService;
 
     public constructor(
         @inject(TYPES.UserService) userService: UserService,
@@ -46,8 +45,7 @@ export class VerificationManager {
         @inject(TYPES.VerificationService) verificationService: VerificationService,
         @inject(TYPES.VericodeService) vericodeService: VericodeService,
         @inject(TYPES.VerificationTemplateService) verificationTemplateService:  VerificationTemplateService,
-        @inject(TYPES.VerificationMessenger) verificationMessenger: VerificationMessenger,
-        @inject(TYPES.RealmEyeService) realmEyeService: RealmEyeService
+        @inject(TYPES.VerificationMessenger) verificationMessenger: VerificationMessenger
     ) {
         this._UserService = userService;
         this._GuildService = guildService;
@@ -56,7 +54,6 @@ export class VerificationManager {
         this._VericodeService = vericodeService;
         this._VerificationTemplateService = verificationTemplateService;
         this._VerificationMessenger = verificationMessenger;
-        this._RealmEyeService = realmEyeService;
     }
 
     /**
@@ -307,7 +304,7 @@ export class VerificationManager {
         }
 
         try {
-            this._RealmEyeService.getRealmEyeUserData(iUser.ign).then(userData => {
+            RealmEyeService.getRealmEyeUserData(iUser.ign).then(userData => {
 
                 const status = Status.createPending();
                 if (!manualOverride) {
@@ -322,7 +319,7 @@ export class VerificationManager {
                 }
                 status.finalize();
 
-                if (status.passed) {
+                if (status.isPassed) {
                     this.completeTemplateVerification(guildMember, userData, template, manualOverride);
                 } else {
                     this.failTemplateVerification(guildMember, userData, template, status);
@@ -394,7 +391,7 @@ export class VerificationManager {
         const vericode = await this._VericodeService.findByUserId(user.id);
 
         try {
-            this._RealmEyeService.getRealmEyeUserData(ign).then(async userData => {
+            RealmEyeService.getRealmEyeUserData(ign).then(async userData => {
                 if (!userData) {
                     Logger.error('RealmEyeUserData is unexpectedly undefined during verification', {user: user, ign: ign});
                     this._VerificationMessenger.sendGeneralVerificationFailureToUser(
@@ -523,7 +520,7 @@ export class VerificationManager {
             return;
         }
         const status = await this.checkUserIsVerifiable(verifyingUser, template);
-        if (status.failed) {
+        if (status.isFailed) {
             this._VerificationMessenger.sendGeneralVerificationFailureToGuild(message.channel, ...status.failureReasons);
         }
 
@@ -602,7 +599,7 @@ export class VerificationManager {
         }
 
         const status = await this.checkUserIsVerifiable(message.author, template);
-        if (status.failed) {
+        if (status.isFailed) {
             this._VerificationMessenger.sendGeneralVerificationFailureToUser(message.author, ...status.failureReasons);
         }
 

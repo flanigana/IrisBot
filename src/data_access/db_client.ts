@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import Logger from '../utilities/logging';
 
 export async function getDatabaseClient(dbHost: string, dbName: string) {
     return new Promise<mongoose.Mongoose>((resolve, reject) => {
@@ -9,11 +10,11 @@ export async function getDatabaseClient(dbHost: string, dbName: string) {
         });
         const db = mongoose.connection;
         db.on('error', (e: Error) => {
-            console.error('Db conenction error: ', e);
+            Logger.error('DB connection error!', {error: e});
             reject(e);
         });
         db.once('open', () => {
-            console.log('Db conenction success: ', connString);
+            Logger.info(`DB Connection Success! Connected to ${connString}`);
             resolve(mongoose);
         });
     });

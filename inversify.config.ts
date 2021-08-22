@@ -59,7 +59,6 @@ container.bind<RaidTemplateService>(TYPES.RaidTemplateService).to(RaidTemplateSe
 container.bind<MessageController>(TYPES.MessageDispatcher).to(MessageController).inSingletonScope();
 container.bind<VerificationManager>(TYPES.VerificationManager).to(VerificationManager).inSingletonScope();
 container.bind<RaidManager>(TYPES.RaidManager).to(RaidManager).inSingletonScope();
-container.bind<RealmEyeService>(TYPES.RealmEyeService).to(RealmEyeService).inSingletonScope();
 container.bind<VerificationTemplateService>(TYPES.VerificationTemplateService).to(VerificationTemplateService).inSingletonScope();
 container.bind<UserService>(TYPES.UserService).to(UserService).inSingletonScope();
 container.bind<VerificationService>(TYPES.VerificationService).to(VerificationService).inSingletonScope();
