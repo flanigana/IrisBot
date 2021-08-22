@@ -100,7 +100,7 @@ export class VerificationManager {
      * @param user GuildMember object for User to remove roles from
      * @param template VerificationTemplate to build role list from
      */
-    private removeVerificationRoles(user: GuildMember, template: IVerificationTemplate): Promise<Status<any>> {
+    private async removeVerificationRoles(user: GuildMember, template: IVerificationTemplate): Promise<Status<any>> {
         const status = Status.createPending<GuildMember>();
 
         const promises = [];
@@ -119,12 +119,12 @@ export class VerificationManager {
             status.addFailureReason({failure: 'User is Unmanageable', failureMessage: 'Roles could not be removed because user is unmanageable by Iris Bot.'});
         }
 
-        return Promise.all(promises).then(() => {
-            status.addPassingObject(this._ClientTools.findGuildMember(user.guild.id, user.id));
+        return Promise.all(promises).then(async () => {
+            status.addPassingObject(await user.fetch());
             return status.finalize();
-        }).catch (e => {
+        }).catch (async e => {
             Logger.warn('Error encountered while removing User roles', {errors: e, user: user});
-            status.addPassingObject(user);
+            status.addPassingObject(await user.fetch());
             status.addFailureReason({failure: 'Error Updating User', failureMessage: 'Unexpected error adding/removing user roles or editing nickname'});
             return status.finalize();
         });
@@ -167,12 +167,12 @@ export class VerificationManager {
             status.addFailureReason({failure: 'User is Unmanageable', failureMessage: 'Nickname and roles could not be updated because user is unmanageable by Iris Bot.'});
         }
 
-        return Promise.all(promises).then(() => {
-            status.addPassingObject(this._ClientTools.findGuildMember(user.guild.id, user.id));
+        return Promise.all(promises).then(async () => {
+            status.addPassingObject(await user.fetch());
             return status.finalize();
-        }).catch (e => {
+        }).catch (async e => {
             Logger.warn('Error encountered while updating User roles', {errors: e, user: user});
-            status.addPassingObject(user);
+            status.addPassingObject(await user.fetch());
             status.addFailureReason({failure: 'Error Updating User', failureMessage: 'Unexpected error adding/removing user roles or editing nickname'});
             return status.finalize();
         });
@@ -296,7 +296,7 @@ export class VerificationManager {
         await this._VerificationService.createQueuedVerification(user.id, template.guildId, template._id);
         const iUser = await this._UserService.findByUserId(user.id);
 
-        const guildMember = this._ClientTools.findGuildMember(template.guildId, user.id);
+        const guildMember = await this._ClientTools.findGuildMember(template.guildId, user.id);
         if (!guildMember) {
             Logger.warn('Unable to retrieve GuildMember during verification attempt', {user: user, template: template});
             // TODO: send user message telling them to go to server to reverify
@@ -566,7 +566,7 @@ export class VerificationManager {
         }
 
         const userId = MessageParser.parseUserId(args[1]);
-        const verifyingUser = ClientTools.findGuildMember(message.guild, userId);
+        const verifyingUser = await ClientTools.findGuildMember(message.guild, userId);
         if (!userId || !verifyingUser) {
             Logger.debug('Invalid user id given during attempted manual verification... Aborting verification', {guild: message.guild, args: args});
             this._VerificationMessenger.sendGeneralVerificationFailureToGuild(
@@ -627,7 +627,7 @@ export class VerificationManager {
                 }
                 break;
             case 'MANUALVERIFY': // manualVerify :user :templateName
-                if (!this._GuildService.isMod(message.guild, message.author.id)) {
+                if (!(await this._GuildService.isMod(message.guild, message.author.id))) {
                     return;
                 }
                 if (args.length < 3 || !(message.channel instanceof TextChannel)) {
@@ -636,7 +636,7 @@ export class VerificationManager {
                 this.beginManualCommand(message, args, 'verify');
                 break;
             case 'MANUALUNVERIFY': // unverify :user :templateName
-                if (!this._GuildService.isMod(message.guild, message.author.id)) {
+                if (!(await this._GuildService.isMod(message.guild, message.author.id))) {
                     return;
                 }
                 if (args.length < 3 || !(message.channel instanceof TextChannel)) {

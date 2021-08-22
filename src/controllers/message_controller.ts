@@ -92,11 +92,11 @@ export class MessageController {
      */
     public handleMessage(message: Message): void {
         switch (message.channel.type) {
-            case 'text':
+            case 'GUILD_TEXT':
                 Logger.debug('Guild message received', {guild: message.guild, user: message.author});
                 this.handleGuildMessage(message);
                 break;
-            case 'dm':
+            case 'DM':
                 Logger.debug('Direct message received', {user: message.author});
                 this.handleDirectMessage(message);
                 break;

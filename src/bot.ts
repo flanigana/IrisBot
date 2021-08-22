@@ -23,6 +23,8 @@ export class Bot {
 
     private readonly _IgnoreList: Map<string, Set<string>>; // used to isolate users using the template service
 
+    private uptimeInterval: NodeJS.Timeout;
+
     constructor(
         @inject(TYPES.Client) client: Client,
         @inject(TYPES.DiscordToken) token: string,
@@ -101,7 +103,7 @@ export class Bot {
     private startUptimePresence(): void {
         this._Client.user.setActivity('chat for 00:00:00', {type: 'WATCHING'});
         const start = Date.now();
-        this._Client.setInterval(() => {
+        this.uptimeInterval = setInterval(() => {
             let uptimeInSeconds = Math.floor((Date.now() - start) / 1000);
             let hours = Math.floor(uptimeInSeconds / 3600);
             uptimeInSeconds -= hours * 3600;
@@ -120,11 +122,11 @@ export class Bot {
      */
     public listen(login = true): Promise<void> {
         // on message
-        this._Client.on<'message'>('message', async (message: Message) => {
+        this._Client.on<'message_create'>('message_create', async (message: Message) => {
             if (message.author.bot) {
                 return;
             }
-            if (message.channel.type === 'text' && !this.startsWithValidPrefix(message.content)) {
+            if (message.channel.type === 'GUILD_TEXT' && !this.startsWithValidPrefix(message.content)) {
                 return;
             }
             if (this._IgnoreList.has(message.author.id) && this._IgnoreList.get(message.author.id).has(message.channel.id)) {
@@ -135,12 +137,12 @@ export class Bot {
 
         // on guild creation
         this._Client.on<'guildCreate'>('guildCreate', async (guild: Guild) => {
-            return this._GuildService.saveDiscordGuild(guild);
+            this._GuildService.saveDiscordGuild(guild);
         });
 
         // on guild update
         this._Client.on<'guildUpdate'>('guildUpdate', async (guild: Guild) => {
-            return this._GuildService.saveDiscordGuild(guild);
+            this._GuildService.saveDiscordGuild(guild);
         });
 
         if (login) {
@@ -154,9 +156,9 @@ export class Bot {
      * Logs out the Discord Client and closes the connection to the database
      */
     public async logout() {
-        this._Client.user?.setActivity('Offline...').then(() => {
-            this._Client.destroy();
-        });
+        clearInterval(this.uptimeInterval);
+        this._Client.user?.setActivity('Offline...');
+        this._Client.destroy();
         await mongoose.disconnect();
     }
 }

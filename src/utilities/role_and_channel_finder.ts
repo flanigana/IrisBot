@@ -1,4 +1,5 @@
 import { Guild, Channel, Role } from 'discord.js';
+import { ChannelTypes } from 'discord.js/typings/enums';
 import { StringUtils } from './string_utils';
 
 /**
@@ -11,8 +12,9 @@ export abstract class RolesAndChannels {
      * @param guild Discord Guild containing the Channel
      * @param channelId id of the Channel
      */
-    public static getChannelById(guild: Guild, channelId: string, type?: 'text' | 'voice'): Channel  {
+    public static getChannelById(guild: Guild, channelId: string, type: 'GUILD_TEXT' | 'GUILD_VOICE'): Channel  {
         let channel = guild.channels.cache.get(channelId);
+        channel.type
         return channel.type === type ? channel : undefined;
     };
     
@@ -31,7 +33,7 @@ export abstract class RolesAndChannels {
      * @param channelName name of the Channel
      * @param type the type of the Channel
      */
-    public static getChannelByName(guild: Guild, channelName: string, type?: 'text' | 'voice'): Channel {
+    public static getChannelByName(guild: Guild, channelName: string, type?: 'GUILD_TEXT' | 'GUILD_VOICE'): Channel {
         return guild.channels.cache.find((channel) => {
             if (StringUtils.equalsIgnoreCase(channel.name, channelName)) {
                 return false;
@@ -58,7 +60,7 @@ export abstract class RolesAndChannels {
      * @param channel identifier for the Channel
      * @param type the type of the Channel
      */
-    public static getChannel(guild: Guild, channel: string, type?: 'text' | 'voice'): Channel {
+    public static getChannel(guild: Guild, channel: string, type?: 'GUILD_TEXT' | 'GUILD_VOICE'): Channel {
         const channelRegex = new RegExp(/(<#\d*>)/g);
         if (channelRegex.test(channel)) {
             return this.getChannelById(guild, channel.replace(/^<#|>$/g, ''), type);

@@ -81,7 +81,7 @@ export abstract class SetupService<E extends DataModel> {
         collector.stop();
         this._Bot.userUnignore(this.authorId, this.channel.id);
         this.save();
-        return this._view.edit(this.getEndPage(true));
+        return this._view.edit({embeds: [this.getEndPage(true)]});
     }
 
     private async processCollection(collector: ReactionCollector, reaction: MessageReaction): Promise<Message> {
@@ -91,25 +91,25 @@ export abstract class SetupService<E extends DataModel> {
             case '❌': // cancel
                 collector.stop();
                 this._Bot.userUnignore(this.authorId, this.channel.id);
-                return this._view.edit(this.getCancelledPage());
+                return this._view.edit({embeds: [this.getCancelledPage()]});
             case '⬅': // previous page
                 if (this._pageSet.hasPrevious) {
                     return this._pageSet.getPreviousPageView().then((embed: MessageEmbed) => {
-                        return this._view.edit(embed);
+                        return this._view.edit({embeds: [embed]});
                     });
                 }
                 break;
             case '➡': // next page
                 if (this._pageSet.hasNext) {
                     return this._pageSet.getNextPageView().then((embed: MessageEmbed) => {
-                        return this._view.edit(embed);
+                        return this._view.edit({embeds: [embed]});
                     });
                 } else {
                     if (this.isFinished) {
                         return this.onCompletion(collector);
                     } else {
                         let embed: MessageEmbed = this.getEndPage(false);
-                        return this._view.edit(embed);
+                        return this._view.edit({embeds: [embed]});
                     }
                 }
         }
@@ -118,7 +118,12 @@ export abstract class SetupService<E extends DataModel> {
     private addReactionCollector(message: Message, responseListener: (res: Message) => void): void {
         const reactionFilter = (reaction: MessageReaction, user: User) => ((user.id === this.authorId) && this._PageReactions.has(reaction.emoji.name));
 
-        const collector = message.createReactionCollector(reactionFilter, {time: 10*(60*1000)});
+        const collector = message.createReactionCollector(
+            {
+                filter: reactionFilter,
+                time: 10*(60*1000)
+            }
+        );
 
         collector.on('collect', (reaction: MessageReaction) => {
             this.processCollection(collector, reaction);
@@ -134,7 +139,7 @@ export abstract class SetupService<E extends DataModel> {
         this._pageSet.validate(res).then((template) => {
             Object.assign<Partial<E>, Partial<E>>(this._template, template);
             this._pageSet.getCurrentPageView().then((embed: MessageEmbed) => {
-                return this._view.edit(embed);
+                return this._view.edit({embeds: [embed]});
             });
         });
     }
@@ -166,7 +171,7 @@ export abstract class SetupService<E extends DataModel> {
     }
 
     public startService() {
-        this.channel.send(this.getStartPage()).then((msg: Message) => {
+        this.channel.send({embeds: [this.getStartPage()]}).then((msg: Message) => {
             this._view = msg;
             const responseListener = this.attachMessageListener();
             this.addReactionCollector(msg, responseListener);

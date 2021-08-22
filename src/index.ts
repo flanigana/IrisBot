@@ -37,16 +37,16 @@ if (process.platform === 'win32') {
 
 })().catch(console.error);
 
-// (async () => {
-//     runTest();
-// })().catch(console.error);
+(async () => {
+    runTest();
+})().catch(console.error);
 
-// async function runTest() {
-//     const arg = process.argv.slice(2).join(' ');
-//     await new Promise(resolve => setTimeout(resolve, 5000));
-//     // await realmeye.getRealmEyeUserData(arg || 'Japan');
-//     console.log(await RealmEyeService.getRealmEyeUserData(arg || 'Japan'));
-//     // await realmeye.getRealmEyeGuildData('Black Bullet');
-//     // console.log((await realmeye.getRealmEyeGuildData(arg || 'Black Bullet')).topCharacters[24]);
-//     // findBestMatch(arg || 'void', ['Cursed Library', 'The Void', 'Lost Halls', 'Manor of the Immortals', 'Tomb of the Ancients'], {includeScore: false});
-// }
+async function runTest() {
+    const arg = process.argv.slice(2).join(' ');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    // await realmeye.getRealmEyeUserData(arg || 'Japan');
+    // console.log(await RealmEyeService.getRealmEyeUserData(arg || 'Japan'));
+    // await realmeye.getRealmEyeGuildData('Black Bullet');
+    // console.log((await realmeye.getRealmEyeGuildData(arg || 'Black Bullet')).topCharacters[24]);
+    // findBestMatch(arg || 'void', ['Cursed Library', 'The Void', 'Lost Halls', 'Manor of the Immortals', 'Tomb of the Ancients'], {includeScore: false});
+}

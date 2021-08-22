@@ -77,10 +77,10 @@ export class VerificationController {
         }
 
         switch (message.channel.type) {
-            case 'text':
+            case 'GUILD_TEXT':
                 this.handleGuildMessage(message, args);
                 break;
-            case 'dm':
+            case 'DM':
                 this.handleDirectMessage(message, args);
                 break;
         }

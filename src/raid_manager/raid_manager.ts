@@ -82,9 +82,9 @@ export class RaidManager {
             template: template,
             config: config,
             guild: message.guild,
-            starter: ClientTools.findGuildMember(message.guild, message.author.id),
-            alertChannel: RolesAndChannels.getChannel(message.guild, args[3], 'text') as TextChannel,
-            raidChannel: RolesAndChannels.getChannel(message.guild, args[4], 'voice') as VoiceChannel,
+            starter: await ClientTools.findGuildMember(message.guild, message.author.id),
+            alertChannel: RolesAndChannels.getChannel(message.guild, args[3], 'GUILD_TEXT') as TextChannel,
+            raidChannel: RolesAndChannels.getChannel(message.guild, args[4], 'GUILD_VOICE') as VoiceChannel,
             raiderRole: RolesAndChannels.getRole(message.guild, args[5]),
             location: args.length > 6 ? args[6] : undefined,
             remainingTime: config.runTime * 1000,
@@ -110,7 +110,7 @@ export class RaidManager {
                 return true;
             } else if (emoji.toString() === template.primaryReact.react || limitedReactions.has(emoji.toString())) {
                 return true;
-            } else if (emoji.toString() === nitroEmoji && config.allowBooster && this._GuildService.isNitroBooster(guild, user.id)) {
+            } else if (emoji.toString() === nitroEmoji && config.allowBooster && await this._GuildService.isNitroBooster(guild, user.id)) {
                 return true;
             } else {
                 return false;
@@ -124,7 +124,7 @@ export class RaidManager {
      * @param properties the options object to read raid information from
      */
     private async onPrimaryReact(user: User, {guild, raiders, raidLeaders}: RaidProperties): Promise<void> {
-        const guildMember = ClientTools.findGuildMember(guild, user.id);
+        const guildMember = await ClientTools.findGuildMember(guild, user.id);
         if (await this._GuildService.isRaidLeader(guild, user.id)) {
             raidLeaders.add(guildMember);
         }
@@ -150,7 +150,7 @@ export class RaidManager {
                 }
             }
 
-            return confirmation.awaitReactions(filter, {max: 1, time: 60000}).then(collected => {
+            return confirmation.awaitReactions({filter, max: 1, time: 60000}).then(collected => {
                 return collected.every(r => {
                     if (r.emoji.name === '✅') {
                         return true;
@@ -168,10 +168,10 @@ export class RaidManager {
      * @param user user who reacted
      * @param properties the options object to read raid information from
      */
-    private onSecondaryReact(emoji: GuildEmoji | ReactionEmoji, user: User, properties: RaidProperties): void {
+    private async onSecondaryReact(emoji: GuildEmoji | ReactionEmoji, user: User, properties: RaidProperties): Promise<void> {
         const { guild, location, limitedReactions, confirmationsMessage } = properties;
         const tracker = limitedReactions.get(emoji.toString());
-        const guildMember = ClientTools.findGuildMember(guild, user.id);
+        const guildMember = await ClientTools.findGuildMember(guild, user.id);
         if (!tracker.has(guildMember)) {
             this.confirmReaction(emoji, user).then(confirmed => {
                 if (confirmed && !limitedReactions.get(emoji.toString()).atMaxSize) {
@@ -181,7 +181,7 @@ export class RaidManager {
                     } else {
                         user.send(`You are now confirmed with ${emoji} for the raid. Please go to the location announced with your ${emoji}.`);
                     }
-                    confirmationsMessage.edit(this.createConfirmationsEmbed(properties));
+                    confirmationsMessage.edit({embeds: [this.createConfirmationsEmbed(properties)]});
                 } else if (confirmed) {
                     user.send(`The raid has already reached the limit for ${emoji}'s.`);
                 } else {
@@ -198,12 +198,12 @@ export class RaidManager {
      * @param collector message reaction collector
      * @param properties the options object to read raid information from
      */
-    private onReactionCollection(emoji: GuildEmoji | ReactionEmoji, user: User, collector: ReactionCollector, properties: RaidProperties): void {
+    private async onReactionCollection(emoji: GuildEmoji | ReactionEmoji, user: User, collector: ReactionCollector, properties: RaidProperties): Promise<void> {
         if (emoji.name === '✅' || emoji.name === '❌') {
             if (emoji.name === '❌') {
                 properties.status = RaidStatus.CANCELLED;
             }
-            properties.stoppedBy = ClientTools.findGuildMember(properties.guild, user.id);
+            properties.stoppedBy = await ClientTools.findGuildMember(properties.guild, user.id);
             collector.stop();
         } else if (emoji.toString() === properties.template.primaryReact.react) {
             this.onPrimaryReact(user, properties);
@@ -232,7 +232,7 @@ export class RaidManager {
                 if (guild.afkChannel) {
                     member.voice.setChannel(guild.afkChannel, 'Raider failed to react for raid.');
                 } else {
-                    member.voice.kick('Raider failed to react for raid.');
+                    member.voice.disconnect('Raider failed to react for raid.');
                 }
             }
         });
@@ -262,7 +262,7 @@ export class RaidManager {
                 .setFooter(`Cancelled by ${stoppedBy.displayName}`);
             break;
         }
-        raidMessage.edit(embed);
+        raidMessage.edit({embeds: [embed]});
     }
     
     private startPostAfk(properties: RaidProperties) {
@@ -303,7 +303,12 @@ export class RaidManager {
      * @param properties the options object to read raid information from
      */
     private startReactionCollector(properties: RaidProperties): void {
-        const collector = properties.raidMessage.createReactionCollector(this.createReactionFilter(properties), {time: properties.remainingTime});
+        const collector = properties.raidMessage.createReactionCollector(
+            {
+                filter: this.createReactionFilter(properties), 
+                time: properties.remainingTime
+            }
+        );
         collector.on('collect', ({emoji}, user) => {
             this.onReactionCollection(emoji, user, collector, properties)});
         collector.on('end', () => {
@@ -316,7 +321,7 @@ export class RaidManager {
      * @param properties the options object to read raid information from 
      */
     private openRaidChannel({raidChannel, raiderRole}: RaidProperties, userId?: string): void {
-        raidChannel.overwritePermissions([
+        raidChannel.permissionOverwrites.set([
             {
                 id: !userId ? raiderRole.id : userId,
                 allow: ['CONNECT'],
@@ -330,7 +335,7 @@ export class RaidManager {
      * @param properties the options object to read raid information from 
      */
     private closeRaidChannel({raidChannel, raiderRole}: RaidProperties, userId?: string): void {
-        raidChannel.overwritePermissions([
+        raidChannel.permissionOverwrites.set([
             {
                 id: !userId ? raiderRole.id : userId,
                 deny: ['CONNECT'],
@@ -396,7 +401,7 @@ export class RaidManager {
     private createUpdateInterval(properties: RaidProperties): NodeJS.Timeout {
         return setInterval(() => {
             properties.remainingTime -= properties.remainingTime - 5000 >= 0 ? 5000 : properties.remainingTime;
-            properties.raidMessage.edit(this.createRaidStartEmbed(properties));
+            properties.raidMessage.edit({embeds: [this.createRaidStartEmbed(properties)]});
         }, 5000);
     }
 
@@ -419,13 +424,13 @@ export class RaidManager {
      * @param type type of channel to validate
      * @returns whether or not the channel is valid
      */
-    private verifyChannel(message: Message, channel: string, type: 'text' | 'voice'): boolean {
+    private verifyChannel(message: Message, channel: string, type: 'GUILD_TEXT' | 'GUILD_VOICE'): boolean {
         const res = RolesAndChannels.getChannel(message.guild, channel, type);
         if (!res) {
             const embed = this._ClientTools.getStandardEmbed()
                 .setTitle("ERROR: Invalid Arguments Given")
                 .setDescription(`${channel} is not a valid ${type} channel in this server.`);
-            message.channel.send(embed);
+            message.channel.send({embeds: [embed]});
             return false;
         }
         return true;
@@ -443,7 +448,7 @@ export class RaidManager {
             const embed = this._ClientTools.getStandardEmbed()
                 .setTitle("Error: Invalid Arguments Given")
                 .setDescription(`${role} is not a valid role in this server.`);
-            message.channel.send(embed); 
+            message.channel.send({embeds: [embed]}); 
             return false;
         }
         return true;
@@ -455,7 +460,7 @@ export class RaidManager {
             const embed = this._ClientTools.getStandardEmbed()
                 .setTitle('Error: Invalid Template Name')
                 .setDescription(`${templateName} is not a valid template in this server.`);
-            message.channel.send(embed);
+            message.channel.send({embeds: [embed]});
             return false;
         }
         return true;
@@ -471,8 +476,8 @@ export class RaidManager {
     private async verifyArguments(message: Message, args: string[]): Promise<boolean> {
         let passed = true;
         passed = passed && await this.verifyTemplate(message, args[2]);
-        passed = passed && this.verifyChannel(message, args[3], 'text'); 
-        passed = passed && this.verifyChannel(message, args[4], 'voice');
+        passed = passed && this.verifyChannel(message, args[3], 'GUILD_TEXT'); 
+        passed = passed && this.verifyChannel(message, args[4], 'GUILD_VOICE');
         passed = passed && this.verifyRole(message, args[5]);
         return passed;
     }
@@ -489,14 +494,14 @@ export class RaidManager {
         }
         const raidProperties = await this.buildRaidProperties(message, args);
         raidProperties.notifMessage = await this.sendNotifMessage(raidProperties);
-        raidProperties.alertChannel.send(this.createRaidStartEmbed(raidProperties)).then(async raidMessage => {
+        raidProperties.alertChannel.send({embeds: [this.createRaidStartEmbed(raidProperties)]}).then(async raidMessage => {
             raidProperties.raidMessage = raidMessage;
             this.addRaidReactions(raidMessage, raidProperties);
             raidProperties.interval = this.createUpdateInterval(raidProperties);
             this.openRaidChannel(raidProperties);
             if (raidProperties.config.confirmationsChannel) {
-                const confirmChannel = RolesAndChannels.getChannel(message.guild, raidProperties.config.confirmationsChannel, 'text') as TextChannel;
-                raidProperties.confirmationsMessage = await confirmChannel.send(this.createConfirmationsEmbed(raidProperties));
+                const confirmChannel = RolesAndChannels.getChannel(message.guild, raidProperties.config.confirmationsChannel, 'GUILD_TEXT') as TextChannel;
+                raidProperties.confirmationsMessage = await confirmChannel.send({embeds: [this.createConfirmationsEmbed(raidProperties)]});
             }
             this.startReactionCollector(raidProperties);
         });

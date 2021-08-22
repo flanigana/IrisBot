@@ -22,6 +22,8 @@ type InitializationSettings = {
  * checks for element existence and data scraping. For now, this is how it is.
  * 
  * NOTE of NOTE: Cheerio has been updated and now has proper types. The package needs to be updated and this class needs to be updated.
+ * NOTE of NOTE of NOTE: Cheerio types are absolute trash, so it will continue being done unsafely for now. Cheerio types still mostly aren't exposed
+ * and there's no way to check the instanceof a subelement of any single element. Beware future headache. (maybe replace cheerio)
  */
 @injectable()
 export abstract class RealmEyeService {
@@ -154,7 +156,7 @@ export abstract class RealmEyeService {
         }
 
         const headingSelector = 'h2#realm-dungeons, h2#realm-event-dungeons, h2#oryx-s-castle, h2#mini-dungeons';
-        const $ = cheerio.load(data);
+        const $ = cheerio.load(data) as any;
         const container = $('.container');
         const headAndTable = $(headingSelector + ', div.table-responsive', container);
         for (let i=0; i < headAndTable.length; i++) {
@@ -529,7 +531,7 @@ export abstract class RealmEyeService {
 
         const completions: DungeonCompletions = {};
 
-        const $ = cheerio.load(data);
+        const $ = cheerio.load(data) as any;
         const completionsTable = $('table.main-achievements');
         $('tbody > tr', completionsTable).each((i, tableRow) => {
             const rowData = $('td', tableRow);

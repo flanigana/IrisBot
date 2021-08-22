@@ -37,9 +37,9 @@ export class GuildService {
      * @param member GuildMember to check permissions for
      * @returns whether the member has admin permissions
      */
-    public isAdmin(guild: Guild, member: string | GuildMember): Promise<boolean> {
-        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
-        if (guildMember.id === '225044370930401280' || guildMember.hasPermission('ADMINISTRATOR')) {
+    public async isAdmin(guild: Guild, member: string | GuildMember): Promise<boolean> {
+        const guildMember = typeof member === 'string' ? await ClientTools.findGuildMember(guild, member) : member;
+        if (guildMember.id === '225044370930401280' || guildMember.permissions.has('ADMINISTRATOR')) {
             return Promise.resolve(true);
         }
         return this.findById(guild.id).then(iGuild => {
@@ -53,11 +53,11 @@ export class GuildService {
      * @param member GuildMember to check permissions for
      * @returns whether the member has mod permissions
      */
-    public isMod(guild: Guild, member: string | GuildMember): Promise<boolean> {
-        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
-        return this.findById(guild.id).then(iGuild => {
+    public async isMod(guild: Guild, member: string | GuildMember): Promise<boolean> {
+        const guildMember = typeof member === 'string' ? await ClientTools.findGuildMember(guild, member) : member;
+        return this.findById(guild.id).then(async iGuild => {
             return iGuild.mods.some(role => GuildService.hasRole(guildMember, role))
-                || this.isAdmin(guild, guildMember);
+                || await this.isAdmin(guild, guildMember);
         });
     }
     
@@ -67,8 +67,8 @@ export class GuildService {
      * @param member GuildMember to check permissions for
      * @returns whether the member has raid leader permissions
      */
-    public isRaidLeader(guild: Guild, member: string | GuildMember): Promise<boolean> {
-        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
+    public async isRaidLeader(guild: Guild, member: string | GuildMember): Promise<boolean> {
+        const guildMember = typeof member === 'string' ? await ClientTools.findGuildMember(guild, member) : member;
         return this.findRaidConfigById(guild.id).then(iRaidConfig => {
             return iRaidConfig.raidLeaders.some(role => GuildService.hasRole(guildMember, role))
                 || this.isAdmin(guild, guildMember);
@@ -81,8 +81,8 @@ export class GuildService {
      * @param member GuildMember to check permissions for
      * @returns whether the member is a nitro-booster
      */
-    public isNitroBooster(guild: Guild, member: string | GuildMember): boolean {
-        const guildMember = typeof member === 'string' ? ClientTools.findGuildMember(guild, member) : member;
+    public async isNitroBooster(guild: Guild, member: string | GuildMember): Promise<boolean> {
+        const guildMember = typeof member === 'string' ? await ClientTools.findGuildMember(guild, member) : member;
         return guildMember.premiumSince ? true : false;
     }
 
@@ -163,7 +163,7 @@ export class GuildService {
         return getBlankGuild({
             guildId: guild.id,
             name: guild.name,
-            owner: guild.ownerID
+            owner: guild.ownerId
         });
     }
 
@@ -174,7 +174,7 @@ export class GuildService {
     private async getUpdatedGuild(guild: Guild): Promise<IGuild> {
         return this._GuildRepo.findByGuildId(guild.id).then((iguild) => {
             iguild.name = guild.name;
-            iguild.owner = guild.ownerID;
+            iguild.owner = guild.ownerId;
             return iguild;
         });
     }

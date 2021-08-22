@@ -42,7 +42,13 @@ let container = new Container();
 
 // client
 container.bind<string>(TYPES.DiscordToken).toConstantValue(process.env.DISCORD_TOKEN);
-container.bind<Client>(TYPES.Client).toConstantValue(new Client());
+container.bind<Client>(TYPES.Client).toConstantValue(new Client(
+    {
+        intents: [
+            'GUILDS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS', 'GUILD_EMOJIS_AND_STICKERS',
+            'DIRECT_MESSAGES', 'DIRECT_MESSAGE_REACTIONS'
+        ]
+}));
 
 // repositories
 container.bind<GuildRepository>(TYPES.GuildRepository).to(GuildRepository).inSingletonScope();

@@ -36,8 +36,10 @@ export class ClientTools {
      * Returns the Discord Guild with the given id
      * @param guildId id of Guild
      */
-    public findGuild(guildId: string): Guild {
-        return this._Client.guilds.cache.find(g => (g.id === guildId));
+    public findGuild(guildId: string): Promise<Guild> {
+        return this._Client.guilds.fetch().then(guilds =>
+            guilds.get(guildId).fetch()
+        );
     }
 
     /**
@@ -46,8 +48,12 @@ export class ClientTools {
      * @param memberId id of the user to search for
      * @returns 
      */
-    public findGuildMember(guildId: string, memberId: string): GuildMember {
-        return this.findGuild(guildId)?.members.cache.find(m => (m.id === memberId));
+    public findGuildMember(guildId: string, memberId: string): Promise<GuildMember> {
+        return this.findGuild(guildId).then(g => 
+            g?.members.fetch().then(gm => 
+                gm.get(memberId)
+            )
+        );
     }
     
     /**
@@ -55,8 +61,10 @@ export class ClientTools {
      * @param guild Guild to search for member in
      * @param memberId id of the user to search for
      */
-    public static findGuildMember(guild: Guild, memberId: string): GuildMember {
-        return guild.members.cache.find(m => (m.id === memberId));
+    public static findGuildMember(guild: Guild, memberId: string): Promise<GuildMember> {
+        return guild.members.fetch().then(gm => 
+            gm.get(memberId)
+        );
     }
 
     /**

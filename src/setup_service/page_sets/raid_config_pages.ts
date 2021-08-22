@@ -83,7 +83,7 @@ export default function addRaidConfigPages(pageSet: PageSet<IRaidConfig>, templa
                 fields.confirmationsChannel = undefined;
                 return 'Successfully turned off confirmations.';
             }
-            const channel = RolesAndChannels.getChannel(guild, res, 'text');
+            const channel = RolesAndChannels.getChannel(guild, res, 'GUILD_TEXT');
             if (!channel) {
                 return `Error: Channel, ${res}, not found!`;
             } else {

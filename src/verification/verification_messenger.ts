@@ -40,15 +40,15 @@ export class VerificationMessenger {
     }
 
     public sendGeneralVerificationFailureToGuild(channel: TextChannel, ...reasons: EmbedField[] | FailureReason[]): void {
-        channel.send(this.buildGeneralVerificationFailureEmbed(...reasons));
+        channel.send({embeds: [this.buildGeneralVerificationFailureEmbed(...reasons)]});
     }
 
     public sendGeneralVerificationFailureToUser(user: User, ...reasons: EmbedField[] | FailureReason[]): void {
-        user.send(this.buildGeneralVerificationFailureEmbed(...reasons));
+        user.send({embeds: [this.buildGeneralVerificationFailureEmbed(...reasons)]});
     }
 
     public sendIgnLinkingStartMessageToUser(user: User, vericode: string): void {
-        user.send(
+        user.send({embeds: [
             this._ClientTools.getStandardEmbed()
                 .setTitle('IGN Linking Started')
                 .setDescription('Thank you for beginning your verification process with Iris Bot!.' +
@@ -58,39 +58,39 @@ export class VerificationMessenger {
                     {name: 'Step 2', value: 'Come back here and reply with \`!verify :ign\`.'},
                     {name: 'Step 3', value: 'Once completed successfully, you\'ll receive a message verifying completion!'}
                 )
-        )
+                ]})
     }
 
     public sendInvalidIgnLinkingCommandToUser(user: User): void {
-        user.send(
+        user.send({embeds: [
             this._ClientTools.getStandardEmbed()
                 .setTitle('Invalid Command')
                 .setDescription('In order to link your IGN, you need to include your IGN in the command, such as \`!verify :ign\`.\n' +
                     'If you wish to add or update your IGN, use the command \`!updateIGN\` and follow the steps.')
-        );
+        ]});
     }
 
     public sendIgnLinkingSuccessToUser(user: User, userData: RealmEyeUserData): void {
-        user.send(
+        user.send({embeds: [
             this._ClientTools.getStandardEmbed()
                 .setTitle('IGN Linking Success')
                 .setDescription(`Congratulations! You have successfully linked [${userData.name}](${userData.realmEyeUrl}) with Iris Bot!\n` +
                     'You can now verify in any verification channel using this bot.')
                 .addField('Updating Your IGN', 'If you ever need to update your IGN, just type \`!updateIGN\` in this DM channel'
                     + ' or any verification channel used by Iris Bot')
-        );
+        ]});
     }
 
     public sendTemplateVerificationSuccessToUser(user: GuildMember, template: IVerificationTemplate): void {
-        user.send(
+        user.send({embeds: [
             this._ClientTools.getStandardEmbed()
                 .setTitle('Verified!')
                 .setDescription(`Congratulations! You have been verified in **${user.guild}**:${template.verificationChannel}`)
-        );
+        ]});
     }
 
     public sendTemplateVerificationSuccessToGuild(user: GuildMember, userData: RealmEyeUserData, template: IVerificationTemplate, manualOverride?: ManualOverride): void {
-        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'text') as TextChannel;
+        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'GUILD_TEXT') as TextChannel;
         const embed = this._ClientTools.getStandardEmbed()
             .setTitle(`${user.displayName} Has Been Verified!`)
             .setURL(`https://www.realmeye.com/player/${userData.name}`);
@@ -105,13 +105,13 @@ export class VerificationMessenger {
             {name: "Server Name", value: user.displayName, options: {inline: true}},
             {name: "Discord Tag", value: user.user.tag, options: {inline: true}},
             {name: "Discord Id", value: user.id, options: {inline: true}},
-            {name: "Roles", value: user.roles.cache.array(), options: {separator: ' '}}
+            {name: "Roles", value: user.roles.cache.values(), options: {separator: ' '}}
         );
-        logChannel.send(embed);
+        logChannel.send({embeds: [embed]});
     }
 
     public sendUserUnmanageableToGuild(user: GuildMember, addedRoles: Role[], removedRoles: Role[], template: IVerificationTemplate, userData?: RealmEyeUserData): void {
-        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'text') as TextChannel;
+        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'GUILD_TEXT') as TextChannel;
         const embed = this._ClientTools.getStandardEmbed()
             .setTitle(`${user.displayName} is Unmanageable`)
             .setDescription(`${user} is unmanageable either because the user outranks Iris Bot or because Iris Bot is lacking the ` + 
@@ -128,7 +128,7 @@ export class VerificationMessenger {
             {name: 'Attempted Roles Added', value: addedRoles, options: {separator: ' ', inline: true}},
             {name: 'Attempted Roles Removed', value: removedRoles, options: {separator: ' ', inline: true}}
         );
-        logChannel.send(embed);
+        logChannel.send({embeds: [embed]});
     }
 
     private addFailureReasonsToEmbed(embed: MessageEmbed, status: Status<any>, sendTo: 'user' | 'guild'): MessageEmbed {
@@ -162,24 +162,24 @@ export class VerificationMessenger {
             .setURL(userData.realmEyeUrl)
             .setDescription(`You failed to verify in **${user.guild}**:${template.verificationChannel} for the following reasons:`);
         this.addFailureReasonsToEmbed(embed, status, 'user');
-        user.send(embed);
+        user.send({embeds: [embed]});
     }
 
     public sendTemplateVerificationFailureToGuild(user: GuildMember, userData: RealmEyeUserData, template: IVerificationTemplate, status: Status<any>): void {
-        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'text') as TextChannel;
+        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'GUILD_TEXT') as TextChannel;
         const embed = this._ClientTools.getStandardEmbed()
             .setTitle(`${user.displayName} Failed Verification`)
             .setURL(userData.realmEyeUrl)
             .setDescription(`${user} failed to verify for ${template.name} in ${template.verificationChannel} for the following reasons:`);
         this.addFailureReasonsToEmbed(embed, status, 'guild');
-        logChannel.send(embed);
+        logChannel.send({embeds: [embed]});
     }
 
     public sendTemplateUnverificationSuccessToGuild(user: GuildMember, template: IVerificationTemplate, initiatingUser: User): void {
-        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'text') as TextChannel;
+        const logChannel = RolesAndChannels.getChannel(user.guild, template.logChannel, 'GUILD_TEXT') as TextChannel;
         const embed = this._ClientTools.getStandardEmbed()
             .setTitle(`${user.displayName} Successfully Unverified`)
             .setDescription(`${user} has been unverified for ${template.name} by ${initiatingUser}.`);
-        logChannel.send(embed);
+        logChannel.send({embeds: [embed]});
     }
 }

@@ -77,7 +77,7 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
         async (fields: Partial<IVerificationTemplate>, res: string): Promise<string> => {
             const usedChannels = await getUsedVerificationChannels();
             const args = MessageParser.parseMessage(res);
-            const verify = RolesAndChannels.getChannel(guild, args[0], 'text');
+            const verify = RolesAndChannels.getChannel(guild, args[0], 'GUILD_TEXT');
             if (!verify) {
                 return `Error: ${args[0]} is not a valid text channel.`;
             }
@@ -86,7 +86,7 @@ export default function addVerificationTemplatePages(pageSet: PageSet<IVerificat
             }
             fields.verificationChannel = verify.toString();
             const log = args.length > 1 ?
-                    RolesAndChannels.getChannel(guild, args[1], 'text') :
+                    RolesAndChannels.getChannel(guild, args[1], 'GUILD_TEXT') :
                     verify;
             if (!log) {
                 fields.logChannel = fields.logChannel || fields.verificationChannel;

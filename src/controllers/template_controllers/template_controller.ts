@@ -39,7 +39,7 @@ export class TemplateController<T extends GuildTemplate> {
             } else {
                 this._ClientTools.addFieldToEmbed(embed, 'Template Names', templates.map(t => t.name), {separator: '\n'});
             }
-            message.channel.send(embed);
+            message.channel.send({embeds: [embed]});
         });
     }
 
@@ -65,7 +65,7 @@ export class TemplateController<T extends GuildTemplate> {
             .setDescription(`Are you sure you want to delete the **${templateName}** template? ` + 
                 '\nReply with \`yes\` to confirm.');
 
-        return message.channel.send(embed).then((msg) => {
+        return message.channel.send({embeds: [embed]}).then((msg) => {
 
             const messageListener = (res: Message) => {
                 if ((res.channel.id === message.channel.id) && (res.author.id === message.author.id)) {
@@ -77,10 +77,10 @@ export class TemplateController<T extends GuildTemplate> {
                     const confirmRegEx = new RegExp(/^y.*/i);
                     if (confirmRegEx.test(res.content)) {
                         return this._TemplateService.deleteTemplate(message.guild.id, templateName, false).then(() => {
-                            return msg.edit(this.createDeletionConfirmation(templateName, true));
+                            return msg.edit({embeds: [this.createDeletionConfirmation(templateName, true)]});
                         });
                     } else {
-                        return msg.edit(this.createDeletionConfirmation(templateName, false));
+                        return msg.edit({embeds: [this.createDeletionConfirmation(templateName, false)]});
                     }
                 }
             }
@@ -118,7 +118,7 @@ export class TemplateController<T extends GuildTemplate> {
         let embed = this._ClientTools.getStandardEmbed();
         embed.setTitle('Verification Template Not Found')
             .setDescription(`A verification template with the name **${templateName}** could not be found.`);
-        message.channel.send(embed);
+        message.channel.send({embeds: [embed]});
     }
 
     public async handleMessage(message: Message, args: string[]): Promise<void> {
