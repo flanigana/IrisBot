@@ -1,29 +1,17 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "target": "es2020",
-        "outDir": "./lib",
-        "lib": [
-            "es6",
-            "dom"
-        ],
-        "sourceMap": true,
-        "types": [
-            "node",
-            "jest",
-            "reflect-metadata"
-        ],
-        "typeRoots": [
-            "node_modules/@types"
-        ],
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true
-    },
-    "exclude": [
-        "node_modules",
-        "lib"
-    ]
+	"compilerOptions": {
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2020",
+		"outDir": "./lib",
+		"lib": ["es6", "dom"],
+		"sourceMap": true,
+		"types": ["node", "jest", "reflect-metadata"],
+		"typeRoots": ["node_modules/@types"],
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"resolveJsonModule": true,
+		"esModuleInterop": true
+	},
+	"exclude": ["node_modules", "lib"]
 }

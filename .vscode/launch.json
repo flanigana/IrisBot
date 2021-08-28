@@ -1,0 +1,18 @@
+{
+	"version": "1.0.0",
+	"configurations": [
+		{
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"name": "Local Server",
+			"restart": true,
+			"request": "launch",
+			"runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin/ts-node-dev",
+			"skipFiles": ["<node_internals>/**"],
+			"type": "node",
+			"runtimeArgs": ["--respawn"],
+			"args": ["${workspaceFolder}\\src\\index.ts"],
+			"outputCapture": "std"
+		}
+	]
+}

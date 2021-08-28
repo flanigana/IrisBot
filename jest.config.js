@@ -1,14 +1,12 @@
+/* eslint-disable no-undef */
 module.exports = {
-  preset: 'ts-jest',
-  transform: {
-    "^.+\\.tsx?$": "ts-jest",
-  },
-  testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$",
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  testEnvironment: 'node',
-  verbose: true,
-  coveragePathIgnorePatterns: [
-    "/node_modules/",
-    "/src/data_access/repositories/"
-  ]
+	preset: 'ts-jest',
+	transform: {
+		'^.+\\.tsx?$': 'ts-jest',
+	},
+	testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$',
+	moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+	testEnvironment: 'node',
+	verbose: true,
+	coveragePathIgnorePatterns: ['/node_modules/', '/src/data_access/repositories/'],
 };

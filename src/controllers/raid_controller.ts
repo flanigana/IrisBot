@@ -6,36 +6,34 @@ import { RaidManager } from '../raid_manager/raid_manager';
 
 @injectable()
 export class RaidController {
+	private readonly _RaidTemplateController: RaidTemplateController;
+	private readonly _RaidManager: RaidManager;
 
-    private readonly _RaidTemplateController: RaidTemplateController;
-    private readonly _RaidManager: RaidManager;
+	public constructor(
+		@inject(TYPES.RaidTemplateController) raidTemplateController: RaidTemplateController,
+		@inject(TYPES.RaidManager) raidManager: RaidManager
+	) {
+		this._RaidTemplateController = raidTemplateController;
+		this._RaidManager = raidManager;
+	}
 
-    public constructor(
-        @inject(TYPES.RaidTemplateController) raidTemplateController: RaidTemplateController,
-        @inject(TYPES.RaidManager) raidManager: RaidManager
-    ) {
-        this._RaidTemplateController = raidTemplateController;
-        this._RaidManager = raidManager;
-    }
+	public async handleMessage(message: Message, args: string[]): Promise<void> {
+		if (args.length < 2) {
+			return;
+		}
 
-    public async handleMessage(message: Message, args: string[]): Promise<void> {
-        if (args.length < 2) {
-            return;
-        }
+		const subCommand = args[1].toUpperCase();
 
-        const subCommand = args[1].toUpperCase();
-
-        switch (subCommand) {
-            case 'LIST':    // raid list
-            case 'CREATE':  // raid create
-            case 'EDIT':    // raid edit :templateName
-            case 'DELETE':  // raid delete :templateName
-                this._RaidTemplateController.handleMessage(message, args);
-                break;
-            case 'START':   // raid start :templateName :alertTextChannel :destVoiceChannel ?:location
-                this._RaidManager.startRaid(message, args);
-                break;
-        }
-    }
-
+		switch (subCommand) {
+			case 'LIST': // raid list
+			case 'CREATE': // raid create
+			case 'EDIT': // raid edit :templateName
+			case 'DELETE': // raid delete :templateName
+				this._RaidTemplateController.handleMessage(message, args);
+				break;
+			case 'START': // raid start :templateName :alertTextChannel :destVoiceChannel ?:location
+				this._RaidManager.startRaid(message, args);
+				break;
+		}
+	}
 }

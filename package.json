@@ -1,56 +1,63 @@
 {
-  "name": "irisbot",
-  "version": "2.0.0",
-  "description": "A Discord bot for use with Realm of the Mad God",
-  "main": "lib/src/index.js",
-  "scripts": {
-    "start": "ts-node-dev ./src/index.ts",
-    "tsc": "tsc -p tsconfig.json",
-    "watch": "tsc -p tsconfig.json -w",
-    "test": "jest",
-    "coverage": "jest --coverage"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/flanigana/IrisBot.git"
-  },
-  "keywords": [
-    "RotMG",
-    "Realm",
-    "Discord",
-    "bot",
-    "Discord.js"
-  ],
-  "author": "Alec Flanigan",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/flanigana/IrisBot/issues"
-  },
-  "homepage": "https://github.com/flanigana/IrisBot#readme",
-  "dependencies": {
-    "axios": "^0.21.1",
-    "cheerio": "^1.0.0-rc.10",
-    "discord.js": "^13.1.0",
-    "dotenv": "^8.6.0",
-    "fuse.js": "^6.4.6",
-    "inversify": "^5.1.1",
-    "jshint": "^2.13.1",
-    "mongodb": "^3.6.11",
-    "mongoose": "^5.13.7",
-    "reflect-metadata": "^0.1.13",
-    "winston": "^3.3.3"
-  },
-  "devDependencies": {
-    "@types/cheerio": "^0.22.30",
-    "@types/enzyme": "^2.8.12",
-    "@types/jest": "^26.0.24",
-    "@types/mongoose": "^5.11.97",
-    "@types/node": "^14.17.11",
-    "@types/react-redux": "^4.4.47",
-    "jest": "^26.6.3",
-    "ts-jest": "^26.5.6",
-    "ts-node": "^9.1.1",
-    "ts-node-dev": "^1.1.8",
-    "typescript": "^4.3.5"
-  }
+	"name": "irisbot",
+	"version": "2.0.0",
+	"description": "A Discord bot for use with Realm of the Mad God",
+	"main": "lib/src/index.js",
+	"scripts": {
+		"start": "ts-node-dev ./src/index.ts",
+		"tsc": "tsc -p tsconfig.json",
+		"watch": "tsc -p tsconfig.json -w",
+		"test": "jest",
+		"coverage": "jest --coverage"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/flanigana/IrisBot.git"
+	},
+	"keywords": [
+		"RotMG",
+		"Realm",
+		"Discord",
+		"bot",
+		"Discord.js"
+	],
+	"author": "Alec Flanigan",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/flanigana/IrisBot/issues"
+	},
+	"homepage": "https://github.com/flanigana/IrisBot#readme",
+	"dependencies": {
+		"axios": "^0.21.1",
+		"canvas": "^2.8.0",
+		"cheerio": "^1.0.0-rc.10",
+		"discord.js": "^13.1.0",
+		"dotenv": "^8.6.0",
+		"fuse.js": "^6.4.6",
+		"inversify": "^5.1.1",
+		"jshint": "^2.13.1",
+		"mongodb": "^3.6.11",
+		"mongoose": "^5.13.7",
+		"reflect-metadata": "^0.1.13",
+		"sharp": "^0.29.0",
+		"winston": "^3.3.3"
+	},
+	"devDependencies": {
+		"@types/cheerio": "^0.22.30",
+		"@types/enzyme": "^2.8.12",
+		"@types/jest": "^26.0.24",
+		"@types/mongoose": "^5.11.97",
+		"@types/node": "^14.17.11",
+		"@types/react-redux": "^4.4.47",
+		"@types/sharp": "^0.28.5",
+		"@typescript-eslint/eslint-plugin": "^4.29.3",
+		"@typescript-eslint/parser": "^4.29.3",
+		"eslint": "^7.32.0",
+		"eslint-config-prettier": "^8.3.0",
+		"jest": "^26.6.3",
+		"ts-jest": "^26.5.6",
+		"ts-node": "^9.1.1",
+		"ts-node-dev": "^1.1.8",
+		"typescript": "^4.3.5"
+	}
 }
