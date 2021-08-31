@@ -1,4 +1,4 @@
-import { Message, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import { inject, injectable, unmanaged } from 'inversify';
 import {
 	dungeonRequirementsToStringArray,
@@ -13,6 +13,8 @@ import { VerificationTemplateService } from '../services/verification_template_s
 import { TYPES } from '../types';
 import { DynamicPage, Page } from './pages/page';
 import addVerificationTemplatePages from './page_sets/verification_template_pages';
+import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
+import { GuildMessageCommand } from '../command/message_command';
 
 @injectable()
 export class VerificationTemplateManagerService extends SetupService<IVerificationTemplate> {
@@ -22,11 +24,11 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.VerificationTemplateService) verificationTemplateService: VerificationTemplateService,
-		@unmanaged() message: Message,
-		@unmanaged() template = getBlankVerificationTemplate({ guildId: message.guild.id }),
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@unmanaged() template = getBlankVerificationTemplate({ guildId: command.guild.id }),
 		@unmanaged() updatable = false
 	) {
-		super(bot, clientTools, message, template, updatable);
+		super(bot, clientTools, command, template, updatable);
 		this._VerificationTemplateService = verificationTemplateService;
 		this._pageSet = this.createPageSet();
 	}
@@ -77,7 +79,7 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
 		if (embedDescription) {
 			embed.setDescription(embedDescription);
 		}
-		this._ClientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'Name', value: name, options: { default: 'Unset', inline: true } },
 			{ name: 'Verification Channel', value: verificationChannel, options: { default: 'Unset', inline: true } },
@@ -85,10 +87,10 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
 			ClientTools.LINE_BREAK_FIELD
 		);
 		if (this._template.guildVerification) {
-			this._ClientTools.addFieldToEmbed(embed, 'Guild Name', this._template.guildName, { inline: true });
+			ClientTools.addFieldToEmbed(embed, 'Guild Name', this._template.guildName, { inline: true });
 			if (this._template.guildRoles?.setRoles) {
 				const { founderRole, leaderRole, officerRole, memberRole, initiateRole } = this._template.guildRoles;
-				this._ClientTools.addFieldsToEmbed(
+				ClientTools.addFieldsToEmbed(
 					embed,
 					{ name: 'Founder Role', value: founderRole, options: { default: 'Unset', inline: true } },
 					{ name: 'Leader Role', value: leaderRole, options: { default: 'Unset', inline: true } },
@@ -97,9 +99,9 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
 					{ name: 'Initiate Role', value: initiateRole, options: { default: 'Unset', inline: true } }
 				);
 			}
-			this._ClientTools.addLineBreakFieldToEmbed(embed);
+			ClientTools.addLineBreakFieldToEmbed(embed);
 		}
-		this._ClientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'Verified Roles to Give', value: verifiedRoles, options: { default: 'None', inline: true } },
 			{
@@ -120,7 +122,7 @@ export class VerificationTemplateManagerService extends SetupService<IVerificati
 		);
 
 		if (!this.isFinished) {
-			this._ClientTools.addFieldToEmbed(
+			ClientTools.addFieldToEmbed(
 				embed,
 				'Error',
 				'Name, Verification Channel, and at least one Verified Role are all required.'

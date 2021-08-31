@@ -1,5 +1,5 @@
 import { Guild, MessageEmbed } from 'discord.js';
-import container from '../../inversify.config';
+import { container } from '../../inversify.config';
 import { Bot } from '../../bot';
 import { IGuild } from '../../models/guild';
 import { TYPES } from '../../types';
@@ -24,9 +24,9 @@ export default function addGuildConfigPages(pageSet: PageSet<IGuild>, template: 
 						'Respond with the prefix you would like the bot to use. This will go before every Iris Bot command.' +
 							'\nAll valid prefixes are listed below.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`>`');
-				clientTools.addFieldToEmbed(embed, 'Valid Prefixes', Array.from(Bot.PREFIXES), { separator: ' | ' });
-				clientTools.addFieldToEmbed(embed, 'Current Prefix', fields.prefix);
+				ClientTools.addFieldToEmbed(embed, 'Example', '`>`');
+				ClientTools.addFieldToEmbed(embed, 'Valid Prefixes', Array.from(Bot.PREFIXES), { separator: ' | ' });
+				ClientTools.addFieldToEmbed(embed, 'Current Prefix', fields.prefix);
 				return embed;
 			},
 			(fields: Partial<IGuild>, res: string): string => {
@@ -51,11 +51,11 @@ export default function addGuildConfigPages(pageSet: PageSet<IGuild>, template: 
 						'Respond with the roles you would like to give admin permissions to. ' +
 							'Bot admins have permission to alter **any** of the configuration settings.'
 					);
-				clientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
-				clientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
-				clientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
-				clientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
-				clientTools.addFieldToEmbed(embed, 'Admin Roles', fields.admins, { default: 'None' });
+				ClientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
+				ClientTools.addFieldToEmbed(embed, 'Admin Roles', fields.admins, { default: 'None' });
 				return embed;
 			},
 			(fields: Partial<IGuild>, res: string): string => {
@@ -86,11 +86,11 @@ export default function addGuildConfigPages(pageSet: PageSet<IGuild>, template: 
 						'Respond with the roles you would like to give mod permissions to. ' +
 							'Bot mods have permission to alter settings like verification, but not sensitive configuration settings (such as roles) or raid settings.'
 					);
-				clientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
-				clientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
-				clientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
-				clientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
-				clientTools.addFieldToEmbed(embed, 'Mod Roles', fields.mods, { default: 'None' });
+				ClientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
+				ClientTools.addFieldToEmbed(embed, 'Mod Roles', fields.mods, { default: 'None' });
 				return embed;
 			},
 			(fields: Partial<IGuild>, res: string): string => {

@@ -1,5 +1,5 @@
 // import { Bot } from '../src/bot';
-// import container from '../inversify.config';
+// import { container } from '../inversify.config';
 // import { TYPES } from '../src/types';
 // import { Client, Guild, Message, TextChannel, User } from 'discord.js';
 // import { GuildService } from '../src/services/guild_service';
@@ -26,7 +26,7 @@
 //         userMock.bot = false;
 //         messageMock.author = userMock;
 //         guildServiceMock.saveDiscordGuild = jest.fn();
-        
+
 //         bot = container.get<Bot>(TYPES.Bot);
 //         await bot.listen(false).catch(console.error);
 //         done();

@@ -5,6 +5,7 @@ import { Client, ClientEvents, Guild, Message } from 'discord.js';
 import { GuildService } from './services/guild_service';
 import { MessageController } from './controllers/message_controller';
 import { Realmeye } from './realmeye/realmeye';
+import { CoreCommandCenter } from './command/core_command_center';
 
 /**
  * Responsible for the core functionality including:
@@ -17,6 +18,7 @@ export class Bot {
 	private readonly _Client: Client;
 	private readonly _Token: string;
 	private readonly _MessageDispatcher: MessageController;
+	private readonly _CommandCenter: CoreCommandCenter;
 	private readonly _GuildService: GuildService;
 	private readonly _RealmEyeService: Realmeye;
 
@@ -45,12 +47,14 @@ export class Bot {
 		@inject(TYPES.Client) client: Client,
 		@inject(TYPES.DiscordToken) token: string,
 		@inject(TYPES.MessageDispatcher) messageDispatcher: MessageController,
+		@inject(TYPES.CommandCenter) commandCenter: CoreCommandCenter,
 		@inject(TYPES.GuildService) guildService: GuildService,
 		@inject(TYPES.RealmEyeService) realmEyeService: Realmeye
 	) {
 		this._Client = client;
 		this._Token = token;
 		this._MessageDispatcher = messageDispatcher;
+		this._CommandCenter = commandCenter;
 		this._GuildService = guildService;
 		this._RealmEyeService = realmEyeService;
 
@@ -145,7 +149,7 @@ export class Bot {
 	 * Starts the general run operations for the bot
 	 * @param login whether to log the client in. Defaults to true, can be set to false for testing to prevent actual login attempt
 	 */
-	public listen(login = true): Promise<void> {
+	public async listen(login = true): Promise<void> {
 		// on message
 		// TODO: throw InvalidCommandError (need to make) if wrong usage of command
 		// TODO: Make BotCommand with all commands to handle things more freely and in one place
@@ -163,7 +167,7 @@ export class Bot {
 			) {
 				return;
 			}
-			this._MessageDispatcher.handleMessage(message);
+			this._CommandCenter.dispatchFromMessage(message);
 		});
 
 		// on guild creation

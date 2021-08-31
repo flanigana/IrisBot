@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 require('dotenv').config();
-import container from './inversify.config';
+import { container } from './inversify.config';
 import { TYPES } from './types';
 import { Mongoose } from 'mongoose';
 import { getDatabaseClient } from './data_access/db_client';

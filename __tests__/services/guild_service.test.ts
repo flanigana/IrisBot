@@ -1,5 +1,5 @@
 // import { GuildService } from '../../src/services/guild_service';
-// import container from '../../inversify.config';
+// import { container } from '../../inversify.config';
 // import { TYPES } from '../../src/types';
 // import { Guild, IGuild } from '../../src/models/guild';
 // import { GuildRepository } from '../../src/data_access/repositories/guild_repository';

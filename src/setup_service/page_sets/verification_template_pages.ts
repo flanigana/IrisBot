@@ -1,5 +1,5 @@
 import { Guild, MessageEmbed } from 'discord.js';
-import container from '../../inversify.config';
+import { container } from '../../inversify.config';
 import { dungeonRequirementsToStringArray, IVerificationTemplate } from '../../models/verification_template';
 import { RealmEyeError } from '../../realmeye/realmeye_error';
 import { Realmeye } from '../../realmeye/realmeye';
@@ -49,9 +49,9 @@ export default function addVerificationTemplatePages(
 						'Respond with the name you would like to use for this verification template. It cannot be the same name as an existing template. ' +
 							'\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`General`');
-				clientTools.addFieldToEmbed(embed, 'Template Name', fields.name, { default: 'Unset', inline: true });
-				clientTools.addFieldToEmbed(embed, 'Other Template Names', existingTemplates, {
+				ClientTools.addFieldToEmbed(embed, 'Example', '`General`');
+				ClientTools.addFieldToEmbed(embed, 'Template Name', fields.name, { default: 'Unset', inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Other Template Names', existingTemplates, {
 					default: 'None',
 					inline: true,
 				});
@@ -87,16 +87,16 @@ export default function addVerificationTemplatePages(
 							'\nIf you would like verification logs to go to a different channel, respond with both the verification channel name **AND** the log channel name. ' +
 							'\nThe same channel cannot be used twice. Invalid (already used) channel names are listed below.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`#verify` or `#verify #verificationLogs`');
-				clientTools.addFieldToEmbed(embed, 'Verification Channel', fields.verificationChannel, {
+				ClientTools.addFieldToEmbed(embed, 'Example', '`#verify` or `#verify #verificationLogs`');
+				ClientTools.addFieldToEmbed(embed, 'Verification Channel', fields.verificationChannel, {
 					default: 'Unset',
 					inline: true,
 				});
-				clientTools.addFieldToEmbed(embed, 'Log Channel', fields.logChannel, {
+				ClientTools.addFieldToEmbed(embed, 'Log Channel', fields.logChannel, {
 					default: 'Unset',
 					inline: true,
 				});
-				clientTools.addFieldToEmbed(embed, 'Used Verification Channels', usedChannels, { default: 'None' });
+				ClientTools.addFieldToEmbed(embed, 'Used Verification Channels', usedChannels, { default: 'None' });
 				return embed;
 			},
 			async (fields: Partial<IVerificationTemplate>, res: string): Promise<string> => {
@@ -132,8 +132,8 @@ export default function addVerificationTemplatePages(
 					.setDescription(
 						'If you are using this template to verify guild members, respond yes; otherwise, respond no.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`yes` or `no`');
-				clientTools.addFieldToEmbed(embed, 'Guild Verification?', fields.guildVerification ? 'Yes' : 'No');
+				ClientTools.addFieldToEmbed(embed, 'Example', '`yes` or `no`');
+				ClientTools.addFieldToEmbed(embed, 'Guild Verification?', fields.guildVerification ? 'Yes' : 'No');
 				return embed;
 			},
 			(fields: Partial<IVerificationTemplate>, res: string): string => {
@@ -157,8 +157,8 @@ export default function addVerificationTemplatePages(
 					.setDescription(
 						'Enter the name of your guild. This is case and space sensitive as it is used to check RealmEye.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`Black Bullet`');
-				clientTools.addFieldToEmbed(embed, 'Guild Name', fields.guildName, { default: 'Unset' });
+				ClientTools.addFieldToEmbed(embed, 'Example', '`Black Bullet`');
+				ClientTools.addFieldToEmbed(embed, 'Guild Name', fields.guildName, { default: 'Unset' });
 				return embed;
 			},
 			async (fields: Partial<IVerificationTemplate>, res: string): Promise<string> => {
@@ -191,13 +191,13 @@ export default function addVerificationTemplatePages(
 						'Respond with the roles you would like to assign to each rank of your guild. ' +
 							'\nLeave this blank if you *only* want to assign a single role for all guild members. You will be asked on the next page. '
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`@founder @leader @officer @member @initiate`');
-				clientTools.addFieldToEmbed(embed, 'To Turn Rank Roles Off', '`--OFF`');
-				clientTools.addFieldToEmbed(embed, 'Founder Role', founderRole, { default: 'Unset', inline: true });
-				clientTools.addFieldToEmbed(embed, 'Leader Role', leaderRole, { default: 'Unset', inline: true });
-				clientTools.addFieldToEmbed(embed, 'Officer Role', officerRole, { default: 'Unset', inline: true });
-				clientTools.addFieldToEmbed(embed, 'Member Role', memberRole, { default: 'Unset', inline: true });
-				clientTools.addFieldToEmbed(embed, 'Initiate Role', initiateRole, { default: 'Unset', inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Example', '`@founder @leader @officer @member @initiate`');
+				ClientTools.addFieldToEmbed(embed, 'To Turn Rank Roles Off', '`--OFF`');
+				ClientTools.addFieldToEmbed(embed, 'Founder Role', founderRole, { default: 'Unset', inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Leader Role', leaderRole, { default: 'Unset', inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Officer Role', officerRole, { default: 'Unset', inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Member Role', memberRole, { default: 'Unset', inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Initiate Role', initiateRole, { default: 'Unset', inline: true });
 				return embed;
 			},
 			(fields: Partial<IVerificationTemplate>, res: string): string => {
@@ -260,11 +260,11 @@ export default function addVerificationTemplatePages(
 					.setDescription(
 						'Respond with the roles you would like to give to verified users upon verification. This can be one role or many.'
 					);
-				clientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
-				clientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
-				clientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
-				clientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
-				clientTools.addFieldToEmbed(embed, 'Verified Roles', fields.verifiedRoles, { default: 'None' });
+				ClientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
+				ClientTools.addFieldToEmbed(embed, 'Verified Roles', fields.verifiedRoles, { default: 'None' });
 				return embed;
 			},
 			(fields: Partial<IVerificationTemplate>, res: string): string => {
@@ -295,11 +295,11 @@ export default function addVerificationTemplatePages(
 					.setDescription(
 						'Respond with the roles you would like to remove when users are verified. This can be one role or many.'
 					);
-				clientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
-				clientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
-				clientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
-				clientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
-				clientTools.addFieldToEmbed(embed, 'Removed Roles', fields.removeRoles, { default: 'None' });
+				ClientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
+				ClientTools.addFieldToEmbed(embed, 'Removed Roles', fields.removeRoles, { default: 'None' });
 				return embed;
 			},
 			(fields: Partial<IVerificationTemplate>, res: string): string => {
@@ -333,9 +333,9 @@ export default function addVerificationTemplatePages(
 					.setDescription(
 						'Respond with the minimum fame and rank allowed in order for users to verify using this template.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`5000 30`');
-				clientTools.addFieldToEmbed(embed, 'Fame', `${fields.fame}`, { inline: true });
-				clientTools.addFieldToEmbed(embed, 'Rank', `${fields.rank}`, { inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Example', '`5000 30`');
+				ClientTools.addFieldToEmbed(embed, 'Fame', `${fields.fame}`, { inline: true });
+				ClientTools.addFieldToEmbed(embed, 'Rank', `${fields.rank}`, { inline: true });
 				return embed;
 			},
 			(fields: Partial<IVerificationTemplate>, res: string): string => {
@@ -363,8 +363,8 @@ export default function addVerificationTemplatePages(
 					.setDescription(
 						'If you would like users to have their location hidden on RealmEye, respond yes; otherwise, repond no.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`yes` or `no`');
-				clientTools.addFieldToEmbed(embed, 'Require Hidden Location?', fields.requireHidden ? 'Yes' : 'No');
+				ClientTools.addFieldToEmbed(embed, 'Example', '`yes` or `no`');
+				ClientTools.addFieldToEmbed(embed, 'Require Hidden Location?', fields.requireHidden ? 'Yes' : 'No');
 				return embed;
 			},
 			(fields: Partial<IVerificationTemplate>, res: string): string => {
@@ -388,13 +388,13 @@ export default function addVerificationTemplatePages(
 							'\n**Note:** If the dungeon does not appear on [this page](https://www.realmeye.com/graveyard-summary-of-player/IAlec) then it is not tracked. ' +
 							'If you attempt to use a dungeon not on the listed page then **no user will be able to verify**.'
 					);
-				clientTools.addFieldToEmbed(
+				ClientTools.addFieldToEmbed(
 					embed,
 					'Example',
 					'`void 25` or `cultist hideout 50 void 25 pirate cave 500`'
 				);
-				clientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
-				clientTools.addFieldToEmbed(
+				ClientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
+				ClientTools.addFieldToEmbed(
 					embed,
 					'Dungeon Requirements',
 					dungeonRequirementsToStringArray(fields.dungeonRequirements),

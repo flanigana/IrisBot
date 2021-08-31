@@ -24,7 +24,7 @@ export class VerificationMessenger {
 		for (let reason of reasons) {
 			if ((reason as FailureReason).failure) {
 				reason = reason as FailureReason;
-				this._ClientTools.addFieldToEmbed(
+				ClientTools.addFieldToEmbed(
 					embed,
 					reason.failure,
 					reason.failureMessage
@@ -33,7 +33,7 @@ export class VerificationMessenger {
 				);
 			} else {
 				reason = reason as EmbedField;
-				this._ClientTools.addFieldsToEmbed(embed, reason);
+				ClientTools.addFieldsToEmbed(embed, reason);
 			}
 		}
 		return embed;
@@ -143,7 +143,7 @@ export class VerificationMessenger {
 			);
 		}
 
-		this._ClientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'Server Name', value: user.displayName, options: { inline: true } },
 			{ name: 'Discord Tag', value: user.user.tag, options: { inline: true } },
@@ -169,9 +169,9 @@ export class VerificationMessenger {
 					'appropriate permissions to manage user nicknames and roles.'
 			);
 		if (userData) {
-			this._ClientTools.addFieldToEmbed(embed, 'Attempted Name Change', userData.name, { inline: true });
+			ClientTools.addFieldToEmbed(embed, 'Attempted Name Change', userData.name, { inline: true });
 		}
-		this._ClientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'Attempted Roles Added', value: addedRoles, options: { separator: ' ', inline: true } },
 			{ name: 'Attempted Roles Removed', value: removedRoles, options: { separator: ' ', inline: true } }
@@ -199,7 +199,7 @@ export class VerificationMessenger {
 					}
 				}
 			}
-			this._ClientTools.addFieldToEmbed(embed, f.failure, message);
+			ClientTools.addFieldToEmbed(embed, f.failure, message);
 		}
 		return embed;
 	}

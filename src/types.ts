@@ -35,4 +35,7 @@ export const TYPES = {
 	RealmEyeRenderService: Symbol('RealmEyeRenderService'),
 	RealmEyeController: Symbol('RealmEyeController'),
 	RealmEyeManager: Symbol('RealmEyeManager'),
+	CommandCenter: Symbol('CommandCenter'),
+	HelpCommandCenter: Symbol('HelpCommandCenter'),
+	ConfigCommandCenter: Symbol('ConfigCommandCenter'),
 };

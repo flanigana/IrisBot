@@ -1,5 +1,5 @@
 import { Guild, MessageEmbed } from 'discord.js';
-import container from '../../inversify.config';
+import { container } from '../../inversify.config';
 import { IRaidConfig } from '../../models/raid_config';
 import { TYPES } from '../../types';
 import { ClientTools } from '../../utils/client_tools';
@@ -27,11 +27,11 @@ export default function addRaidConfigPages(
 						'Respond with the roles you would like to give raid leader permissions to. ' +
 							'Raid leaders have permissions to control using existing raid templates.'
 					);
-				clientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
-				clientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
-				clientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
-				clientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
-				clientTools.addFieldToEmbed(embed, 'Raid Leader Roles', fields.raidLeaders, { default: 'None' });
+				ClientTools.addFieldToEmbed(embed, 'To Set a New List', '`@role1 @role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Add Roles', '`+role3 +role4`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove Roles', '`-role1 -role2`');
+				ClientTools.addFieldToEmbed(embed, 'To Remove All', '`--ALL`');
+				ClientTools.addFieldToEmbed(embed, 'Raid Leader Roles', fields.raidLeaders, { default: 'None' });
 				return embed;
 			},
 			(fields: Partial<IRaidConfig>, res: string): string => {
@@ -65,8 +65,8 @@ export default function addRaidConfigPages(
 						'Respond with the number of seconds you would like afk-checks to run for.' +
 							`\nThis number must be in the range of ${min}-${max}.`
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`300`');
-				clientTools.addFieldToEmbed(embed, 'AFK-Check Run Time', `${fields.runTime} seconds`);
+				ClientTools.addFieldToEmbed(embed, 'Example', '`300`');
+				ClientTools.addFieldToEmbed(embed, 'AFK-Check Run Time', `${fields.runTime} seconds`);
 				return embed;
 			},
 			(fields: Partial<IRaidConfig>, res: string): string => {
@@ -91,9 +91,9 @@ export default function addRaidConfigPages(
 						'Respond with the channel you would like secondary react confirmations to be sent in. ' +
 							'This channel will be used to send a message for each raid containing all users who reacted and confirmed their secondary reactions for things like keys.'
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`#confirmationsChannel`');
-				clientTools.addFieldToEmbed(embed, 'To Turn Off This Feature', '`--OFF`');
-				clientTools.addFieldToEmbed(embed, 'Confirmations Channel', fields.confirmationsChannel, {
+				ClientTools.addFieldToEmbed(embed, 'Example', '`#confirmationsChannel`');
+				ClientTools.addFieldToEmbed(embed, 'To Turn Off This Feature', '`--OFF`');
+				ClientTools.addFieldToEmbed(embed, 'Confirmations Channel', fields.confirmationsChannel, {
 					default: 'Off',
 				});
 				return embed;
@@ -126,8 +126,8 @@ export default function addRaidConfigPages(
 						'Respond with `yes` if you want to allow Nitro boosters of this server to receive early location. ' +
 							'Respond with `no` if you would not like boosters to receive early location. '
 					);
-				clientTools.addFieldToEmbed(embed, 'Example', '`yes` or `no`');
-				clientTools.addFieldToEmbed(embed, 'Allow Early Location', fields.allowBooster ? 'Yes' : 'No');
+				ClientTools.addFieldToEmbed(embed, 'Example', '`yes` or `no`');
+				ClientTools.addFieldToEmbed(embed, 'Allow Early Location', fields.allowBooster ? 'Yes' : 'No');
 				return embed;
 			},
 			(fields: Partial<IRaidConfig>, res: string): string => {

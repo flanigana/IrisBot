@@ -3,12 +3,14 @@ import { TYPES } from '../types';
 import { SetupService } from './generics/setup_service';
 import { Bot } from '../bot';
 import { IRaidTemplate, getBlankRaidTemplate } from '../models/raid_template';
-import { Message, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import { RaidTemplateService } from '../services/raid_template_service';
 import { Page, DynamicPage } from './pages/page';
 import { ClientTools } from '../utils/client_tools';
 import { PageSet } from './pages/page_set';
 import addRaidTemplatePages from './page_sets/raid_template_pages';
+import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
+import { GuildMessageCommand } from '../command/message_command';
 
 @injectable()
 export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
@@ -18,11 +20,11 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.RaidTemplateService) raidTemplateService: RaidTemplateService,
-		@unmanaged() message: Message,
-		@unmanaged() template = getBlankRaidTemplate({ guildId: message.guild.id }),
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@unmanaged() template = getBlankRaidTemplate({ guildId: command.guild.id }),
 		@unmanaged() updatable = false
 	) {
-		super(bot, clientTools, message, template, updatable);
+		super(bot, clientTools, command, template, updatable);
 		this._RaidTemplateService = raidTemplateService;
 		this._pageSet = this.createPageSet();
 	}
@@ -61,7 +63,7 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
 		if (embedDescription) {
 			embed.setDescription(embedDescription);
 		}
-		this._ClientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'Name', value: name, options: { default: 'Unset' } },
 			{ name: 'Description', value: description, options: { default: 'Unset' } },
@@ -69,9 +71,9 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
 			{ name: 'Primary React', value: primaryReact.react, options: { inline: true, default: 'Unset' } }
 		);
 		for (const sec of secondaryReacts) {
-			this._ClientTools.addFieldToEmbed(embed, 'Secondary React', `${sec.react}: ${sec.limit}`, { inline: true });
+			ClientTools.addFieldToEmbed(embed, 'Secondary React', `${sec.react}: ${sec.limit}`, { inline: true });
 		}
-		this._ClientTools.addFieldToEmbed(
+		ClientTools.addFieldToEmbed(
 			embed,
 			'Additional Reacts',
 			additionalReacts.map((r) => r.react),
@@ -79,7 +81,7 @@ export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
 		);
 
 		if (!this.isFinished) {
-			this._ClientTools.addFieldToEmbed(
+			ClientTools.addFieldToEmbed(
 				embed,
 				'Error',
 				'Name, description, or Primary React left undefined. These are required.'

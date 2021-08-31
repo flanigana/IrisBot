@@ -17,10 +17,10 @@ import { TYPES } from '../types';
 import { ClientTools } from '../utils/client_tools';
 import { RolesAndChannels } from '../utils/role_and_channel_finder';
 import { RaidTemplateService } from '../services/raid_template_service';
-import { IRaidTemplate } from '../models/raid_template';
 import { GuildService } from '../services/guild_service';
 import { ReactionTracker } from './reaction_tracker';
 import { RaidStatus } from './raid_status';
+import { IRaidTemplate } from '../models/raid_template';
 import { getDefaultRaidConfig, IRaidConfig } from '../models/raid_config';
 
 type RaidProperties = {
@@ -411,7 +411,7 @@ export class RaidManager {
 		embed.setTitle(`Raid Confirmations for "${raidChannel.name}"${location ? ' at ' + location : ''}`);
 
 		for (const reaction of limitedReactions.values()) {
-			this._ClientTools.addFieldToEmbed(
+			ClientTools.addFieldToEmbed(
 				embed,
 				`${reaction.react}'s Confirmed`,
 				Array.from(reaction.reactors).map((u) => u.toString()),

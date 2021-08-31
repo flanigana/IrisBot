@@ -1,4 +1,4 @@
-import { Message, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import { inject, injectable, unmanaged } from 'inversify';
 import { Bot } from '../bot';
 import { IGuild } from '../models/guild';
@@ -9,6 +9,8 @@ import { DynamicPage, Page } from './pages/page';
 import { PageSet } from './pages/page_set';
 import { SetupService } from './generics/setup_service';
 import addGuildConfigPages from './page_sets/guild_config_pages';
+import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
+import { GuildMessageCommand } from '../command/message_command';
 
 @injectable()
 export class GuildConfigManagerService extends SetupService<IGuild> {
@@ -18,10 +20,10 @@ export class GuildConfigManagerService extends SetupService<IGuild> {
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.GuildService) guildService: GuildService,
-		@unmanaged() message: Message,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
 		@unmanaged() template: IGuild
 	) {
-		super(bot, clientTools, message, template, true);
+		super(bot, clientTools, command, template, true);
 		this._GuildService = guildService;
 		this._pageSet = this.createPageSet();
 	}
@@ -47,9 +49,9 @@ export class GuildConfigManagerService extends SetupService<IGuild> {
 		if (description) {
 			embed.setDescription(description);
 		}
-		this._ClientTools.addFieldToEmbed(embed, 'Prefix', prefix, { inline: true });
-		this._ClientTools.addFieldToEmbed(embed, 'Admin Roles', admins, { default: 'None', inline: true });
-		this._ClientTools.addFieldToEmbed(embed, 'Mod Roles', mods, { default: 'None', inline: true });
+		ClientTools.addFieldToEmbed(embed, 'Prefix', prefix, { inline: true });
+		ClientTools.addFieldToEmbed(embed, 'Admin Roles', admins, { default: 'None', inline: true });
+		ClientTools.addFieldToEmbed(embed, 'Mod Roles', mods, { default: 'None', inline: true });
 		return embed;
 	}
 

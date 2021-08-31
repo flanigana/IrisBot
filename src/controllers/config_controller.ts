@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 import { inject, injectable, interfaces } from 'inversify';
 import { GuildService } from '../services/guild_service';
 import { TYPES } from '../types';
-import container from '../inversify.config';
+import { container } from '../inversify.config';
 import { SetupService, SetupType } from '../setup_service/generics/setup_service';
 import { IGuild } from '../models/guild';
 import { GuildConfigManagerService } from '../setup_service/guild_config_manager_service';

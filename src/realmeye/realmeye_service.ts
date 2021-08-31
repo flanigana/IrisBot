@@ -50,7 +50,7 @@ export abstract class RealmeyeService {
 					failure: `Initialization Error: ${initializationFunction.name} [RealmEye]`,
 					failureMessage: `${Date.now}: ${error.name}-${error.message}`,
 				});
-			} else {
+			} else if (error instanceof Error) {
 				status.addFailureReason({
 					failure: `Initialization Error: ${initializationFunction.name} [Other]`,
 					failureMessage: `${error.name}-${error.message}`,

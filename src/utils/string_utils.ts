@@ -2,6 +2,7 @@ import Fuse from 'fuse.js';
 
 export abstract class StringUtils {
 	private static defaultOptions: Fuse.IFuseOptions<string> = {
+		isCaseSensitive: false,
 		includeScore: true,
 		threshold: 0.5,
 	};
@@ -10,6 +11,12 @@ export abstract class StringUtils {
 		options = Object.assign({}, this.defaultOptions, options);
 		const res = new Fuse(list, options).search(val);
 		return res.length > 0 ? res[0].item : undefined;
+	}
+
+	public static findBestMatches(val: string, list: string[], options?: Fuse.IFuseOptions<string>): string[] {
+		options = Object.assign({}, this.defaultOptions, options);
+		const res = new Fuse(list, options).search(val);
+		return res.map((r) => r.item);
 	}
 
 	public static equalsIgnoreCase(a: string, b: string): boolean {

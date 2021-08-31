@@ -10,8 +10,8 @@ export class ClientTools {
 		'711504382394630194',
 		'711491483588493313',
 	]);
-	private readonly _EmojiTypes = ['Portal', 'Key', 'Class', 'Ability'];
-	private readonly _MAX_FIELD_LENGTH = 1021;
+	private static readonly _EmojiTypes = ['Portal', 'Key', 'Class', 'Ability'];
+	private static readonly _MAX_FIELD_LENGTH = 1021;
 
 	public static readonly LINE_BREAK_FIELD: EmbedField = {
 		name: '--------------------------------------------------------------------------------------------------',
@@ -62,13 +62,13 @@ export class ClientTools {
 	}
 
 	/**
-	 * Adds a field to a MessageEmbed. Checks that the value is not empty first to avoid errors.
-	 * @param embed MessageEmbed to add field to
+	 * Adds a field to a `MessageEmbed`. Checks that the value is not empty first to avoid errors.
+	 * @param embed `MessageEmbed` to add field to
 	 * @param name name of the field
 	 * @param value value for the field
-	 * @param inline whether or not to make the field inline
+	 * @param options `FieldOptions` to use for field
 	 */
-	public addFieldToEmbed(
+	public static addFieldToEmbed(
 		embed: MessageEmbed,
 		name: string,
 		value: any,
@@ -127,7 +127,7 @@ export class ClientTools {
 	 * @param embed MessageEmbed to add field to
 	 * @param fields list of EmbedFields to add to embed
 	 */
-	public addFieldsToEmbed(embed: MessageEmbed, ...fields: EmbedField[]): MessageEmbed {
+	public static addFieldsToEmbed(embed: MessageEmbed, ...fields: EmbedField[]): MessageEmbed {
 		for (const { name, value, options } of fields) {
 			this.addFieldToEmbed(embed, name, value, options);
 		}
@@ -138,7 +138,7 @@ export class ClientTools {
 	 * Adds a separating line break of -'s in the embed to either create a visual break or clear space for a new set of inlines.
 	 * @param embed MessageEmbed to add break to
 	 */
-	public addLineBreakFieldToEmbed(embed: MessageEmbed): MessageEmbed {
+	public static addLineBreakFieldToEmbed(embed: MessageEmbed): MessageEmbed {
 		this.addFieldsToEmbed(embed, ClientTools.LINE_BREAK_FIELD);
 		return embed;
 	}
@@ -153,7 +153,7 @@ export class ClientTools {
 	public addClientEmojisToEmbed(embed: MessageEmbed, guildId?: string): MessageEmbed {
 		const availableEmojiList = this.createClientEmojisList(guildId);
 		for (const type in availableEmojiList) {
-			this.addFieldToEmbed(embed, type, availableEmojiList[type]);
+			ClientTools.addFieldToEmbed(embed, type, availableEmojiList[type]);
 		}
 		return embed;
 	}
@@ -163,7 +163,7 @@ export class ClientTools {
 	 * @param embed MessageEmbed to add emojis to
 	 * @param emojiList object containing emojis to add to the embed
 	 */
-	public addEmojiListToEmbed(embed: MessageEmbed, emojiList: any): MessageEmbed {
+	public static addEmojiListToEmbed(embed: MessageEmbed, emojiList: any): MessageEmbed {
 		for (const type in emojiList) {
 			this.addFieldToEmbed(embed, type, emojiList[type]);
 		}
@@ -182,7 +182,7 @@ export class ClientTools {
 	 * Checks a string to see if it is a unicode emoji
 	 * @param emojiName emoji string
 	 */
-	public isUnicodeEmoji(emojiName: string): boolean {
+	public static isUnicodeEmoji(emojiName: string): boolean {
 		const emojiRanges = [
 			'(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])', // U+1F680 to U+1F6FF
 		];
@@ -226,7 +226,7 @@ export class ClientTools {
 	 */
 	public getEmoji(emojiName: string, guildId?: string): string | GuildEmoji {
 		const fullEmoji = new RegExp(/<:?(\w*):?(\d+)?>/);
-		if (this.isUnicodeEmoji(emojiName)) {
+		if (ClientTools.isUnicodeEmoji(emojiName)) {
 			return emojiName;
 		}
 		const match = fullEmoji.exec(emojiName); // ['<:emojiName:id>', 'emojiName', 'id']
@@ -266,7 +266,7 @@ export class ClientTools {
 			if (emojiList[name] === undefined) {
 				emojiList[name] = `${emoji}`;
 				break;
-			} else if (emojiList[name].length + ` ${emoji}`.length < this._MAX_FIELD_LENGTH) {
+			} else if (emojiList[name].length + ` ${emoji}`.length < ClientTools._MAX_FIELD_LENGTH) {
 				emojiList[name] += ` ${emoji}`;
 				break;
 			} else {
@@ -288,7 +288,7 @@ export class ClientTools {
 					this.addEmojiToList(emojiList, 'Guild', emoji);
 				}
 				if (this._BotGuilds.has(emoji.guild.id)) {
-					for (const type of this._EmojiTypes) {
+					for (const type of ClientTools._EmojiTypes) {
 						const typeRegex = new RegExp(`(${type})$`, 'i');
 						if (typeRegex.test(emoji.name)) {
 							this.addEmojiToList(emojiList, type, emoji);

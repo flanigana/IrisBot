@@ -1,4 +1,4 @@
-import container from '../../inversify.config';
+import { container } from '../../inversify.config';
 import { TYPES } from '../../types';
 import { PageSet } from '../pages/page_set';
 import { DynamicPage } from '../pages/page';
@@ -36,7 +36,7 @@ export default function addRaidTemplatePages(
 						'Respond with the name you would like to use for this raid template. It cannot be the same name as an existing template. ' +
 							'\n**Note:** If you wish to include spaces in your template name, the entire name must be enclosed in quotes when using it (ie "Template Name")!'
 					);
-				clientTools.addFieldsToEmbed(
+				ClientTools.addFieldsToEmbed(
 					embed,
 					ClientTools.LINE_BREAK_FIELD,
 					{ name: 'Example', value: '`Void`' },
@@ -75,8 +75,8 @@ export default function addRaidTemplatePages(
 							'\n\nBelow is a list of emojis available for use.' +
 							'\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as `<emojiname>`.'
 					);
-				clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-				clientTools.addFieldsToEmbed(
+				ClientTools.addEmojiListToEmbed(embed, availableEmojiList);
+				ClientTools.addFieldsToEmbed(
 					embed,
 					ClientTools.LINE_BREAK_FIELD,
 					{
@@ -109,8 +109,8 @@ export default function addRaidTemplatePages(
 							'\n\nBelow is a list of emojis available for use.' +
 							'\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as `<emojiname>`.'
 					);
-				clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-				clientTools.addFieldsToEmbed(
+				ClientTools.addEmojiListToEmbed(embed, availableEmojiList);
+				ClientTools.addFieldsToEmbed(
 					embed,
 					ClientTools.LINE_BREAK_FIELD,
 					{ name: 'Example', value: '`<losthallsportal>`' },
@@ -145,8 +145,8 @@ export default function addRaidTemplatePages(
 							'\n\nBelow is a list of emojis available for use.' +
 							'\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as `<emojiname>`.'
 					);
-				clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-				clientTools.addFieldsToEmbed(
+				ClientTools.addEmojiListToEmbed(embed, availableEmojiList);
+				ClientTools.addFieldsToEmbed(
 					embed,
 					{
 						name: 'Example',
@@ -214,8 +214,8 @@ export default function addRaidTemplatePages(
 							'\n\nBelow is a list of emojis available for use.' +
 							'\n**Emoji Note:** To use any emoji that is ***not*** in **this** guild but ***is*** in the following list, you ***must*** type the name as `<emojiname>`.'
 					);
-				clientTools.addEmojiListToEmbed(embed, availableEmojiList);
-				clientTools.addFieldsToEmbed(
+				ClientTools.addEmojiListToEmbed(embed, availableEmojiList);
+				ClientTools.addFieldsToEmbed(
 					embed,
 					ClientTools.LINE_BREAK_FIELD,
 					{

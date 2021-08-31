@@ -1,5 +1,5 @@
 import { inject, injectable, interfaces, unmanaged } from 'inversify';
-import container from '../../inversify.config';
+import { container } from '../../inversify.config';
 import { TYPES } from '../../types';
 import { SetupService, SetupType } from '../../setup_service/generics/setup_service';
 import { Message, MessageEmbed } from 'discord.js';
@@ -34,7 +34,7 @@ export class TemplateController<T extends GuildTemplate> {
 			if (templates.length === 0) {
 				embed.setDescription('There are no templates in this server.');
 			} else {
-				this._ClientTools.addFieldToEmbed(
+				ClientTools.addFieldToEmbed(
 					embed,
 					'Template Names',
 					templates.map((t) => t.name),

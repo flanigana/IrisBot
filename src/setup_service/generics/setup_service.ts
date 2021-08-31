@@ -5,6 +5,11 @@ import { DataModel } from '../../models/interfaces/data_model';
 import { Bot } from '../../bot';
 import { PageSet } from '../pages/page_set';
 import { ClientTools } from '../../utils/client_tools';
+import {
+	CommandParameters,
+	RootCommandCenter,
+} from '../../command/root_command_centers/interfaces/root_command_center';
+import { GuildMessageCommand } from '../../command/message_command';
 
 export enum SetupType {
 	GuildConfig,
@@ -23,7 +28,7 @@ export abstract class SetupService<E extends DataModel> {
 
 	private readonly _Bot: Bot;
 	protected readonly _ClientTools: ClientTools;
-	private readonly _Message: Message;
+	private readonly _Command: GuildMessageCommand<RootCommandCenter, CommandParameters>;
 
 	protected _pageSet: PageSet<E>;
 	private _view: Message;
@@ -34,13 +39,13 @@ export abstract class SetupService<E extends DataModel> {
 	public constructor(
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
-		@unmanaged() message: Message,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
 		@unmanaged() template: Partial<E>,
 		@unmanaged() updatable?: boolean
 	) {
 		this._Bot = bot;
 		this._ClientTools = clientTools;
-		this._Message = message;
+		this._Command = command;
 		this._template = template;
 		this._updatable = updatable ? updatable : false;
 		if (this._updatable) {
@@ -54,15 +59,15 @@ export abstract class SetupService<E extends DataModel> {
 	protected abstract get isFinished(): boolean;
 
 	protected get authorId(): string {
-		return this._Message.author.id;
+		return this._Command.user.id;
 	}
 
 	protected get guild(): Guild {
-		return this._Message.guild;
+		return this._Command.guild;
 	}
 
 	protected get channel(): TextBasedChannels {
-		return this._Message.channel;
+		return this._Command.channel;
 	}
 
 	protected getStartPage(): MessageEmbed {

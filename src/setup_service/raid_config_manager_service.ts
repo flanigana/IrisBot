@@ -1,4 +1,4 @@
-import { Message, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import { inject, injectable, unmanaged } from 'inversify';
 import { Bot } from '../bot';
 import { IRaidConfig } from '../models/raid_config';
@@ -9,6 +9,8 @@ import { DynamicPage, Page } from './pages/page';
 import { PageSet } from './pages/page_set';
 import addRaidConfigPages from './page_sets/raid_config_pages';
 import { SetupService } from './generics/setup_service';
+import { GuildMessageCommand } from '../command/message_command';
+import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
 
 @injectable()
 export class RaidConfigManagerService extends SetupService<IRaidConfig> {
@@ -18,10 +20,10 @@ export class RaidConfigManagerService extends SetupService<IRaidConfig> {
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.GuildService) guildService: GuildService,
-		@unmanaged() message: Message,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
 		@unmanaged() template: IRaidConfig
 	) {
-		super(bot, clientTools, message, template, true);
+		super(bot, clientTools, command, template, true);
 		this._GuildService = guildService;
 		this._pageSet = this.createPageSet();
 	}
@@ -42,13 +44,13 @@ export class RaidConfigManagerService extends SetupService<IRaidConfig> {
 		if (description) {
 			embed.setDescription(description);
 		}
-		this._ClientTools.addFieldToEmbed(embed, 'Raid Leader Roles', raidLeaders, { default: 'None' });
-		this._ClientTools.addFieldToEmbed(embed, 'AFK-Check Run Time', `${runTime}`, { inline: true });
-		this._ClientTools.addFieldToEmbed(embed, 'Confirmations Channel', confirmationsChannel, {
+		ClientTools.addFieldToEmbed(embed, 'Raid Leader Roles', raidLeaders, { default: 'None' });
+		ClientTools.addFieldToEmbed(embed, 'AFK-Check Run Time', `${runTime}`, { inline: true });
+		ClientTools.addFieldToEmbed(embed, 'Confirmations Channel', confirmationsChannel, {
 			default: 'Unset',
 			inline: true,
 		});
-		this._ClientTools.addFieldToEmbed(embed, 'Allow Early Booster Location?', allowBooster ? 'Yes' : 'No', {
+		ClientTools.addFieldToEmbed(embed, 'Allow Early Booster Location?', allowBooster ? 'Yes' : 'No', {
 			inline: true,
 		});
 		return embed;

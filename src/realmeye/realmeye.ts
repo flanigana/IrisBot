@@ -117,7 +117,7 @@ export class Realmeye {
 			.setTitle(`${playerData.name}'s RealmEye`)
 			.setURL(playerData.realmEyeUrl)
 			.setDescription(playerData.description ?? 'No description');
-		Realmeye._clientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'User', value: playerData.name, options: { inline: true } },
 			{ name: 'Characters', value: playerData.characterCount, options: { inline: true, default: 'Hidden' } },
@@ -163,7 +163,7 @@ export class Realmeye {
 			.setTitle(`${guildData.name}'s RealmEye`)
 			.setURL(guildData.realmEyeUrl)
 			.setDescription(guildData.description ?? 'No description');
-		Realmeye._clientTools.addFieldsToEmbed(
+		ClientTools.addFieldsToEmbed(
 			embed,
 			{ name: 'Guild', value: guildData.name, options: { inline: true } },
 			{ name: 'Fame', value: guildData.fame, options: { inline: true } },

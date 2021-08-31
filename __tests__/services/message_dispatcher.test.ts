@@ -1,5 +1,5 @@
 // import { MessageController } from '../../src/controllers/message_controller';
-// import container from '../../inversify.config';
+// import { container } from '../../inversify.config';
 // import { TYPES } from '../../src/types';
 // import { Client, TextChannel, Message, Guild } from 'discord.js';
 // import { GuildService } from '../../src/services/guild_service';
@@ -19,7 +19,7 @@
 //         container.rebind<Client>(TYPES.Client).toConstantValue(clientMock);
 //         guildServiceMock = jest.createMockFromModule('../../src/services/guild_service.ts');
 //         container.rebind<GuildService>(TYPES.GuildService).toConstantValue(guildServiceMock);
-        
+
 //         guildMock = jest.createMockFromModule('discord.js');
 //         iGuildMock = jest.createMockFromModule('../../src/models/guild.ts');
 //         guildMock.id, iGuildMock._id = '1234567890';

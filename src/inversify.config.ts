@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Container, interfaces } from 'inversify';
 import { TYPES } from './types';
-import { Client, Message } from 'discord.js';
+import { Client } from 'discord.js';
 import { Bot } from './bot';
 import { GuildService } from './services/guild_service';
 import { GuildRepository } from './data_access/repositories/guild_repository';
@@ -43,8 +43,18 @@ import { RealmeyeRenderService } from './realmeye/realmeye_render/realmeye_rende
 import { RealmEyeController } from './controllers/realmeye_controller';
 import { RealmEyeManager } from './realmeye/realmeye_manager';
 import { RaidTemplateManagerService } from './setup_service/raid_template_manger_service';
+import { CommandParameters, RootCommandCenter } from './command/root_command_centers/interfaces/root_command_center';
+import { GuildMessageCommand } from './command/message_command';
+import { fluentProvide } from 'inversify-binding-decorators';
+import { CoreCommandCenter } from './command/core_command_center';
+import { HelpCommandCenter } from './command/root_command_centers/help_command_center';
+import { ConfigCommandCenter } from './command/root_command_centers/config_command_center';
 
 const container = new Container();
+
+const asSingleton = (identifier: any) => {
+	return fluentProvide(identifier).inSingletonScope().done();
+};
 
 // client
 container.bind<string>(TYPES.DiscordToken).toConstantValue(process.env.DISCORD_TOKEN);
@@ -112,7 +122,11 @@ container.bind<RealmEyeController>(TYPES.RealmEyeController).to(RealmEyeControll
 container
 	.bind<interfaces.Factory<SetupService<DataModel>>>(TYPES.SetupService)
 	.toFactory<SetupService<DataModel>>(() => {
-		return (type: SetupType, message: Message, template?: DataModel) => {
+		return (
+			type: SetupType,
+			command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+			template?: DataModel
+		) => {
 			const bot = container.get<Bot>(TYPES.Bot);
 			const clientTools = container.get<ClientTools>(TYPES.ClientTools);
 			const guildService = container.get<GuildService>(TYPES.GuildService);
@@ -125,12 +139,12 @@ container
 							bot,
 							clientTools,
 							templateService,
-							message,
+							command,
 							template as IRaidTemplate,
 							true
 						);
 					} else {
-						return new RaidTemplateManagerService(bot, clientTools, templateService, message);
+						return new RaidTemplateManagerService(bot, clientTools, templateService, command);
 					}
 				case SetupType.VerificationTemplate:
 					templateService = container.get<VerificationTemplateService>(TYPES.VerificationTemplateService);
@@ -139,28 +153,33 @@ container
 							bot,
 							clientTools,
 							templateService,
-							message,
+							command,
 							template as IVerificationTemplate,
 							true
 						);
 					} else {
-						return new VerificationTemplateManagerService(bot, clientTools, templateService, message);
+						return new VerificationTemplateManagerService(bot, clientTools, templateService, command);
 					}
 				case SetupType.GuildConfig:
-					return new GuildConfigManagerService(bot, clientTools, guildService, message, template as IGuild);
+					return new GuildConfigManagerService(bot, clientTools, guildService, command, template as IGuild);
 				case SetupType.RaidConfig:
 					return new RaidConfigManagerService(
 						bot,
 						clientTools,
 						guildService,
-						message,
+						command,
 						template as IRaidConfig
 					);
 			}
 		};
 	});
 
+// commands
+container.bind<CoreCommandCenter>(TYPES.CommandCenter).to(CoreCommandCenter).inSingletonScope();
+container.bind<HelpCommandCenter>(TYPES.HelpCommandCenter).to(HelpCommandCenter).inSingletonScope();
+container.bind<ConfigCommandCenter>(TYPES.ConfigCommandCenter).to(ConfigCommandCenter).inSingletonScope();
+
 // bot
 container.bind<Bot>(TYPES.Bot).to(Bot).inSingletonScope();
 
-export default container;
+export { container, asSingleton };
