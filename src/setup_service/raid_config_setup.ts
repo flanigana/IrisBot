@@ -8,19 +8,19 @@ import { ClientTools } from '../utils/client_tools';
 import { DynamicPage, Page } from './pages/page';
 import { PageSet } from './pages/page_set';
 import addRaidConfigPages from './page_sets/raid_config_pages';
-import { SetupService } from './generics/setup_service';
+import { InteractiveSetup } from './generics/interactive_setup';
 import { GuildMessageCommand } from '../command/message_command';
-import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
+import { CommandParameters, RootCommandCenter } from '../command/interfaces/root_command_center';
 
 @injectable()
-export class RaidConfigManagerService extends SetupService<IRaidConfig> {
+export class RaidConfigSetup extends InteractiveSetup<IRaidConfig> {
 	private readonly _GuildService: GuildService;
 
 	public constructor(
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.GuildService) guildService: GuildService,
-		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>,
 		@unmanaged() template: IRaidConfig
 	) {
 		super(bot, clientTools, command, template, true);

@@ -1,23 +1,23 @@
 import { Message } from 'discord.js';
 import { inject, injectable } from 'inversify';
 import { GuildService } from '../services/guild_service';
-import { TYPES } from '../types';
 import { ClientTools } from '../utils/client_tools';
-import { RootCommandName } from './root_command_centers/interfaces/command_types';
-import { ConfigCommandCenter } from './root_command_centers/config_command_center';
-import { HelpCommandCenter } from './root_command_centers/help_command_center';
+import { ConfigCommandCenter } from './config/config_command_center';
+import { HelpCommandCenter } from './help_command_center';
 import {
 	CommandAttributes,
 	CommandParameters,
 	MalformedCommandError,
 	RootCommandCenter,
-} from './root_command_centers/interfaces/root_command_center';
+} from './interfaces/root_command_center';
 import Logger from '../utils/logging';
 import { MessageCommand } from './message_command';
+import { TYPES } from '../types';
 
 @injectable()
 export class CoreCommandCenter {
-	private static readonly _ROOT_COMMANDS: Map<string, RootCommandCenter> = new Map();
+	private static readonly _ROOT_COMMAND_MAP: Map<string, RootCommandCenter> = new Map();
+	private static readonly _ROOT_COMMAND_CENTERS: { [key: string]: RootCommandCenter } = {};
 
 	private readonly _ClientTools: ClientTools;
 	private readonly _GuildService: GuildService;
@@ -25,13 +25,36 @@ export class CoreCommandCenter {
 	public constructor(
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.GuildService) guildService: GuildService,
-		@inject(TYPES.ConfigCommandCenter) configCommandCenter: ConfigCommandCenter,
-		@inject(TYPES.HelpCommandCenter) helpCommandCenter: HelpCommandCenter
+		@inject(TYPES.HelpCommandCenter) helpCommandCenter: HelpCommandCenter,
+		@inject(TYPES.ConfigCommandCenter) configCommandCenter: ConfigCommandCenter
 	) {
 		this._ClientTools = clientTools;
 		this._GuildService = guildService;
-		CoreCommandCenter._ROOT_COMMANDS.set(RootCommandName.CONFIG, configCommandCenter);
-		CoreCommandCenter._ROOT_COMMANDS.set(RootCommandName.HELP, helpCommandCenter);
+
+		// add command centers to collection
+		CoreCommandCenter._ROOT_COMMAND_CENTERS['HelpCommandCenter'] = helpCommandCenter;
+		CoreCommandCenter._ROOT_COMMAND_CENTERS['ConfigCommandCenter'] = configCommandCenter;
+		Object.freeze(CoreCommandCenter._ROOT_COMMAND_CENTERS);
+
+		// initialize the command map
+		this.initCommandMap();
+		Object.freeze(CoreCommandCenter._ROOT_COMMAND_MAP);
+	}
+
+	private initCommandMap(): void {
+		for (const commandCenter of Object.values(CoreCommandCenter._ROOT_COMMAND_CENTERS)) {
+			for (const commandName of commandCenter.RootCommands) {
+				if (CoreCommandCenter._ROOT_COMMAND_MAP.has(commandName)) {
+					const existingCenter = CoreCommandCenter._ROOT_COMMAND_MAP.get(commandName);
+					throw new Error(
+						`Duplicate CommandName, ${commandName}, found for both ${typeof existingCenter} ` +
+							` and ${typeof commandCenter} during CoreCommandCenter initialization. ` +
+							'This should not be possible and will cause errors when building commands'
+					);
+				}
+				CoreCommandCenter._ROOT_COMMAND_MAP.set(commandName, commandCenter);
+			}
+		}
 	}
 
 	public dispatchFromMessage(message: Message): void {
@@ -60,14 +83,14 @@ export class CoreCommandCenter {
 	}
 
 	private dispatch(attr: CommandAttributes): Promise<void> {
-		const commandCenter = CoreCommandCenter._ROOT_COMMANDS.get(attr.args[0]);
+		const commandCenter = CoreCommandCenter._ROOT_COMMAND_MAP.get(attr.args[0]);
 
 		if (!commandCenter) {
 			this.checkForCloseCommand(attr);
 			return;
 		}
 
-		let command: MessageCommand<RootCommandCenter, CommandParameters>;
+		let command: MessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>;
 		try {
 			command = commandCenter.parse(attr);
 			command.run();
@@ -84,7 +107,7 @@ export class CoreCommandCenter {
 					);
 				} else {
 					Logger.error(
-						`Unexpected Error While Parsing Command in ${commandCenter.RootCommandName}: ${error.message}`,
+						`Unexpected Error While Parsing Command in ${typeof commandCenter}: ${error.message}`,
 						{ error: error }
 					);
 				}

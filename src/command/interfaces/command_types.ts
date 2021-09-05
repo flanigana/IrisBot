@@ -5,6 +5,8 @@ export enum BotPermission {
 	ANY,
 }
 
+export type CommandName = RootCommandName | SubCommandName;
+
 export enum RootCommandName {
 	HELP = 'HELP',
 	CONFIG = 'CONFIG',

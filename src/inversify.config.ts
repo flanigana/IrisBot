@@ -7,23 +7,23 @@ import { GuildService } from './services/guild_service';
 import { GuildRepository } from './data_access/repositories/guild_repository';
 import { RaidTemplateService } from './services/raid_template_service';
 import { MessageController } from './controllers/message_controller';
-import { SetupService, SetupType } from './setup_service/generics/setup_service';
+import { InteractiveSetup, SetupType } from './setup_service/generics/interactive_setup';
 import { DataModel } from './models/interfaces/data_model';
 import { ClientTools } from './utils/client_tools';
 import { IRaidTemplate } from './models/raid_template';
 import { RaidController } from './controllers/raid_controller';
 import { RaidTemplateController } from './controllers/template_controllers/raid_template_controller';
 import { RaidManager } from './raid_manager/raid_manager';
-import { GuildConfigManagerService } from './setup_service/guild_config_manager_service';
+import { GuildConfigSetup } from './setup_service/guild_config_setup';
 import { IGuild } from './models/guild';
 import { ConfigController } from './controllers/config_controller';
 import { RaidConfigRepository } from './data_access/repositories/raid_config_repository';
-import { RaidConfigManagerService } from './setup_service/raid_config_manager_service';
+import { RaidConfigSetup } from './setup_service/raid_config_setup';
 import { IRaidConfig } from './models/raid_config';
 import { RaidTemplateRepository } from './data_access/repositories/raid_template_repository';
 import { VerificationTemplateRepository } from './data_access/repositories/verification_template_repository';
 import { VerificationTemplateService } from './services/verification_template_service';
-import { VerificationTemplateManagerService } from './setup_service/verification_template_manager_service';
+import { VerificationTemplateSetup } from './setup_service/verification_template_setup';
 import { IVerificationTemplate } from './models/verification_template';
 import { VerificationTemplateController } from './controllers/template_controllers/verification_template_controller';
 import { UserRepository } from './data_access/repositories/user_repository';
@@ -42,13 +42,14 @@ import { RealmeyeDataService } from './realmeye/realmeye_data/realmeye_data_serv
 import { RealmeyeRenderService } from './realmeye/realmeye_render/realmeye_render_service';
 import { RealmEyeController } from './controllers/realmeye_controller';
 import { RealmEyeManager } from './realmeye/realmeye_manager';
-import { RaidTemplateManagerService } from './setup_service/raid_template_manger_service';
-import { CommandParameters, RootCommandCenter } from './command/root_command_centers/interfaces/root_command_center';
+import { RaidTemplateSetup } from './setup_service/raid_template_setup';
 import { GuildMessageCommand } from './command/message_command';
 import { fluentProvide } from 'inversify-binding-decorators';
 import { CoreCommandCenter } from './command/core_command_center';
-import { HelpCommandCenter } from './command/root_command_centers/help_command_center';
-import { ConfigCommandCenter } from './command/root_command_centers/config_command_center';
+import { CommandParameters, RootCommandCenter } from './command/interfaces/root_command_center';
+import { HelpCommandCenter } from './command/help_command_center';
+import { ConfigCommandCenter } from './command/config/config_command_center';
+import { RaidConfigCommandCenter } from './command/config/config_raid_command';
 
 const container = new Container();
 
@@ -120,11 +121,11 @@ container.bind<RealmEyeController>(TYPES.RealmEyeController).to(RealmEyeControll
 
 // factories
 container
-	.bind<interfaces.Factory<SetupService<DataModel>>>(TYPES.SetupService)
-	.toFactory<SetupService<DataModel>>(() => {
+	.bind<interfaces.Factory<InteractiveSetup<DataModel>>>(TYPES.SetupService)
+	.toFactory<InteractiveSetup<DataModel>>(() => {
 		return (
 			type: SetupType,
-			command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+			command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>,
 			template?: DataModel
 		) => {
 			const bot = container.get<Bot>(TYPES.Bot);
@@ -135,7 +136,7 @@ container
 				case SetupType.RaidTemplate:
 					templateService = container.get<RaidTemplateService>(TYPES.RaidTemplateService);
 					if (template) {
-						return new RaidTemplateManagerService(
+						return new RaidTemplateSetup(
 							bot,
 							clientTools,
 							templateService,
@@ -144,12 +145,12 @@ container
 							true
 						);
 					} else {
-						return new RaidTemplateManagerService(bot, clientTools, templateService, command);
+						return new RaidTemplateSetup(bot, clientTools, templateService, command);
 					}
 				case SetupType.VerificationTemplate:
 					templateService = container.get<VerificationTemplateService>(TYPES.VerificationTemplateService);
 					if (template) {
-						return new VerificationTemplateManagerService(
+						return new VerificationTemplateSetup(
 							bot,
 							clientTools,
 							templateService,
@@ -158,18 +159,12 @@ container
 							true
 						);
 					} else {
-						return new VerificationTemplateManagerService(bot, clientTools, templateService, command);
+						return new VerificationTemplateSetup(bot, clientTools, templateService, command);
 					}
 				case SetupType.GuildConfig:
-					return new GuildConfigManagerService(bot, clientTools, guildService, command, template as IGuild);
+					return new GuildConfigSetup(bot, clientTools, guildService, command, template as IGuild);
 				case SetupType.RaidConfig:
-					return new RaidConfigManagerService(
-						bot,
-						clientTools,
-						guildService,
-						command,
-						template as IRaidConfig
-					);
+					return new RaidConfigSetup(bot, clientTools, guildService, command, template as IRaidConfig);
 			}
 		};
 	});
@@ -178,6 +173,7 @@ container
 container.bind<CoreCommandCenter>(TYPES.CommandCenter).to(CoreCommandCenter).inSingletonScope();
 container.bind<HelpCommandCenter>(TYPES.HelpCommandCenter).to(HelpCommandCenter).inSingletonScope();
 container.bind<ConfigCommandCenter>(TYPES.ConfigCommandCenter).to(ConfigCommandCenter).inSingletonScope();
+container.bind<RaidConfigCommandCenter>(TYPES.RaidConfigCommandCenter).to(RaidConfigCommandCenter).inSingletonScope();
 
 // bot
 container.bind<Bot>(TYPES.Bot).to(Bot).inSingletonScope();

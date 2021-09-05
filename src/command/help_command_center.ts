@@ -1,24 +1,23 @@
-import { MessageEmbed, TextBasedChannels } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import { inject, injectable } from 'inversify';
-import { TYPES } from '../../types';
-import { ClientTools } from '../../utils/client_tools';
-import { StringUtils } from '../../utils/string_utils';
-import { MessageCommand } from '../message_command';
-import { ConfigCommandCenter } from './config_command_center';
-import { BotPermission, RootCommandName } from './interfaces/command_types';
+import { ClientTools } from '../utils/client_tools';
+import { StringUtils } from '../utils/string_utils';
+import { MessageCommand } from './message_command';
+import { BotPermission, CommandName, RootCommandName } from './interfaces/command_types';
 import {
 	RootCommandCenter,
 	CommandParameters,
 	CommandAttributes,
 	MalformedCommandError,
 } from './interfaces/root_command_center';
+import { TYPES } from '../types';
 
 @injectable()
 export class HelpCommandCenter extends RootCommandCenter {
-	public static readonly MINIMUM_COMMAND_LENGTH = 1;
-	public static readonly REQUIRED_SUB_COMMAND = false;
-	public static readonly SUB_COMMANDS = Object.values(RootCommandName);
-	public static readonly REQUIRED_PERMISSIONS = [BotPermission.ANY];
+	protected _RootCommands: RootCommandName[] = [RootCommandName.HELP];
+	protected _MinimumCommandLength = 1;
+	protected _SubCommands: CommandName[] = Object.values(RootCommandName);
+	protected _RequiredPermissions: BotPermission[] = [BotPermission.ANY];
 
 	private readonly _ClientTools: ClientTools;
 
@@ -27,32 +26,25 @@ export class HelpCommandCenter extends RootCommandCenter {
 		this._ClientTools = clientTools;
 	}
 
-	public get RootCommandName() {
-		return HelpCommandCenter.ROOT_COMMAND_NAME;
-	}
-
-	public get RequiredPermissions() {
-		return HelpCommandCenter.REQUIRED_PERMISSIONS;
-	}
-
 	public get clientTools() {
 		return this._ClientTools;
 	}
 
-	// TODO:
+	// TODO: Add additional help parsing
 	public parse(attr: CommandAttributes): MessageCommand<RootCommandCenter, HelpCommandParameters> {
-		let helpCommand = HelpCommandCenter.help;
-		const commandName = attr.args.length > 1 ? attr.args[1].toUpperCase() : 'HELP';
-		switch (commandName) {
-			case ConfigCommandCenter.ROOT_COMMAND_NAME:
-				helpCommand = ConfigCommandCenter.help;
-				break;
-			default:
-				helpCommand = HelpCommandCenter.help;
-				break;
-		}
-		const params = new HelpCommandParameters(helpCommand, this._ClientTools.getStandardEmbed());
-		return new MessageCommand(this, attr.user, attr.channel, params, HelpCommandCenter.sendHelp);
+		throw new Error('Method not implemented.');
+		// let helpCommand = HelpCommandCenter.help;
+		// const commandName = attr.args.length > 1 ? attr.args[1].toUpperCase() : 'HELP';
+		// switch (commandName) {
+		// 	case ConfigCommandCenter.ROOT_COMMANDS[0]:
+		// 		helpCommand = ConfigCommandCenter.help;
+		// 		break;
+		// 	default:
+		// 		helpCommand = HelpCommandCenter.help;
+		// 		break;
+		// }
+		// const params = new HelpCommandParameters(helpCommand, this._ClientTools.getStandardEmbed());
+		// return new MessageCommand(this, attr.user, attr.channel, params, HelpCommandCenter.sendHelp);
 	}
 
 	public static override help(embed: MessageEmbed): MessageEmbed {
@@ -106,16 +98,21 @@ export class HelpCommandCenter extends RootCommandCenter {
 
 	public static findClosestCommands(attempted: string, commandList?: string[]): string[] {
 		return StringUtils.findBestMatches(attempted, commandList ?? Object.values(RootCommandName), {
-			threshold: 0.85,
+			threshold: 0.3,
 		});
 	}
 }
 
-export class HelpCommandParameters extends CommandParameters {
+export class HelpCommandParameters extends CommandParameters<HelpCommandCenter> {
 	private readonly _Embed;
 
-	public constructor(helpCommand: (embed: MessageEmbed) => MessageEmbed, embed: MessageEmbed) {
-		super();
+	public constructor(
+		commandCenter: HelpCommandCenter,
+		args: string[],
+		helpCommand: (embed: MessageEmbed) => MessageEmbed,
+		embed: MessageEmbed
+	) {
+		super(commandCenter, args);
 		this._Embed = helpCommand(embed);
 		if (helpCommand != HelpCommandCenter.help) {
 			ClientTools.addFieldsToEmbed(this._Embed, RootCommandCenter.ALL_HELP_FIELD);

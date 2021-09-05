@@ -38,4 +38,5 @@ export const TYPES = {
 	CommandCenter: Symbol('CommandCenter'),
 	HelpCommandCenter: Symbol('HelpCommandCenter'),
 	ConfigCommandCenter: Symbol('ConfigCommandCenter'),
+	RaidConfigCommandCenter: Symbol('RaidConfigCommandCenter'),
 };

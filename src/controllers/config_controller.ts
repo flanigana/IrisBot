@@ -3,11 +3,11 @@ import { inject, injectable, interfaces } from 'inversify';
 import { GuildService } from '../services/guild_service';
 import { TYPES } from '../types';
 import { container } from '../inversify.config';
-import { SetupService, SetupType } from '../setup_service/generics/setup_service';
+import { InteractiveSetup, SetupType } from '../setup_service/generics/interactive_setup';
 import { IGuild } from '../models/guild';
-import { GuildConfigManagerService } from '../setup_service/guild_config_manager_service';
+import { GuildConfigSetup } from '../setup_service/guild_config_setup';
 import { getDefaultRaidConfig, IRaidConfig } from '../models/raid_config';
-import { RaidConfigManagerService } from '../setup_service/raid_config_manager_service';
+import { RaidConfigSetup } from '../setup_service/raid_config_setup';
 
 @injectable()
 export class ConfigController {
@@ -23,11 +23,11 @@ export class ConfigController {
 	 */
 	private async createGuildConfigService(message: Message): Promise<void> {
 		const template = await this._GuildService.findById(message.guild.id);
-		const service = container.get<interfaces.Factory<SetupService<IGuild>>>(TYPES.SetupService)(
+		const service = container.get<interfaces.Factory<InteractiveSetup<IGuild>>>(TYPES.SetupService)(
 			SetupType.GuildConfig,
 			message,
 			template
-		) as GuildConfigManagerService;
+		) as GuildConfigSetup;
 		service.startService();
 	}
 
@@ -43,11 +43,11 @@ export class ConfigController {
 		} else {
 			template = await this._GuildService.findRaidConfigById(guildId);
 		}
-		const service = container.get<interfaces.Factory<SetupService<IRaidConfig>>>(TYPES.SetupService)(
+		const service = container.get<interfaces.Factory<InteractiveSetup<IRaidConfig>>>(TYPES.SetupService)(
 			SetupType.RaidConfig,
 			message,
 			template
-		) as RaidConfigManagerService;
+		) as RaidConfigSetup;
 		service.startService();
 	}
 

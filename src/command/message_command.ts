@@ -1,7 +1,7 @@
 import { Guild, GuildMember, TextBasedChannels, User } from 'discord.js';
-import { RootCommandCenter, CommandParameters } from './root_command_centers/interfaces/root_command_center';
+import { RootCommandCenter, CommandParameters } from './interfaces/root_command_center';
 
-export class MessageCommand<T extends RootCommandCenter, P extends CommandParameters> {
+export class MessageCommand<T extends RootCommandCenter, P extends CommandParameters<RootCommandCenter>> {
 	private readonly _User: User;
 	private readonly _Channel: TextBasedChannels;
 
@@ -44,10 +44,10 @@ export class MessageCommand<T extends RootCommandCenter, P extends CommandParame
 	}
 }
 
-export class GuildMessageCommand<T extends RootCommandCenter, P extends CommandParameters> extends MessageCommand<
-	T,
-	P
-> {
+export class GuildMessageCommand<
+	T extends RootCommandCenter,
+	P extends CommandParameters<RootCommandCenter>
+> extends MessageCommand<T, P> {
 	private readonly _Guild: Guild;
 	private readonly _Member: GuildMember;
 

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../types';
-import { SetupType } from '../../setup_service/generics/setup_service';
+import { SetupType } from '../../setup_service/generics/interactive_setup';
 import { IRaidTemplate } from '../../models/raid_template';
 import { RaidTemplateService } from '../../services/raid_template_service';
 import { ClientTools } from '../../utils/client_tools';

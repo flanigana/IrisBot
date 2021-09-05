@@ -1,6 +1,6 @@
 import { injectable, inject, unmanaged } from 'inversify';
 import { TYPES } from '../types';
-import { SetupService } from './generics/setup_service';
+import { InteractiveSetup } from './generics/interactive_setup';
 import { Bot } from '../bot';
 import { IRaidTemplate, getBlankRaidTemplate } from '../models/raid_template';
 import { MessageEmbed } from 'discord.js';
@@ -9,18 +9,18 @@ import { Page, DynamicPage } from './pages/page';
 import { ClientTools } from '../utils/client_tools';
 import { PageSet } from './pages/page_set';
 import addRaidTemplatePages from './page_sets/raid_template_pages';
-import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
 import { GuildMessageCommand } from '../command/message_command';
+import { CommandParameters, RootCommandCenter } from '../command/interfaces/root_command_center';
 
 @injectable()
-export class RaidTemplateManagerService extends SetupService<IRaidTemplate> {
+export class RaidTemplateSetup extends InteractiveSetup<IRaidTemplate> {
 	private readonly _RaidTemplateService: RaidTemplateService;
 
 	public constructor(
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.RaidTemplateService) raidTemplateService: RaidTemplateService,
-		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>,
 		@unmanaged() template = getBlankRaidTemplate({ guildId: command.guild.id }),
 		@unmanaged() updatable = false
 	) {

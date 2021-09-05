@@ -1,13 +1,20 @@
-import { inject, injectable } from 'inversify';
-import { TYPES } from '../types';
+import { inject, interfaces } from 'inversify';
 import { getBlankGuild, IGuild } from '../models/guild';
 import { Guild, GuildMember } from 'discord.js';
-import { GuildRepository } from '../data_access/repositories/guild_repository';
-import { IRaidConfig } from '../models/raid_config';
-import { RaidConfigRepository } from '../data_access/repositories/raid_config_repository';
+import { GuildRepository } from '../data/repositories/guild_repository';
+import { getDefaultRaidConfig, IRaidConfig } from '../models/raid_config';
+import { RaidConfigRepository } from '../data/repositories/raid_config_repository';
 import { ClientTools } from '../utils/client_tools';
+import { container } from '../inversify.config';
+import { InteractiveSetup, SetupType } from '../interactive_setup/generics/interactive_setup';
+import { GuildConfigSetup } from '../interactive_setup/guild_config_setup';
+import { RaidConfigSetup } from '../interactive_setup/raid_config_setup';
+import { GuildMessageCommand } from '../command/message_command';
+import { ConfigCommandCenter, ConfigCommandParameters } from '../command/config/config_command_center';
+import { fluentProvide } from 'inversify-binding-decorators';
+import { TYPES } from '../types';
 
-@injectable()
+@(fluentProvide(GuildService).inSingletonScope().done())
 export class GuildService {
 	private readonly _GuildRepo: GuildRepository;
 	private readonly _RaidConfigRepo: RaidConfigRepository;
@@ -123,6 +130,20 @@ export class GuildService {
 	}
 
 	/**
+	 * Returns a guaranteed IRaidConfig. If one exists in the database, it will be returned. If not, a new one will be created, saved, and returned.
+	 * @param guild Discord Guild object to read information from
+	 */
+	public async safeFindRaidConfig(guildId: string): Promise<IRaidConfig> {
+		if (await this._RaidConfigRepo.existsByGuildId(guildId)) {
+			return this._RaidConfigRepo.findByGuildId(guildId);
+		} else {
+			const raidConfig = getDefaultRaidConfig({ guildId: guildId });
+			await this._RaidConfigRepo.save(raidConfig);
+			return raidConfig;
+		}
+	}
+
+	/**
 	 * Checks whether a RaidConfig template exists for the Guild with the given id
 	 * @param guildID Guild id
 	 * @returns whether a RaidConfig template exists
@@ -211,5 +232,37 @@ export class GuildService {
 	 */
 	public async save(guild: IGuild): Promise<IGuild> {
 		return this._GuildRepo.save(guild);
+	}
+
+	/**
+	 * Starts an `InteractiveSetup` for Guild basic configuration
+	 * @param message message sent by User
+	 */
+	public async startGuildConfigSetup(
+		command: GuildMessageCommand<ConfigCommandCenter, ConfigCommandParameters>
+	): Promise<void> {
+		const template = await this.findById(command.guild.id);
+		const service = container.get<interfaces.Factory<InteractiveSetup<IGuild>>>('InteractiveSetup')(
+			SetupType.GuildConfig,
+			command,
+			template
+		) as GuildConfigSetup;
+		service.startService();
+	}
+
+	/**
+	 * Starts a `InteractiveSetup` for Guild raid configuration
+	 * @param message message sent by User
+	 */
+	public async startRaidConfigSetup(
+		command: GuildMessageCommand<ConfigCommandCenter, ConfigCommandParameters>
+	): Promise<void> {
+		const template = await this.safeFindRaidConfig(command.guild.id);
+		const service = container.get<interfaces.Factory<InteractiveSetup<IRaidConfig>>>('InteractiveSetup')(
+			SetupType.RaidConfig,
+			command,
+			template
+		) as RaidConfigSetup;
+		service.startService();
 	}
 }

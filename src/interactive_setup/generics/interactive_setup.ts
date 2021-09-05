@@ -1,15 +1,15 @@
-import { injectable, inject, unmanaged } from 'inversify';
-import { TYPES } from '../../types';
+import { inject, unmanaged } from 'inversify';
 import { Message, MessageEmbed, User, MessageReaction, ReactionCollector, Guild, TextBasedChannels } from 'discord.js';
 import { DataModel } from '../../models/interfaces/data_model';
 import { Bot } from '../../bot';
 import { PageSet } from '../pages/page_set';
 import { ClientTools } from '../../utils/client_tools';
-import {
-	CommandParameters,
-	RootCommandCenter,
-} from '../../command/root_command_centers/interfaces/root_command_center';
+import { CommandParameters, RootCommandCenter } from '../../command/interfaces/root_command_center';
 import { GuildMessageCommand } from '../../command/message_command';
+import { fluentProvide } from 'inversify-binding-decorators';
+import getDecorators from 'inversify-inject-decorators';
+import { container } from '../../inversify.config';
+const { lazyInject } = getDecorators(container, false);
 
 export enum SetupType {
 	GuildConfig,
@@ -18,17 +18,18 @@ export enum SetupType {
 	VerificationTemplate,
 }
 
-@injectable()
-export abstract class SetupService<E extends DataModel> {
+@(fluentProvide('InteractiveSetup').inSingletonScope().done())
+export abstract class InteractiveSetup<E extends DataModel> {
 	private readonly _PageReactions = new Set(['⬅', '➡', '❌']);
 	protected readonly _EndPageDescription =
 		'Almost finished, just look over the information below and react with ➡ one last time to complete the service.';
 	protected readonly _EndPageDefaultFinalDescription =
 		'The service is complete and your changes have been successfully saved.';
 
-	private readonly _Bot: Bot;
+	@lazyInject(Bot)
+	private _Bot: Bot;
 	protected readonly _ClientTools: ClientTools;
-	private readonly _Command: GuildMessageCommand<RootCommandCenter, CommandParameters>;
+	private readonly _Command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>;
 
 	protected _pageSet: PageSet<E>;
 	private _view: Message;
@@ -37,13 +38,11 @@ export abstract class SetupService<E extends DataModel> {
 	private _updatable: boolean;
 
 	public constructor(
-		@inject(TYPES.Bot) bot: Bot,
-		@inject(TYPES.ClientTools) clientTools: ClientTools,
-		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@inject(ClientTools) clientTools: ClientTools,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>,
 		@unmanaged() template: Partial<E>,
 		@unmanaged() updatable?: boolean
 	) {
-		this._Bot = bot;
 		this._ClientTools = clientTools;
 		this._Command = command;
 		this._template = template;

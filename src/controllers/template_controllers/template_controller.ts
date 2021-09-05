@@ -1,7 +1,7 @@
 import { inject, injectable, interfaces, unmanaged } from 'inversify';
 import { container } from '../../inversify.config';
 import { TYPES } from '../../types';
-import { SetupService, SetupType } from '../../setup_service/generics/setup_service';
+import { InteractiveSetup, SetupType } from '../../setup_service/generics/interactive_setup';
 import { Message, MessageEmbed } from 'discord.js';
 import { ClientTools } from '../../utils/client_tools';
 import { Bot } from '../../bot';
@@ -97,27 +97,27 @@ export class TemplateController<T extends GuildTemplate> {
 		return this.confirmTemplateDeletion(message, templateName);
 	}
 
-	protected async editTemplate(message: Message, args: string[]): Promise<SetupService<T>> {
+	protected async editTemplate(message: Message, args: string[]): Promise<InteractiveSetup<T>> {
 		const templateName = args.length >= 3 ? args.slice(2).join(' ') : undefined;
 		const template = await this._TemplateService.findTemplateByGuildIdAndName(
 			message.guild.id,
 			templateName,
 			false
 		);
-		return container.get<interfaces.Factory<SetupService<T>>>(TYPES.SetupService)(
+		return container.get<interfaces.Factory<InteractiveSetup<T>>>(TYPES.SetupService)(
 			this._SetupType,
 			message,
 			template
-		) as SetupService<T>;
+		) as InteractiveSetup<T>;
 	}
 
 	protected async createTemplateManager(message: Message, args: string[]): Promise<void> {
-		let templateManagerService: SetupService<T>;
+		let templateManagerService: InteractiveSetup<T>;
 		if (args[1].match(/create/i)) {
-			templateManagerService = container.get<interfaces.Factory<SetupService<T>>>(TYPES.SetupService)(
+			templateManagerService = container.get<interfaces.Factory<InteractiveSetup<T>>>(TYPES.SetupService)(
 				this._SetupType,
 				message
-			) as SetupService<T>;
+			) as InteractiveSetup<T>;
 		} else {
 			templateManagerService = await this.editTemplate(message, args);
 			if (!templateManagerService) {

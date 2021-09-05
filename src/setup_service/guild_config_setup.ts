@@ -7,20 +7,20 @@ import { ClientTools } from '../utils/client_tools';
 import { GuildService } from '../services/guild_service';
 import { DynamicPage, Page } from './pages/page';
 import { PageSet } from './pages/page_set';
-import { SetupService } from './generics/setup_service';
+import { InteractiveSetup } from './generics/interactive_setup';
 import addGuildConfigPages from './page_sets/guild_config_pages';
-import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
 import { GuildMessageCommand } from '../command/message_command';
+import { CommandParameters, RootCommandCenter } from '../command/interfaces/root_command_center';
 
 @injectable()
-export class GuildConfigManagerService extends SetupService<IGuild> {
+export class GuildConfigSetup extends InteractiveSetup<IGuild> {
 	private readonly _GuildService: GuildService;
 
 	public constructor(
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.GuildService) guildService: GuildService,
-		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>,
 		@unmanaged() template: IGuild
 	) {
 		super(bot, clientTools, command, template, true);

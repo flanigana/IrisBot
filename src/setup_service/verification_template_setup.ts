@@ -6,25 +6,25 @@ import {
 	IVerificationTemplate,
 } from '../models/verification_template';
 import { PageSet } from './pages/page_set';
-import { SetupService } from './generics/setup_service';
+import { InteractiveSetup } from './generics/interactive_setup';
 import { Bot } from '../bot';
 import { ClientTools } from '../utils/client_tools';
 import { VerificationTemplateService } from '../services/verification_template_service';
 import { TYPES } from '../types';
 import { DynamicPage, Page } from './pages/page';
 import addVerificationTemplatePages from './page_sets/verification_template_pages';
-import { CommandParameters, RootCommandCenter } from '../command/root_command_centers/interfaces/root_command_center';
 import { GuildMessageCommand } from '../command/message_command';
+import { CommandParameters, RootCommandCenter } from '../command/interfaces/root_command_center';
 
 @injectable()
-export class VerificationTemplateManagerService extends SetupService<IVerificationTemplate> {
+export class VerificationTemplateSetup extends InteractiveSetup<IVerificationTemplate> {
 	private readonly _VerificationTemplateService: VerificationTemplateService;
 
 	public constructor(
 		@inject(TYPES.Bot) bot: Bot,
 		@inject(TYPES.ClientTools) clientTools: ClientTools,
 		@inject(TYPES.VerificationTemplateService) verificationTemplateService: VerificationTemplateService,
-		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters>,
+		@unmanaged() command: GuildMessageCommand<RootCommandCenter, CommandParameters<RootCommandCenter>>,
 		@unmanaged() template = getBlankVerificationTemplate({ guildId: command.guild.id }),
 		@unmanaged() updatable = false
 	) {
